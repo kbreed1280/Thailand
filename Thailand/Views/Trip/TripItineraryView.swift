@@ -33,6 +33,7 @@ struct TripItineraryView: View {
     @State private var showingFlights = false
     @State private var showingWeather = false
     @State private var showingTDAC = false
+    @State private var showingTikTok = false
     @State private var showingTransit = false
     @State private var showingOffline = false
     @State private var sharingError: String?
@@ -60,6 +61,7 @@ struct TripItineraryView: View {
                     case .flights: showingFlights = true
                     case .weather: showingWeather = true
                     case .tdac: showingTDAC = true
+                    case .tiktok: showingTikTok = true
                     case .transit: showingTransit = true
                     case .offline: showingOffline = true
                     }
@@ -167,6 +169,9 @@ struct TripItineraryView: View {
         }
         .sheet(isPresented: $showingTDAC) {
             TDACView(trip: trip)
+        }
+        .sheet(isPresented: $showingTikTok) {
+            TikTokLibraryView(trip: trip)
         }
         .sheet(isPresented: $showingTransit) {
             NavigationStack {
@@ -409,6 +414,7 @@ struct TripItineraryView: View {
             Button("Flights", systemImage: "airplane") { showingFlights = true }
             Button("Weather", systemImage: "sun.max.fill") { showingWeather = true }
             Button("Arrival Card (TDAC)", systemImage: "person.text.rectangle") { showingTDAC = true }
+            Button("TikTok Videos", systemImage: "play.rectangle.on.rectangle") { showingTikTok = true }
             Button("Offline Maps", systemImage: "arrow.down.circle") { showingOffline = true }
             Button("BTS & MRT", systemImage: "tram.fill") { showingTransit = true }
         }
@@ -560,7 +566,7 @@ private struct TripHeaderCard: View {
     var canEdit = true
     let onAction: (HeaderAction) -> Void
 
-    enum HeaderAction { case packing, ideas, documents, flights, weather, tdac, transit, offline }
+    enum HeaderAction { case packing, ideas, documents, flights, weather, tdac, tiktok, transit, offline }
 
     @ObservedObject private var flights = FlightStore.shared
 
@@ -631,6 +637,10 @@ private struct TripHeaderCard: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
+                    Button { onAction(.tiktok) } label: {
+                        let waiting = SharedInbox.load().count
+                        Label(waiting > 0 ? "TikTok (\(waiting) new)" : "TikTok", systemImage: "play.rectangle.on.rectangle.fill")
+                    }
                     Button { onAction(.tdac) } label: { Label("TDAC", systemImage: "person.text.rectangle") }
                     Button { onAction(.documents) } label: { Label("Documents", systemImage: "lock.doc.fill") }
                     Button { onAction(.weather) } label: { Label("Weather", systemImage: "sun.max.fill") }

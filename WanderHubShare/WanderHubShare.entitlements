@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Shared keychain with the Share extension: links shared from TikTok wait here.
+	     (Team provisioning profiles already allow any TEAMID.* keychain group.) -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)com.kbreed.thailandtrip.shared</string>
+	</array>
+</dict>
+</plist>

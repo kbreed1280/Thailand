@@ -67,11 +67,26 @@ struct FlightsView: View {
                     .listRowBackground(Color.clear)
             }
             if !store.upcoming.isEmpty {
-                Section("Upcoming") {
+                Section {
                     ForEach(store.upcoming) { flight in
                         NavigationLink(value: flight.id) { FlightRow(flight: flight, isRefreshing: store.refreshing.contains(flight.id)) }
                     }
                     .onDelete { offsets in offsets.map { store.upcoming[$0] }.forEach(store.delete) }
+                    .onMove { store.moveUpcoming(from: $0, to: $1) }
+                } header: {
+                    HStack {
+                        Text("Upcoming")
+                        Spacer()
+                        if store.hasCustomOrder {
+                            Button("Sort by date") { withAnimation { store.sortUpcomingByDate() } }
+                                .font(.caption.weight(.semibold))
+                                .textCase(nil)
+                        }
+                    }
+                } footer: {
+                    if store.upcoming.count > 1 {
+                        Text("Touch and hold a flight, then drag to change the order.")
+                    }
                 }
             }
             if !store.past.isEmpty {

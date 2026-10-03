@@ -11,6 +11,8 @@ struct TrackedFlight: Codable, Identifiable, Equatable {
     var note: String = ""
     var status: FlightStatus?
     var lastError: String?
+    /// Your own order in the Upcoming list (set by dragging); nil = sort by departure time.
+    var sortIndex: Int?
 
     /// "tg103" / "TG-103" → "TG 103". Airline codes always contain a letter (TG, FD, 3K),
     /// so a bare number like "701" is left as-is and treated as invalid.
@@ -77,7 +79,30 @@ final class FlightStore: ObservableObject {
     init() { load() }
 
     var upcoming: [TrackedFlight] {
-        flights.filter { !$0.isFinished }.sorted { ($0.departureDate ?? .distantFuture) < ($1.departureDate ?? .distantFuture) }
+        let open = flights.filter { !$0.isFinished }
+        let byDate = open.sorted { ($0.departureDate ?? .distantFuture) < ($1.departureDate ?? .distantFuture) }
+        guard open.contains(where: { $0.sortIndex != nil }) else { return byDate }
+        // Custom order first (as dragged); any flight added since goes after, by date.
+        return byDate.sorted { ($0.sortIndex ?? Int.max) < ($1.sortIndex ?? Int.max) }
+    }
+
+    /// True once you've dragged flights into your own order.
+    var hasCustomOrder: Bool { flights.contains { !$0.isFinished && $0.sortIndex != nil } }
+
+    /// Drag-to-reorder in the Upcoming list.
+    func moveUpcoming(from source: IndexSet, to destination: Int) {
+        var order = upcoming
+        order.move(fromOffsets: source, toOffset: destination)
+        for (index, flight) in order.enumerated() {
+            if let i = flights.firstIndex(where: { $0.id == flight.id }) { flights[i].sortIndex = index }
+        }
+        save()
+    }
+
+    /// Back to automatic order by departure time.
+    func sortUpcomingByDate() {
+        for i in flights.indices { flights[i].sortIndex = nil }
+        save()
     }
 
     var past: [TrackedFlight] {

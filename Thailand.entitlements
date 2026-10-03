@@ -14,6 +14,13 @@
 	<array>
 		<string>CloudKit</string>
 	</array>
+	<!-- Shared keychain with the Share extension: links shared from TikTok wait here.
+	     (Team provisioning profiles already allow any TEAMID.* keychain group.) -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)com.kbreed.thailandtrip</string>
+		<string>$(AppIdentifierPrefix)com.kbreed.thailandtrip.shared</string>
+	</array>
 	<!-- Weather on the Nearby tab. -->
 	<key>com.apple.developer.weatherkit</key>
 	<true/>

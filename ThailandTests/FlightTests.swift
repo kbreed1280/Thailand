@@ -66,3 +66,13 @@ final class FlightTests: XCTestCase {
         XCTAssertNil(passport.expiryWarning(tripStart: tripStart))
     }
 }
+
+@MainActor
+final class FlightOrderTests: XCTestCase {
+    func testCustomOrderDecodesFromOldSaves() throws {
+        // Flights saved before reordering existed have no sortIndex.
+        let json = #"[{"id":"2B8AD509-6E3E-4B28-948F-4585B0331FF7","number":"TG 701","day":"2026-10-24","note":""}]"#
+        let flights = try JSONDecoder().decode([TrackedFlight].self, from: Data(json.utf8))
+        XCTAssertNil(flights[0].sortIndex)
+    }
+}

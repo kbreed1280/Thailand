@@ -24,6 +24,7 @@ struct NearbyTabView: View {
     @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var savedMessage: String?
     @State private var showingEmergency = false
+    @State private var showingSevenEleven = false
 
     /// Apple Weather, falling back to Open-Meteo if WeatherKit isn't available.
     private let weatherProvider: WeatherProvider = AutomaticWeatherProvider()
@@ -69,6 +70,7 @@ struct NearbyTabView: View {
                     }
                 }
             }
+            .fullScreenCover(isPresented: $showingSevenEleven) { SevenElevenMapView() }
             .sheet(item: $selectedLandmark) { landmark in
                 LandmarkDetailSheet(landmark: landmark, userLocation: location.lastLocation) { target in
                     selectedLandmark = nil
@@ -135,6 +137,10 @@ struct NearbyTabView: View {
                 .mapControls { MapUserLocationButton() }
                 .frame(height: 220)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+
+                if let here = lastLoadedAt {
+                    NearestSevenElevenRow(here: here, onWalk: { walkTarget = $0 }, onShowMap: { showingSevenEleven = true })
+                }
 
                 CurrentTripReader { trip in
                     if let trip, let today = trip.today {

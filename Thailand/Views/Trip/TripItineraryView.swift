@@ -32,6 +32,7 @@ struct TripItineraryView: View {
     @State private var showingVault = false
     @State private var showingFlights = false
     @State private var showingWeather = false
+    @State private var showingTDAC = false
     @State private var showingTransit = false
     @State private var showingOffline = false
     @State private var sharingError: String?
@@ -58,6 +59,7 @@ struct TripItineraryView: View {
                     case .documents: showingVault = true
                     case .flights: showingFlights = true
                     case .weather: showingWeather = true
+                    case .tdac: showingTDAC = true
                     case .transit: showingTransit = true
                     case .offline: showingOffline = true
                     }
@@ -162,6 +164,9 @@ struct TripItineraryView: View {
         }
         .sheet(isPresented: $showingWeather) {
             WeatherSheet()
+        }
+        .sheet(isPresented: $showingTDAC) {
+            TDACView(trip: trip)
         }
         .sheet(isPresented: $showingTransit) {
             NavigationStack {
@@ -403,6 +408,7 @@ struct TripItineraryView: View {
             Button("Travel Documents", systemImage: "lock.doc.fill") { showingVault = true }
             Button("Flights", systemImage: "airplane") { showingFlights = true }
             Button("Weather", systemImage: "sun.max.fill") { showingWeather = true }
+            Button("Arrival Card (TDAC)", systemImage: "person.text.rectangle") { showingTDAC = true }
             Button("Offline Maps", systemImage: "arrow.down.circle") { showingOffline = true }
             Button("BTS & MRT", systemImage: "tram.fill") { showingTransit = true }
         }
@@ -554,7 +560,7 @@ private struct TripHeaderCard: View {
     var canEdit = true
     let onAction: (HeaderAction) -> Void
 
-    enum HeaderAction { case packing, ideas, documents, flights, weather, transit, offline }
+    enum HeaderAction { case packing, ideas, documents, flights, weather, tdac, transit, offline }
 
     @ObservedObject private var flights = FlightStore.shared
 
@@ -625,6 +631,7 @@ private struct TripHeaderCard: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
+                    Button { onAction(.tdac) } label: { Label("TDAC", systemImage: "person.text.rectangle") }
                     Button { onAction(.documents) } label: { Label("Documents", systemImage: "lock.doc.fill") }
                     Button { onAction(.weather) } label: { Label("Weather", systemImage: "sun.max.fill") }
                     Button { onAction(.flights) } label: { Label("Flights", systemImage: "airplane") }

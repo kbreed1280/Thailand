@@ -21,11 +21,7 @@ struct RootTabView: View {
                 )
             }
             Tab("Convert", systemImage: "bahtsign.circle.fill") {
-                ComingSoonView(
-                    title: "Convert",
-                    systemImage: "bahtsign.circle.fill",
-                    message: "Baht ⇄ dollar converter and shared expenses. Coming in step 2."
-                )
+                ConvertTabView()
             }
             Tab("Translate", systemImage: "character.bubble.fill") {
                 ComingSoonView(

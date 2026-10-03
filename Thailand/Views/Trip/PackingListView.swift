@@ -6,6 +6,8 @@ struct PackingListView: View {
     @Environment(\.managedObjectContext) private var context
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var trip: Trip
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(key: "createdAt", ascending: false)])
+    private var allTrips: FetchedResults<Trip>
 
     @State private var newTitle = ""
     @State private var newCategory: PackingCategory = .essentials
@@ -57,11 +59,24 @@ struct PackingListView: View {
                         }
                         .accessibilityLabel("Category: \(newCategory.title)")
                     }
-                    if items.count < 5 {
+                    let missing = missingSuggestions.count
+                    if missing > 0 {
                         Button {
                             addSuggestions()
                         } label: {
-                            Label("Add Thailand essentials", systemImage: "sparkles")
+                            Label(items.isEmpty ? "Add Thailand essentials (\(missing) items)" : "Add the \(missing) missing Thailand essentials",
+                                  systemImage: "sparkles")
+                        }
+                    }
+                    ForEach(otherTripsWithPacking, id: \.objectID) { other in
+                        let count = copyable(from: other).count
+                        if count > 0 {
+                            Button {
+                                copy(from: other)
+                            } label: {
+                                Label("Copy \(count) item\(count == 1 ? "" : "s") from \"\(other.name ?? "another trip")\"",
+                                      systemImage: "doc.on.doc")
+                            }
                         }
                     }
                 }
@@ -118,10 +133,35 @@ struct PackingListView: View {
         item.trip = trip
     }
 
+    private var existingTitles: Set<String> { Set(items.compactMap { $0.title?.lowercased() }) }
+
+    private var missingSuggestions: [(String, PackingCategory)] {
+        let existing = existingTitles
+        return Self.suggestions.filter { !existing.contains($0.0.lowercased()) }
+    }
+
     private func addSuggestions() {
-        let existing = Set(items.compactMap { $0.title?.lowercased() })
-        for (title, category) in Self.suggestions where !existing.contains(title.lowercased()) {
+        for (title, category) in missingSuggestions {
             insert(title, category: category)
+        }
+        save()
+    }
+
+    private var otherTripsWithPacking: [Trip] {
+        allTrips.filter { $0.objectID != trip.objectID && !$0.sortedPackingItems.isEmpty }
+    }
+
+    /// Items on another trip's list that this trip doesn't have yet.
+    private func copyable(from other: Trip) -> [PackingItem] {
+        let existing = existingTitles
+        return other.sortedPackingItems.filter { !existing.contains(($0.title ?? "").lowercased()) }
+    }
+
+    /// Copies another trip's packing items (unchecked) into this trip.
+    private func copy(from other: Trip) {
+        for source in copyable(from: other) {
+            guard let title = source.title else { continue }
+            insert(title, category: source.category)
         }
         save()
     }

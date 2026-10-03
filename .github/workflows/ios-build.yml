@@ -32,7 +32,7 @@ jobs:
             -destination "id=$DEST" \
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
-            test | tee xcodebuild.log | grep -E "error:|warning:|Test Case .*(passed|failed)|Executed|TEST (SUCCEEDED|FAILED)|BUILD (SUCCEEDED|FAILED)" | sort -u || true
+            test | tee xcodebuild.log | grep -iE "error:|warning:|test case .*(passed|failed)|executed [0-9]+ test|TEST (SUCCEEDED|FAILED)|BUILD (SUCCEEDED|FAILED)" | sort -u || true
           grep -q "TEST SUCCEEDED" xcodebuild.log
 
       - name: Count warnings

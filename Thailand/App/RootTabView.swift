@@ -14,11 +14,7 @@ struct RootTabView: View {
                 )
             }
             Tab("Explore", systemImage: "fork.knife.circle.fill") {
-                ComingSoonView(
-                    title: "Explore",
-                    systemImage: "fork.knife.circle.fill",
-                    message: "Places to eat, stay and see, plus the Thai food guide. Coming in step 4."
-                )
+                ExploreTabView()
             }
             Tab("Convert", systemImage: "bahtsign.circle.fill") {
                 ConvertTabView()

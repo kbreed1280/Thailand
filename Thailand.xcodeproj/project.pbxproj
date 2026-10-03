@@ -272,6 +272,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Thailand-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Thailand Trip";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Take photos to attach to places in your itinerary and to translate menus and signs.";
@@ -308,6 +309,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Thailand-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Thailand Trip";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Take photos to attach to places in your itinerary and to translate menus and signs.";

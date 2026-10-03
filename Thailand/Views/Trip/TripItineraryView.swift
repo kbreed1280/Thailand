@@ -20,6 +20,8 @@ struct TripItineraryView: View {
     @State private var confirmingDelete = false
     @State private var mapDay: Day?
     @State private var isPreparingShare = false
+    @State private var showingEmergency = false
+    @State private var showingVault = false
     @State private var sharingError: String?
 
     private var store: ItineraryStore { ItineraryStore(context: context) }
@@ -112,6 +114,12 @@ struct TripItineraryView: View {
         }
         .sheet(isPresented: $showingProfile) {
             ProfileSheet()
+        }
+        .sheet(isPresented: $showingEmergency) {
+            EmergencyView(trip: trip)
+        }
+        .sheet(isPresented: $showingVault) {
+            DocumentVaultView()
         }
         .sheet(item: $mapDay) { day in
             DayMapView(day: day)
@@ -316,6 +324,10 @@ struct TripItineraryView: View {
             Button("Packing List", systemImage: "suitcase.rolling") { showingPacking = true }
             Button("Starter Ideas", systemImage: "lightbulb") { showingStarterIdeas = true }
             Button("Your Name", systemImage: "person.crop.circle") { showingProfile = true }
+        }
+        Section {
+            Button("Emergency Info", systemImage: "cross.case.fill") { showingEmergency = true }
+            Button("Travel Documents", systemImage: "lock.doc.fill") { showingVault = true }
         }
         Section {
             Button("New Trip", systemImage: "plus") { showingNewTrip = true }

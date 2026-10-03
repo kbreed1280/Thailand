@@ -9,6 +9,9 @@
 		<string>grab</string>
 		<string>bolt</string>
 	</array>
+	<!-- Only standard HTTPS encryption: skips the export-compliance question on every TestFlight upload. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<!-- Lets iOS open this app when a trip invitation link is tapped. -->
 	<key>CKSharingSupported</key>
 	<true/>

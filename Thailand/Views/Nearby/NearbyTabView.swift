@@ -23,6 +23,7 @@ struct NearbyTabView: View {
     @State private var walkTarget: WalkTarget?
     @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var savedMessage: String?
+    @State private var showingEmergency = false
 
     private let weatherProvider: WeatherProvider = WeatherKitProvider()
 
@@ -38,6 +39,14 @@ struct NearbyTabView: View {
             .background(Theme.background)
             .navigationTitle("Nearby")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showingEmergency = true
+                    } label: {
+                        Label("Emergency", systemImage: "sos.circle.fill")
+                            .foregroundStyle(.red)
+                    }
+                }
                 ToolbarItem(placement: .primaryAction) {
                     CurrentTripReader { trip in
                         if let trip {
@@ -58,6 +67,11 @@ struct NearbyTabView: View {
             }
             .fullScreenCover(item: $walkTarget) { target in
                 WalkingRouteView(destinationName: target.name, coordinate: target.coordinate)
+            }
+            .sheet(isPresented: $showingEmergency) {
+                CurrentTripReader { trip in
+                    EmergencyView(trip: trip)
+                }
             }
             .onAppear {
                 location.startUpdating()

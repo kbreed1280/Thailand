@@ -277,6 +277,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Thailand Trip";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Take photos to attach to places in your itinerary and to translate menus and signs.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID keeps your passport and booking documents private.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to show where you are, photos of nearby sights and places to eat. It's only used while the app is open.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "Motion & Fitness counts your steps and how far you've walked each day of the trip.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The microphone is used for voice translation so you can talk with people in Thai.";
@@ -316,6 +317,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Thailand Trip";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Take photos to attach to places in your itinerary and to translate menus and signs.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID keeps your passport and booking documents private.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to show where you are, photos of nearby sights and places to eat. It's only used while the app is open.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "Motion & Fitness counts your steps and how far you've walked each day of the trip.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The microphone is used for voice translation so you can talk with people in Thai.";

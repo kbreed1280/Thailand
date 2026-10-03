@@ -4,11 +4,11 @@ import MapKit
 /// A day's stops on a map, numbered in visiting order and joined by a line.
 struct DayMapView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.openURL) private var openURL
     @ObservedObject var day: Day
 
     @State private var position: MapCameraPosition = .automatic
     @State private var selectedStop: Int?
+    @State private var walkTarget: WalkTarget?
 
     private var stops: [(number: Int, item: Item)] {
         day.sortedItems
@@ -41,7 +41,25 @@ struct DayMapView: View {
             .navigationTitle(day.heading)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Menu {
+                        Button("Walk This Day in Google Maps", systemImage: "map.fill") {
+                            ExternalApps.openGoogleMaps(stops: stops.filter { $0.item.status != .done }.compactMap { $0.item.coordinate })
+                        }
+                        if let first = stops.first(where: { $0.item.status != .done }), let coordinate = first.item.coordinate {
+                            Button("Walk to First Stop", systemImage: "figure.walk") {
+                                walkTarget = WalkTarget(name: first.item.displayTitle, coordinate: coordinate)
+                            }
+                        }
+                    } label: {
+                        Label("Walk", systemImage: "figure.walk.circle")
+                    }
+                    .disabled(stops.isEmpty)
+                }
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+            }
+            .fullScreenCover(item: $walkTarget) { target in
+                WalkingRouteView(destinationName: target.name, coordinate: target.coordinate)
             }
             .onAppear { LocationService.shared.requestPermission() }
         }
@@ -75,15 +93,13 @@ struct DayMapView: View {
                                 Spacer(minLength: 0)
                                 if let coordinate = stop.item.coordinate {
                                     Button {
-                                        if let url = PlaceLookup.appleMapsURL(to: coordinate, name: stop.item.displayTitle) {
-                                            openURL(url)
-                                        }
+                                        walkTarget = WalkTarget(name: stop.item.displayTitle, coordinate: coordinate)
                                     } label: {
                                         Image(systemName: "figure.walk.circle.fill")
                                             .font(.title)
                                             .foregroundStyle(Theme.lagoon)
                                     }
-                                    .accessibilityLabel("Walking directions to \(stop.item.displayTitle)")
+                                    .accessibilityLabel("Walk to \(stop.item.displayTitle)")
                                 }
                             }
                             .padding(12)

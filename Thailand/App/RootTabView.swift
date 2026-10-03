@@ -7,11 +7,7 @@ struct RootTabView: View {
                 TripTabView()
             }
             Tab("Nearby", systemImage: "location.circle.fill") {
-                ComingSoonView(
-                    title: "Nearby",
-                    systemImage: "location.circle.fill",
-                    message: "Where you are, photos of nearby sights, walking directions and the weather. Coming in step 5."
-                )
+                NearbyTabView()
             }
             Tab("Explore", systemImage: "fork.knife.circle.fill") {
                 ExploreTabView()

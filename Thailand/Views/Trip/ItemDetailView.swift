@@ -9,6 +9,7 @@ struct ItemDetailView: View {
     @ObservedObject var item: Item
     @State private var showingEditor = false
     @State private var confirmingDelete = false
+    @State private var walkTarget: WalkTarget?
 
     private var store: ItineraryStore { ItineraryStore(context: context) }
 
@@ -68,6 +69,9 @@ struct ItemDetailView: View {
             if let trip = item.trip {
                 ItemEditorView(item: item, trip: trip, initialDay: item.day)
             }
+        }
+        .fullScreenCover(item: $walkTarget) { target in
+            WalkingRouteView(destinationName: target.name, coordinate: target.coordinate)
         }
         .confirmationDialog("Delete \(item.displayTitle)?", isPresented: $confirmingDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) {
@@ -151,13 +155,21 @@ struct ItemDetailView: View {
             }
 
             Button {
-                if let url = PlaceLookup.appleMapsURL(to: coordinate, name: item.displayTitle) {
-                    openURL(url)
-                }
+                walkTarget = WalkTarget(name: item.displayTitle, coordinate: coordinate)
             } label: {
-                Label("Walking Directions", systemImage: "figure.walk")
+                Label("Walk There", systemImage: "figure.walk")
             }
             .buttonStyle(.primary)
+
+            PlaceActions(place: PlaceResult(
+                name: item.displayTitle,
+                address: item.address ?? "",
+                latitude: coordinate.latitude,
+                longitude: coordinate.longitude,
+                phone: nil,
+                url: item.linkURL,
+                categoryName: nil
+            ))
         }
         .card()
     }

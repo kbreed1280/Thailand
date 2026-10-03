@@ -71,6 +71,17 @@ final class LocationService: NSObject, ObservableObject, CLLocationManagerDelega
         }
     }
 
+    // MARK: Place names
+
+    /// Neighborhood and city for a location, in English when available ("Phra Nakhon", "Bangkok").
+    func placeName(for location: CLLocation) async -> (area: String, city: String)? {
+        guard let placemark = try? await CLGeocoder()
+            .reverseGeocodeLocation(location, preferredLocale: Locale(identifier: "en_US")).first else { return nil }
+        let area = placemark.subLocality ?? placemark.thoroughfare ?? placemark.name ?? ""
+        let city = placemark.locality ?? placemark.subAdministrativeArea ?? placemark.administrativeArea ?? ""
+        return (area, city)
+    }
+
     // MARK: CLLocationManagerDelegate
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {

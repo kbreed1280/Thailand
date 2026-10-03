@@ -309,6 +309,7 @@ private struct DayHeader: View {
     @ObservedObject var day: Day
     let onMap: () -> Void
     let onAdd: () -> Void
+    @State private var walked: WalkStats?
 
     var body: some View {
         HStack(spacing: 6) {
@@ -320,6 +321,11 @@ private struct DayHeader: View {
                     Text(date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                }
+                if let walked, walked.steps > 0 {
+                    Label("\(walked.steps.formatted()) steps · \(walked.kilometersText)", systemImage: "shoeprints.fill")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(Theme.lagoon)
                 }
             }
             if let date = day.date, Calendar.current.isDateInToday(date) {
@@ -346,6 +352,11 @@ private struct DayHeader: View {
             .accessibilityLabel("Add to day \(day.number)")
         }
         .textCase(nil)
+        .task(id: day.date) {
+            if let date = day.date {
+                walked = await PedometerService.shared.stats(for: date)
+            }
+        }
     }
 }
 

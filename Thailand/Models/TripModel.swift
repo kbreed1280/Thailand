@@ -98,7 +98,21 @@ enum TripModel {
             attribute("updatedAt", .dateAttributeType)
         ])
 
+        let document = entity("TripDocument", [
+            attribute("uuid", .UUIDAttributeType),
+            attribute("title", .stringAttributeType, default: ""),
+            attribute("kindRaw", .stringAttributeType, default: DocumentKind.note.rawValue),
+            attribute("fileData", .binaryDataAttributeType, externalStorage: true),
+            attribute("fileExtension", .stringAttributeType, default: ""),
+            attribute("urlString", .stringAttributeType, default: ""),
+            attribute("text", .stringAttributeType, default: ""),
+            attribute("addedBy", .stringAttributeType, default: ""),
+            attribute("createdAt", .dateAttributeType),
+            attribute("updatedAt", .dateAttributeType)
+        ])
+
         relate(trip, "days", toMany: day, inverse: "trip", deleteRule: .cascadeDeleteRule)
+        relate(trip, "documents", toMany: document, inverse: "trip", deleteRule: .cascadeDeleteRule)
         relate(trip, "savedPlaces", toMany: savedPlace, inverse: "trip", deleteRule: .cascadeDeleteRule)
         relate(trip, "wishItems", toMany: item, inverse: "wishTrip", deleteRule: .cascadeDeleteRule)
         relate(trip, "visits", toMany: visit, inverse: "trip", deleteRule: .cascadeDeleteRule)
@@ -108,7 +122,7 @@ enum TripModel {
         relate(item, "photos", toMany: photo, inverse: "item", deleteRule: .cascadeDeleteRule)
 
         let model = NSManagedObjectModel()
-        model.entities = [trip, day, item, photo, visit, expense, packing, savedPlace]
+        model.entities = [trip, day, item, photo, visit, expense, packing, savedPlace, document]
         return model
     }
 

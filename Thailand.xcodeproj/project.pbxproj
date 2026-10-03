@@ -276,6 +276,7 @@
 				INFOPLIST_FILE = "Thailand-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Thailand Trip";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Thailand Trip shows your calendar next to your plans and can add your plans to your calendar.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Take photos to attach to places in your itinerary and to translate menus and signs.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID keeps your passport and booking documents private.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to show where you are, photos of nearby sights and places to eat. It's only used while the app is open.";
@@ -316,6 +317,7 @@
 				INFOPLIST_FILE = "Thailand-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Thailand Trip";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Thailand Trip shows your calendar next to your plans and can add your plans to your calendar.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Take photos to attach to places in your itinerary and to translate menus and signs.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID keeps your passport and booking documents private.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to show where you are, photos of nearby sights and places to eat. It's only used while the app is open.";

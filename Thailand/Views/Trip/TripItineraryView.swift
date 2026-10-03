@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreData
+import EventKit
 
 /// The itinerary: trip header, wish list and one section per day.
 /// Drag any row onto another row (or a day header) to move it there.
@@ -22,6 +23,10 @@ struct TripItineraryView: View {
     @State private var isPreparingShare = false
     @State private var showingEmergency = false
     @State private var showingSavedPlaces = false
+    @State private var showingBookings = false
+    @State private var showingImport = false
+    @State private var showingCalendar = false
+    @ObservedObject private var calendarSync = CalendarSyncService.shared
     @State private var walkTarget: WalkTarget?
     @State private var showingVault = false
     @State private var sharingError: String?
@@ -122,6 +127,15 @@ struct TripItineraryView: View {
         }
         .sheet(isPresented: $showingSavedPlaces) {
             SavedPlacesView(trip: trip)
+        }
+        .sheet(isPresented: $showingBookings) {
+            BookingsView(trip: trip)
+        }
+        .sheet(isPresented: $showingImport) {
+            SmartImportView(trip: trip)
+        }
+        .sheet(isPresented: $showingCalendar) {
+            CalendarSettingsView(trip: trip)
         }
         .fullScreenCover(item: $walkTarget) { target in
             WalkingRouteView(destinationName: target.name, coordinate: target.coordinate)
@@ -227,6 +241,17 @@ struct TripItineraryView: View {
                     LegRow(from: items[index - 1], to: item) { walkTarget = $0 }
                 }
                 row(for: item, in: day)
+            }
+            if let date = day.date {
+                let _ = calendarSync.changeTick
+                ForEach(calendarSync.events(on: date), id: \.calendarItemIdentifier) { event in
+                    CalendarEventRow(event: event)
+                        .contextMenu {
+                            if canEdit {
+                                Button("Add to This Day", systemImage: "plus") { addCalendarEvent(event, to: day) }
+                            }
+                        }
+                }
             }
         } header: {
             DayHeader(day: day) {
@@ -334,6 +359,10 @@ struct TripItineraryView: View {
                 .disabled(!canEdit)
             Button("Packing List", systemImage: "suitcase.rolling") { showingPacking = true }
             Button("Saved Places", systemImage: "mappin.and.ellipse") { showingSavedPlaces = true }
+            Button("Bookings", systemImage: "doc.text.fill") { showingBookings = true }
+            Button("Import a Booking", systemImage: "wand.and.stars") { showingImport = true }
+                .disabled(!canEdit)
+            Button("Calendar", systemImage: "calendar") { showingCalendar = true }
             Button("Starter Ideas", systemImage: "lightbulb") { showingStarterIdeas = true }
             Button("Your Name", systemImage: "person.crop.circle") { showingProfile = true }
         }
@@ -349,6 +378,22 @@ struct TripItineraryView: View {
                 role: .destructive
             ) { confirmingDelete = true }
         }
+    }
+
+    private func addCalendarEvent(_ event: EKEvent, to day: Day) {
+        let item = store.addItem(
+            title: event.title ?? "Event",
+            category: .activity,
+            to: day,
+            in: trip,
+            address: event.location ?? "",
+            notes: event.notes ?? ""
+        )
+        item.time = event.isAllDay ? nil : event.startDate
+        if let start = event.startDate, let end = event.endDate, !event.isAllDay {
+            item.durationMinutes = Int64(max(15, end.timeIntervalSince(start) / 60))
+        }
+        store.save()
     }
 
     private func shareTrip() {

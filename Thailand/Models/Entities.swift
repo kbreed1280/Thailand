@@ -98,6 +98,21 @@ enum TravelMode: String, CaseIterable, Identifiable {
     }
 }
 
+enum DocumentKind: String, CaseIterable, Identifiable {
+    case pdf, image, link, note
+
+    var id: String { rawValue }
+
+    var systemImage: String {
+        switch self {
+        case .pdf: "doc.richtext.fill"
+        case .image: "photo.fill"
+        case .link: "link"
+        case .note: "note.text"
+        }
+    }
+}
+
 enum ExpenseSplit: String, CaseIterable, Identifiable {
     case equal
     case payerOnly
@@ -179,6 +194,19 @@ final class Trip: NSManagedObject {
     @NSManaged var expenses: NSSet?
     @NSManaged var packingItems: NSSet?
     @NSManaged var savedPlaces: NSSet?
+    @NSManaged var documents: NSSet?
+
+    var sortedDocuments: [TripDocument] {
+        (documents as? Set<TripDocument> ?? []).sorted { ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast) }
+    }
+
+    /// The day whose date matches, if it's within the trip.
+    func day(for date: Date) -> Day? {
+        sortedDays.first { day in
+            guard let dayDate = day.date else { return false }
+            return Calendar.current.isDate(dayDate, inSameDayAs: date)
+        }
+    }
 
     var sortedSavedPlaces: [SavedPlace] {
         (savedPlaces as? Set<SavedPlace> ?? []).sorted { ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast) }
@@ -399,6 +427,43 @@ final class SavedPlace: NSManagedObject {
     static let symbols = ["bed.double.fill", "house.fill", "building.2.fill", "airplane", "tram.fill", "fork.knife", "cup.and.saucer.fill", "star.fill"]
 }
 
+@objc(TripDocument)
+final class TripDocument: NSManagedObject {
+    @NSManaged var uuid: UUID?
+    @NSManaged var title: String?
+    @NSManaged var kindRaw: String?
+    @NSManaged var fileData: Data?
+    @NSManaged var fileExtension: String?
+    @NSManaged var urlString: String?
+    @NSManaged var text: String?
+    @NSManaged var addedBy: String?
+    @NSManaged var createdAt: Date?
+    @NSManaged var updatedAt: Date?
+    @NSManaged var trip: Trip?
+
+    var kind: DocumentKind {
+        get { DocumentKind(rawValue: kindRaw ?? "") ?? .note }
+        set { kindRaw = newValue.rawValue }
+    }
+
+    var displayTitle: String { (title ?? "").isEmpty ? "Booking" : (title ?? "") }
+
+    var url: URL? {
+        guard let urlString, !urlString.isEmpty else { return nil }
+        return URL(string: urlString)
+    }
+
+    /// Writes the file to a temporary location for QuickLook / sharing.
+    func temporaryFileURL() -> URL? {
+        guard let fileData else { return nil }
+        let ext = (fileExtension ?? "").isEmpty ? (kind == .pdf ? "pdf" : "jpg") : (fileExtension ?? "jpg")
+        let safeTitle = displayTitle.components(separatedBy: CharacterSet.alphanumerics.inverted).filter { !$0.isEmpty }.joined(separator: "-")
+        let url = FileManager.default.temporaryDirectory.appending(path: "\(safeTitle.isEmpty ? "Booking" : safeTitle).\(ext)")
+        try? fileData.write(to: url, options: .atomic)
+        return url
+    }
+}
+
 @objc(PackingItem)
 final class PackingItem: NSManagedObject {
     @NSManaged var uuid: UUID?
@@ -425,3 +490,4 @@ extension VisitLog: Identifiable {}
 extension Expense: Identifiable {}
 extension PackingItem: Identifiable {}
 extension SavedPlace: Identifiable {}
+extension TripDocument: Identifiable {}

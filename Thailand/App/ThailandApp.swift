@@ -9,7 +9,10 @@ struct ThailandApp: App {
         WindowGroup {
             RootTabView()
                 .environment(\.managedObjectContext, persistence.viewContext)
-                .task { await IdentityService.refreshDisplayName() }
+                .task {
+                    CalendarSyncService.shared.startObserving(persistence.viewContext)
+                    await IdentityService.refreshDisplayName()
+                }
         }
     }
 }

@@ -21,6 +21,8 @@ struct TripItineraryView: View {
     @State private var mapDay: Day?
     @State private var isPreparingShare = false
     @State private var showingEmergency = false
+    @State private var showingSavedPlaces = false
+    @State private var walkTarget: WalkTarget?
     @State private var showingVault = false
     @State private var sharingError: String?
 
@@ -118,6 +120,12 @@ struct TripItineraryView: View {
         .sheet(isPresented: $showingEmergency) {
             EmergencyView(trip: trip)
         }
+        .sheet(isPresented: $showingSavedPlaces) {
+            SavedPlacesView(trip: trip)
+        }
+        .fullScreenCover(item: $walkTarget) { target in
+            WalkingRouteView(destinationName: target.name, coordinate: target.coordinate)
+        }
         .sheet(isPresented: $showingVault) {
             DocumentVaultView()
         }
@@ -214,7 +222,10 @@ struct TripItineraryView: View {
                     drop(ids, onto: day, before: nil)
                 }
             }
-            ForEach(items) { item in
+            ForEach(Array(items.enumerated()), id: \.element.objectID) { index, item in
+                if index > 0, items[index - 1].hasCoordinate, item.hasCoordinate {
+                    LegRow(from: items[index - 1], to: item) { walkTarget = $0 }
+                }
                 row(for: item, in: day)
             }
         } header: {
@@ -322,6 +333,7 @@ struct TripItineraryView: View {
             Button("Edit Trip", systemImage: "pencil") { showingEditTrip = true }
                 .disabled(!canEdit)
             Button("Packing List", systemImage: "suitcase.rolling") { showingPacking = true }
+            Button("Saved Places", systemImage: "mappin.and.ellipse") { showingSavedPlaces = true }
             Button("Starter Ideas", systemImage: "lightbulb") { showingStarterIdeas = true }
             Button("Your Name", systemImage: "person.crop.circle") { showingProfile = true }
         }
@@ -528,13 +540,30 @@ private struct TripHeaderCard: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.sunsetGradient, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+        .background {
+            ZStack {
+                LinearGradient(
+                    colors: [Color(hex: trip.accentHex).opacity(0.75), Color(hex: trip.accentHex)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                if let cover = trip.coverPhoto?.image {
+                    Image(uiImage: cover)
+                        .resizable()
+                        .scaledToFill()
+                        .overlay(LinearGradient(colors: [.black.opacity(0.15), .black.opacity(0.65)], startPoint: .top, endPoint: .bottom))
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+        }
         .overlay(alignment: .topTrailing) {
-            Image(systemName: "sun.max.fill")
-                .font(.system(size: 54))
-                .foregroundStyle(.white.opacity(0.18))
-                .padding(14)
-                .accessibilityHidden(true)
+            if trip.coverPhoto == nil {
+                Image(systemName: "sun.max.fill")
+                    .font(.system(size: 54))
+                    .foregroundStyle(.white.opacity(0.18))
+                    .padding(14)
+                    .accessibilityHidden(true)
+            }
         }
         .padding(.vertical, 4)
     }
@@ -557,7 +586,7 @@ private struct HeaderChip: View {
 private struct HeaderButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .foregroundStyle(Theme.mango)
+            .foregroundStyle(.black.opacity(0.75))
             .padding(.horizontal, 14)
             .frame(minHeight: 40)
             .background(.white, in: Capsule())

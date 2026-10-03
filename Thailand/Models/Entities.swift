@@ -64,6 +64,40 @@ enum ItemStatus: String, CaseIterable, Identifiable {
     }
 }
 
+/// How you get from the previous stop to this one.
+enum TravelMode: String, CaseIterable, Identifiable {
+    case walking
+    case transit
+    case taxi
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .walking: "Walk"
+        case .transit: "Transit"
+        case .taxi: "Taxi / Grab"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .walking: "figure.walk"
+        case .transit: "tram.fill"
+        case .taxi: "car.fill"
+        }
+    }
+
+    /// Google Maps `directionsmode` / `travelmode`.
+    var googleMode: String {
+        switch self {
+        case .walking: "walking"
+        case .transit: "transit"
+        case .taxi: "driving"
+        }
+    }
+}
+
 enum ExpenseSplit: String, CaseIterable, Identifiable {
     case equal
     case payerOnly
@@ -137,11 +171,31 @@ final class Trip: NSManagedObject {
     @NSManaged var notes: String?
     @NSManaged var hotelAddressThai: String?
     @NSManaged var createdAt: Date?
+    @NSManaged var colorHex: String?
+    @NSManaged var coverPhotoID: UUID?
     @NSManaged var days: NSSet?
     @NSManaged var wishItems: NSSet?
     @NSManaged var visits: NSSet?
     @NSManaged var expenses: NSSet?
     @NSManaged var packingItems: NSSet?
+    @NSManaged var savedPlaces: NSSet?
+
+    var sortedSavedPlaces: [SavedPlace] {
+        (savedPlaces as? Set<SavedPlace> ?? []).sorted { ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast) }
+    }
+
+    /// Every photo on every item, newest first (for picking a cover).
+    var allPhotos: [ItemPhoto] {
+        allItems.flatMap(\.sortedPhotos).sorted { ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast) }
+    }
+
+    var coverPhoto: ItemPhoto? {
+        let photos = allPhotos
+        return photos.first { $0.uuid == coverPhotoID } ?? photos.first
+    }
+
+    /// The trip's chosen color, or mango.
+    var accentHex: String { (colorHex ?? "").isEmpty ? "#F4821C" : (colorHex ?? "") }
 
     var displayName: String { (name ?? "").isEmpty ? "Untitled Trip" : (name ?? "") }
 
@@ -223,9 +277,21 @@ final class Item: NSManagedObject {
     @NSManaged var lastEditedBy: String?
     @NSManaged var createdAt: Date?
     @NSManaged var updatedAt: Date?
+    @NSManaged var durationMinutes: Int64
+    @NSManaged var travelModeRaw: String?
     @NSManaged var day: Day?
     @NSManaged var wishTrip: Trip?
     @NSManaged var photos: NSSet?
+
+    var travelMode: TravelMode {
+        get { TravelMode(rawValue: travelModeRaw ?? "") ?? .walking }
+        set { travelModeRaw = newValue.rawValue }
+    }
+
+    /// When this stop ends (time + duration), if it has a time.
+    var endTime: Date? {
+        time.map { $0.addingTimeInterval(TimeInterval(max(durationMinutes, 0)) * 60) }
+    }
 
     var category: ItemCategory {
         get { ItemCategory(rawValue: categoryRaw ?? "") ?? .place }
@@ -315,6 +381,24 @@ final class Expense: NSManagedObject {
     }
 }
 
+@objc(SavedPlace)
+final class SavedPlace: NSManagedObject {
+    @NSManaged var uuid: UUID?
+    @NSManaged var name: String?
+    @NSManaged var address: String?
+    @NSManaged var latitude: Double
+    @NSManaged var longitude: Double
+    @NSManaged var symbolName: String?
+    @NSManaged var createdAt: Date?
+    @NSManaged var updatedAt: Date?
+    @NSManaged var trip: Trip?
+
+    var coordinate: CLLocationCoordinate2D { CLLocationCoordinate2D(latitude: latitude, longitude: longitude) }
+    var displayName: String { (name ?? "").isEmpty ? "Saved place" : (name ?? "") }
+
+    static let symbols = ["bed.double.fill", "house.fill", "building.2.fill", "airplane", "tram.fill", "fork.knife", "cup.and.saucer.fill", "star.fill"]
+}
+
 @objc(PackingItem)
 final class PackingItem: NSManagedObject {
     @NSManaged var uuid: UUID?
@@ -340,3 +424,4 @@ extension ItemPhoto: Identifiable {}
 extension VisitLog: Identifiable {}
 extension Expense: Identifiable {}
 extension PackingItem: Identifiable {}
+extension SavedPlace: Identifiable {}

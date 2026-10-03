@@ -23,6 +23,8 @@ struct ItemEditorView: View {
     @State private var link = ""
     @State private var cost: Double?
     @State private var notes = ""
+    @State private var durationMinutes = 60
+    @State private var travelMode: TravelMode = .walking
 
     @State private var existingPhotos: [ItemPhoto] = []
     @State private var removedPhotoIDs: Set<NSManagedObjectID> = []
@@ -64,6 +66,16 @@ struct ItemEditorView: View {
                     Toggle("Set a time", isOn: $hasTime.animation())
                     if hasTime {
                         DatePicker("Time", selection: $time, displayedComponents: .hourAndMinute)
+                    }
+                    Picker("How long", selection: $durationMinutes) {
+                        ForEach([15, 30, 45, 60, 90, 120, 180, 240, 360], id: \.self) { minutes in
+                            Text(ScheduleMath.durationText(seconds: TimeInterval(minutes * 60))).tag(minutes)
+                        }
+                    }
+                    Picker("Getting there", selection: $travelMode) {
+                        ForEach(TravelMode.allCases) { mode in
+                            Label(mode.title, systemImage: mode.systemImage).tag(mode)
+                        }
                     }
                 }
 
@@ -250,6 +262,8 @@ struct ItemEditorView: View {
         link = item.link ?? ""
         cost = item.costTHB > 0 ? item.costTHB : nil
         notes = item.notes ?? ""
+        durationMinutes = Int(item.durationMinutes > 0 ? item.durationMinutes : 60)
+        travelMode = item.travelMode
         existingPhotos = item.sortedPhotos
     }
 
@@ -273,6 +287,8 @@ struct ItemEditorView: View {
         target.link = link.trimmingCharacters(in: .whitespaces)
         target.costTHB = max(cost ?? 0, 0)
         target.notes = notes
+        target.durationMinutes = Int64(durationMinutes)
+        target.travelMode = travelMode
         target.time = hasTime ? combined(time, onto: day?.date) : nil
 
         for photo in existingPhotos where removedPhotoIDs.contains(photo.objectID) {

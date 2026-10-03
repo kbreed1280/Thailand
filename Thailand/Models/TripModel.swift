@@ -17,7 +17,9 @@ enum TripModel {
             attribute("endDate", .dateAttributeType),
             attribute("notes", .stringAttributeType, default: ""),
             attribute("hotelAddressThai", .stringAttributeType, default: ""),
-            attribute("createdAt", .dateAttributeType)
+            attribute("createdAt", .dateAttributeType),
+            attribute("colorHex", .stringAttributeType, default: ""),
+            attribute("coverPhotoID", .UUIDAttributeType)
         ])
 
         let day = entity("Day", [
@@ -44,7 +46,9 @@ enum TripModel {
             attribute("addedBy", .stringAttributeType, default: ""),
             attribute("lastEditedBy", .stringAttributeType, default: ""),
             attribute("createdAt", .dateAttributeType),
-            attribute("updatedAt", .dateAttributeType)
+            attribute("updatedAt", .dateAttributeType),
+            attribute("durationMinutes", .integer64AttributeType, default: 60),
+            attribute("travelModeRaw", .stringAttributeType, default: TravelMode.walking.rawValue)
         ])
 
         let photo = entity("ItemPhoto", [
@@ -83,7 +87,19 @@ enum TripModel {
             attribute("addedBy", .stringAttributeType, default: "")
         ])
 
+        let savedPlace = entity("SavedPlace", [
+            attribute("uuid", .UUIDAttributeType),
+            attribute("name", .stringAttributeType, default: ""),
+            attribute("address", .stringAttributeType, default: ""),
+            attribute("latitude", .doubleAttributeType, default: 0),
+            attribute("longitude", .doubleAttributeType, default: 0),
+            attribute("symbolName", .stringAttributeType, default: "bed.double.fill"),
+            attribute("createdAt", .dateAttributeType),
+            attribute("updatedAt", .dateAttributeType)
+        ])
+
         relate(trip, "days", toMany: day, inverse: "trip", deleteRule: .cascadeDeleteRule)
+        relate(trip, "savedPlaces", toMany: savedPlace, inverse: "trip", deleteRule: .cascadeDeleteRule)
         relate(trip, "wishItems", toMany: item, inverse: "wishTrip", deleteRule: .cascadeDeleteRule)
         relate(trip, "visits", toMany: visit, inverse: "trip", deleteRule: .cascadeDeleteRule)
         relate(trip, "expenses", toMany: expense, inverse: "trip", deleteRule: .cascadeDeleteRule)
@@ -92,7 +108,7 @@ enum TripModel {
         relate(item, "photos", toMany: photo, inverse: "item", deleteRule: .cascadeDeleteRule)
 
         let model = NSManagedObjectModel()
-        model.entities = [trip, day, item, photo, visit, expense, packing]
+        model.entities = [trip, day, item, photo, visit, expense, packing, savedPlace]
         return model
     }
 

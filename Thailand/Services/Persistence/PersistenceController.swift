@@ -83,7 +83,11 @@ final class PersistenceController {
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         container.viewContext.transactionAuthor = "app"
         container.viewContext.name = "viewContext"
-        try? container.viewContext.setQueryGenerationFrom(.current)
+        // Query generations keep the UI consistent while sync writes in the background.
+        // In-memory stores (previews, tests) don't support them.
+        if !inMemory {
+            try? container.viewContext.setQueryGenerationFrom(.current)
+        }
     }
 
     private static func enableHistory(on description: NSPersistentStoreDescription) {

@@ -1,6 +1,6 @@
-# Thailand Trip 🇹🇭
+# WanderHub 🇹🇭
 
-An iPhone app for two people traveling Thailand together. It includes:
+WanderHub (formerly "Thailand Trip") is an iPhone app for two people traveling Thailand together. It includes:
 
 - a **shared itinerary** that syncs between both phones
 - **walking directions** with a Google Maps hand-off

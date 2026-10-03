@@ -198,7 +198,7 @@ struct TripBookContent: View {
                     .foregroundStyle(.secondary)
             }
 
-            Text("Made with Thailand Trip")
+            Text("Made with WanderHub")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }

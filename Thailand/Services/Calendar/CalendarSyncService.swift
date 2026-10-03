@@ -125,7 +125,7 @@ final class CalendarSyncService: ObservableObject {
         event.startDate = start
         event.endDate = item.endTime ?? start.addingTimeInterval(3_600)
         event.location = item.address
-        event.notes = [item.notes ?? "", "From Thailand Trip"].filter { !$0.isEmpty }.joined(separator: "\n\n")
+        event.notes = [item.notes ?? "", "From WanderHub"].filter { !$0.isEmpty }.joined(separator: "\n\n")
         event.url = item.linkURL
         do {
             try store.save(event, span: .thisEvent)

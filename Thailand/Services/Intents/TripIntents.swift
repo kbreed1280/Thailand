@@ -84,7 +84,7 @@ struct AddToWishListIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         guard let target = TripLookup.trip(for: trip) else {
-            return .result(dialog: "You don't have a trip yet. Open Thailand Trip to create one.")
+            return .result(dialog: "You don't have a trip yet. Open WanderHub to create one.")
         }
         let store = ItineraryStore(context: TripLookup.context)
         store.addItem(title: place, category: .place, to: nil, in: target)

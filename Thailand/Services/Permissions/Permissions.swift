@@ -20,13 +20,13 @@ enum PermissionKind: String, Identifiable {
 
     var message: String {
         switch self {
-        case .location: "Turn on Location (While Using the App) for Thailand Trip in Settings to see where you are and what's nearby."
+        case .location: "Turn on Location (While Using the App) for WanderHub in Settings to see where you are and what's nearby."
         case .camera: "Allow camera access in Settings to take photos and scan menus and signs."
         case .microphone: "Allow microphone access in Settings to use voice translation."
         case .speech: "Allow Speech Recognition in Settings so the app can turn what you say into text."
         case .photos: "Allow photo access in Settings to add photos from your library."
         case .calendar: "Allow calendar access in Settings to see your events next to your plans."
-        case .motion: "Turn on Motion & Fitness for Thailand Trip in Settings to count your steps and distance walked."
+        case .motion: "Turn on Motion & Fitness for WanderHub in Settings to count your steps and distance walked."
         }
     }
 

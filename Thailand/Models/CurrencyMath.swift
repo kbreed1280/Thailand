@@ -76,11 +76,6 @@ enum CurrencyMath {
         roundedToCents(max(bill, 0) * max(percent, 0) / 100)
     }
 
-    static func perPerson(bill: Double, tipPercent: Double, people: Int) -> Double {
-        guard people > 0 else { return 0 }
-        return roundedToCents((max(bill, 0) + tip(on: bill, percent: tipPercent)) / Double(people))
-    }
-
     // MARK: Shared expenses
 
     struct Share {

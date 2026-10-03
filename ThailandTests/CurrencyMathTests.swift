@@ -59,13 +59,12 @@ final class CurrencyMathTests: XCTestCase {
         XCTAssertEqual(CurrencyMath.roundedToCents(1.005 + 0.0001), 1.01)
     }
 
-    // MARK: Tip & split
+    // MARK: Tip
 
-    func testTipAndSplit() {
+    func testTip() {
         XCTAssertEqual(CurrencyMath.tip(on: 1_000, percent: 10), 100)
-        XCTAssertEqual(CurrencyMath.perPerson(bill: 1_000, tipPercent: 10, people: 2), 550)
-        XCTAssertEqual(CurrencyMath.perPerson(bill: 100, tipPercent: 0, people: 3), 33.33)
-        XCTAssertEqual(CurrencyMath.perPerson(bill: 100, tipPercent: 10, people: 0), 0)
+        XCTAssertEqual(CurrencyMath.tip(on: 333, percent: 15), 49.95)
+        XCTAssertEqual(CurrencyMath.tip(on: 500, percent: 0), 0)
     }
 
     // MARK: Expenses

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// THB ⇄ USD converter, quick amounts, rate details, tip & split and the trip's spending.
+/// THB ⇄ USD converter, quick amounts, rate details, tip calculator and the trip's spending.
 struct ConvertTabView: View {
     @StateObject private var rates = ExchangeRateStore.shared
     @ObservedObject private var network = NetworkMonitor.shared
@@ -23,7 +23,7 @@ struct ConvertTabView: View {
                     converterCard
                     quickAmounts
                     rateCard
-                    TipSplitCard(thbPerUSD: rates.thbPerUSD)
+                    TipCard(thbPerUSD: rates.thbPerUSD)
                     CurrentTripReader { trip in
                         if let trip {
                             TripSpendingCard(trip: trip, thbPerUSD: rates.thbPerUSD)
@@ -252,19 +252,18 @@ private struct CurrencyField: View {
     }
 }
 
-/// Bill + tip % + number of people → per-person amount in both currencies.
-private struct TipSplitCard: View {
+/// Bill + tip % → tip and total in both currencies.
+private struct TipCard: View {
     let thbPerUSD: Double
 
     @State private var billText = ""
-    @State private var tipPercent = 0.0
-    @State private var people = 2
+    @State private var tipPercent = 10.0
 
     private var bill: Double { CurrencyMath.parseAmount(billText) ?? 0 }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Tip & Split", systemImage: "person.2.fill")
+            Label("Tip", systemImage: "hand.thumbsup.fill")
                 .font(.headline)
 
             HStack {
@@ -285,23 +284,21 @@ private struct TipSplitCard: View {
             }
             .pickerStyle(.segmented)
 
-            Stepper("Split between \(people) \(people == 1 ? "person" : "people")", value: $people, in: 1...12)
-
             if bill > 0 {
-                let perPerson = CurrencyMath.perPerson(bill: bill, tipPercent: tipPercent, people: people)
-                let total = bill + CurrencyMath.tip(on: bill, percent: tipPercent)
+                let tip = CurrencyMath.tip(on: bill, percent: tipPercent)
+                let total = bill + tip
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Each pays").font(.caption).foregroundStyle(.secondary)
-                        Text(CurrencyMath.format(perPerson, .thb))
+                        Text("Total with tip").font(.caption).foregroundStyle(.secondary)
+                        Text(CurrencyMath.format(total, .thb))
                             .font(.title.bold().monospacedDigit())
                     }
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
-                        Text(CurrencyMath.format(CurrencyMath.convert(perPerson, from: .thb, thbPerUSD: thbPerUSD), .usd))
+                        Text(CurrencyMath.format(CurrencyMath.convert(total, from: .thb, thbPerUSD: thbPerUSD), .usd))
                             .font(.title3.weight(.semibold).monospacedDigit())
                             .foregroundStyle(Theme.lagoon)
-                        Text("Total \(CurrencyMath.format(total, .thb))")
+                        Text("Tip \(CurrencyMath.format(tip, .thb))")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

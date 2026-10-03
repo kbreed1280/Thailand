@@ -17,10 +17,20 @@ struct TikTokLibraryView: View {
     @State private var refreshTick = 0
     @State private var walkTarget: WalkTarget?
     @State private var selectedPin: Item?
+    @State private var newFolderPrompt = false
+    @State private var newFolderName = ""
+    @State private var moving: Item?
+    /// Video to file into the folder being created from the Move dialog.
+    @State private var movingIntoNewFolder: Item?
 
     private var videos: [Item] {
         _ = refreshTick
         return TravelVideos.saved(in: trip)
+    }
+
+    private var folders: [String] {
+        _ = refreshTick
+        return TravelVideos.folders(in: trip)
     }
 
     var body: some View {
@@ -39,6 +49,12 @@ struct TikTokLibraryView: View {
                     }
                     .pickerStyle(.segmented)
                     .frame(width: 200)
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button { newFolderName = ""; newFolderPrompt = true } label: {
+                        Image(systemName: "folder.badge.plus")
+                    }
+                    .accessibilityLabel("New folder")
                 }
                 ToolbarItem(placement: .primaryAction) {
                     // PasteButton reads the clipboard without the "Allow Paste" prompt.
@@ -63,6 +79,23 @@ struct TikTokLibraryView: View {
             .fullScreenCover(item: $walkTarget) { target in
                 WalkingRouteView(destinationName: target.name, coordinate: target.coordinate)
             }
+            .alert("New Folder", isPresented: $newFolderPrompt) {
+                TextField("e.g. Tips, Scams to avoid", text: $newFolderName)
+                Button("Create") { createFolder() }
+                Button("Cancel", role: .cancel) { movingIntoNewFolder = nil }
+            } message: {
+                Text("For videos that aren't about one place: tips, food guides, phrases…")
+            }
+            .confirmationDialog("Move video", isPresented: Binding(get: { moving != nil }, set: { if !$0 { moving = nil } }),
+                                titleVisibility: .visible, presenting: moving) { item in
+                ForEach(folders.filter { $0 != item.videoFolder }, id: \.self) { folder in
+                    Button("📁 \(folder)") { move(item, to: folder) }
+                }
+                Button("New Folder…") { movingIntoNewFolder = item; newFolderName = ""; newFolderPrompt = true }
+                if item.videoFolder != nil {
+                    Button("Back to \(TravelVideos.area(of: item))") { move(item, to: nil) }
+                }
+            }
             .onChange(of: scenePhase) { _, phase in if phase == .active { reloadInbox() } }
             .onReceive(NotificationCenter.default.publisher(for: .NSManagedObjectContextObjectsDidChange, object: context)) { _ in
                 refreshTick &+= 1
@@ -71,6 +104,21 @@ struct TikTokLibraryView: View {
     }
 
     private func reloadInbox() { inbox = SharedInbox.load() }
+
+    private func createFolder() {
+        let name = newFolderName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+        TravelVideos.createFolder(name)
+        if let item = movingIntoNewFolder { move(item, to: name) }
+        movingIntoNewFolder = nil
+        refreshTick &+= 1
+    }
+
+    private func move(_ item: Item, to folder: String?) {
+        TravelVideos.setFolder(folder, for: item)
+        ItineraryStore(context: context).save()
+        refreshTick &+= 1
+    }
 
     // MARK: List
 
@@ -95,27 +143,42 @@ struct TikTokLibraryView: View {
                 }
             }
 
-            let grouped = Dictionary(grouping: videos, by: TravelVideos.area(of:))
+            ForEach(folders, id: \.self) { folder in
+                let inFolder = videos.filter { $0.videoFolder == folder }
+                Section {
+                    if inFolder.isEmpty {
+                        Text("Empty. Swipe a video and tap Move to add it here.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    ForEach(inFolder) { item in videoRow(item) }
+                } header: {
+                    HStack {
+                        Label("\(folder) · \(inFolder.count)", systemImage: "folder.fill")
+                        Spacer()
+                        Menu {
+                            Button("Delete Folder", systemImage: "trash", role: .destructive) {
+                                TravelVideos.deleteFolder(folder, in: trip, context: context)
+                                refreshTick &+= 1
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
+                        }
+                        .textCase(nil)
+                    }
+                } footer: {
+                    if folder == folders.last { Text("Deleting a folder keeps its videos and moves them back to their area.") }
+                }
+            }
+
+            let grouped = Dictionary(grouping: videos.filter { $0.videoFolder == nil }, by: TravelVideos.area(of:))
             ForEach(areaOrder(grouped.keys), id: \.self) { area in
                 Section("\(area) · \(grouped[area]?.count ?? 0)") {
-                    ForEach(grouped[area] ?? []) { item in
-                        VideoRow(item: item) { if let url = item.link.flatMap(URL.init(string:)) { openURL(url) } }
-                            .swipeActions {
-                                Button("Delete", role: .destructive) {
-                                    context.delete(item)
-                                    ItineraryStore(context: context).save()
-                                }
-                                if let c = item.coordinate {
-                                    Button("Walk") { walkTarget = WalkTarget(name: item.title ?? "", coordinate: c) }
-                                        .tint(Theme.mango)
-                                }
-                            }
-                    }
+                    ForEach(grouped[area] ?? []) { item in videoRow(item) }
                 }
             }
         }
         .overlay {
-            if videos.isEmpty && inbox.isEmpty {
+            if videos.isEmpty && inbox.isEmpty && folders.isEmpty {
                 ContentUnavailableView {
                     Label("No TikToks yet", systemImage: "play.rectangle.on.rectangle")
                 } description: {
@@ -123,6 +186,31 @@ struct TikTokLibraryView: View {
                 }
             }
         }
+    }
+
+    private func videoRow(_ item: Item) -> some View {
+        VideoRow(item: item) { if let url = item.link.flatMap(URL.init(string:)) { openURL(url) } }
+            .swipeActions {
+                Button("Delete", role: .destructive) {
+                    context.delete(item)
+                    ItineraryStore(context: context).save()
+                }
+                Button("Move") { moving = item }.tint(.indigo)
+                if let c = item.coordinate {
+                    Button("Walk") { walkTarget = WalkTarget(name: item.title ?? "", coordinate: c) }
+                        .tint(Theme.mango)
+                }
+            }
+            .contextMenu {
+                Button("Move to Folder…", systemImage: "folder") { moving = item }
+                if let c = item.coordinate {
+                    Button("Walk There", systemImage: "figure.walk") { walkTarget = WalkTarget(name: item.title ?? "", coordinate: c) }
+                }
+                Button("Delete", systemImage: "trash", role: .destructive) {
+                    context.delete(item)
+                    ItineraryStore(context: context).save()
+                }
+            }
     }
 
     /// Areas in the app's north-to-south order, "Elsewhere" last.
@@ -271,6 +359,9 @@ struct PlaceVideoSheet: View {
     @State private var suggestions: [MKMapItem] = []
     @State private var searchText = ""
     @State private var searching = false
+    @State private var folders: [String] = []
+    @State private var newFolderPrompt = false
+    @State private var newFolderName = ""
 
     var body: some View {
         NavigationStack {
@@ -286,6 +377,21 @@ struct PlaceVideoSheet: View {
                                 .font(.caption.weight(.semibold))
                         }
                     }
+                }
+
+                Section {
+                    ForEach(folders, id: \.self) { folder in
+                        Button { save(place: nil, folder: folder) } label: {
+                            Label(folder, systemImage: "folder.fill")
+                        }
+                    }
+                    Button { newFolderName = ""; newFolderPrompt = true } label: {
+                        Label("New folder…", systemImage: "folder.badge.plus")
+                    }
+                } header: {
+                    Text("Tip, not a place? Save to a folder")
+                } footer: {
+                    Text("Folder videos stay off your Wish List. They're in the TikTok screen under the folder.")
                 }
 
                 Section {
@@ -332,7 +438,15 @@ struct PlaceVideoSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Later") { dismiss() } }
             }
-            .task { await prepare() }
+            .task { folders = TravelVideos.folders(in: trip); await prepare() }
+            .alert("New Folder", isPresented: $newFolderPrompt) {
+                TextField("e.g. Tips, Scams to avoid", text: $newFolderName)
+                Button("Create & Save") {
+                    let name = newFolderName.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !name.isEmpty { save(place: nil, folder: name) }
+                }
+                Button("Cancel", role: .cancel) {}
+            }
             .onChange(of: area) { _, _ in Task { await search(searchText.isEmpty ? (info?.title ?? "") : searchText) } }
         }
     }
@@ -351,12 +465,12 @@ struct PlaceVideoSheet: View {
         suggestions = await TravelVideos.suggestPlaces(for: text, area: TravelArea.named(area))
     }
 
-    private func save(place: MKMapItem?) {
+    private func save(place: MKMapItem?, folder: String? = nil) {
         var areaName = area
         if let place, areaName == TravelArea.elsewhere, let nearest = TravelArea.nearest(to: place.placemark.coordinate) {
             areaName = nearest.name
         }
-        TravelVideos.save(link: link.url, info: info, place: place, area: areaName, to: trip, context: context)
+        TravelVideos.save(link: link.url, info: info, place: place, area: areaName, folder: folder, to: trip, context: context)
         onSaved()
         dismiss()
     }

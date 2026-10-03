@@ -223,7 +223,7 @@ struct TripItineraryView: View {
     private var wishListSection: some View {
         Section {
             if wishListExpanded {
-                let items = trip.sortedWishItems
+                let items = trip.wishListPlaces
                 if items.isEmpty {
                     DropPlaceholder(text: "Places you want to visit but haven't scheduled. Add from Starter Ideas, Explore or Nearby.") { ids in
                         drop(ids, onto: nil, before: nil)
@@ -241,7 +241,7 @@ struct TripItineraryView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "star.fill").foregroundStyle(Theme.mango)
                         Text("Wish List")
-                        Text("\(trip.sortedWishItems.count)")
+                        Text("\(trip.wishListPlaces.count)")
                             .foregroundStyle(.secondary)
                         Image(systemName: wishListExpanded ? "chevron.down" : "chevron.right")
                             .font(.caption.weight(.bold))
@@ -249,7 +249,7 @@ struct TripItineraryView: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Wish list, \(trip.sortedWishItems.count) places, \(wishListExpanded ? "expanded" : "collapsed")")
+                .accessibilityLabel("Wish list, \(trip.wishListPlaces.count) places, \(wishListExpanded ? "expanded" : "collapsed")")
                 Spacer()
                 Button {
                     editingNewItemFor = NewItemTarget(day: nil)

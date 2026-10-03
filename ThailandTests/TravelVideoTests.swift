@@ -37,3 +37,28 @@ final class TravelVideoTests: XCTestCase {
         XCTAssertEqual(SharedInbox.firstURL(in: text)?.absoluteString, "https://vm.tiktok.com/ZMh123abc/")
     }
 }
+
+final class VideoFolderTests: XCTestCase {
+    func testFolderLineRoundTrip() {
+        let context = PersistenceController.preview.viewContext
+        let item = Item(context: context)
+        item.link = "https://www.tiktok.com/@x/video/1"
+        item.notes = "🎬 TikTok · @x\nPack light!\nArea: Bangkok"
+        XCTAssertNil(item.videoFolder)
+        XCTAssertFalse(item.isFolderVideo)
+
+        TravelVideos.setFolder("Tips", for: item)
+        XCTAssertEqual(item.videoFolder, "Tips")
+        XCTAssertTrue(item.isFolderVideo)
+        XCTAssertTrue(item.notes!.contains("Area: Bangkok")) // area kept for moving back
+
+        TravelVideos.setFolder("Scams to avoid", for: item)
+        XCTAssertEqual(item.videoFolder, "Scams to avoid")
+        XCTAssertEqual(item.notes!.components(separatedBy: "Folder: ").count, 2) // only one folder line
+
+        TravelVideos.setFolder(nil, for: item)
+        XCTAssertNil(item.videoFolder)
+        XCTAssertEqual(TravelVideos.area(of: item), "Bangkok")
+        context.delete(item)
+    }
+}

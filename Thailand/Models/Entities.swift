@@ -233,6 +233,9 @@ final class Trip: NSManagedObject {
         }
     }
 
+    /// Wish list without TikTok tip videos filed in folders (those live in the TikTok screen).
+    var wishListPlaces: [Item] { sortedWishItems.filter { !$0.isFolderVideo } }
+
     var sortedWishItems: [Item] {
         (wishItems as? Set<Item> ?? []).sorted { $0.sortIndex < $1.sortIndex }
     }
@@ -491,3 +494,12 @@ extension Expense: Identifiable {}
 extension PackingItem: Identifiable {}
 extension SavedPlace: Identifiable {}
 extension TripDocument: Identifiable {}
+
+extension Item {
+    /// Custom TikTok folder ("Tips", "Scams to avoid"), stored as a "Folder: …" line in notes.
+    var videoFolder: String? {
+        (notes ?? "").split(separator: "\n").first { $0.hasPrefix("Folder: ") }.map { String($0.dropFirst(8)) }
+    }
+
+    var isFolderVideo: Bool { videoFolder != nil && TravelVideos.isVideoLink(link) }
+}

@@ -163,6 +163,42 @@ enum TravelVideos {
         trip.allItems.filter { isVideoLink($0.link) }
     }
 
+    // MARK: Folders
+
+    private static let emptyFoldersKey = "videoFolders"
+
+    /// Your folders: any used by a saved video, plus ones you created that are still empty.
+    static func folders(in trip: Trip) -> [String] {
+        let used = saved(in: trip).compactMap(\.videoFolder)
+        let created = UserDefaults.standard.stringArray(forKey: emptyFoldersKey) ?? []
+        return Array(Set(used + created)).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+    }
+
+    static func createFolder(_ name: String) {
+        let clean = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !clean.isEmpty else { return }
+        var created = UserDefaults.standard.stringArray(forKey: emptyFoldersKey) ?? []
+        if !created.contains(clean) { created.append(clean) }
+        UserDefaults.standard.set(created, forKey: emptyFoldersKey)
+    }
+
+    /// Removes a folder; its videos go back to their area.
+    static func deleteFolder(_ name: String, in trip: Trip, context: NSManagedObjectContext) {
+        for item in saved(in: trip) where item.videoFolder == name { setFolder(nil, for: item) }
+        let created = (UserDefaults.standard.stringArray(forKey: emptyFoldersKey) ?? []).filter { $0 != name }
+        UserDefaults.standard.set(created, forKey: emptyFoldersKey)
+        ItineraryStore(context: context).save()
+    }
+
+    /// Moves a video into a folder (or back to its area with nil).
+    static func setFolder(_ folder: String?, for item: Item) {
+        var lines = (item.notes ?? "").split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+        lines.removeAll { $0.hasPrefix("Folder: ") }
+        if let folder { lines.append("Folder: \(folder)"); createFolder(folder) }
+        item.notes = lines.joined(separator: "\n")
+        item.markEdited()
+    }
+
     /// Area a saved video belongs to: the "Area:" line we wrote, else nearest to its pin.
     static func area(of item: Item) -> String {
         if let line = (item.notes ?? "").split(separator: "\n").first(where: { $0.hasPrefix("Area: ") }) {
@@ -174,7 +210,7 @@ enum TravelVideos {
 
     /// Adds the video to the trip's wish list: pinned at a place, or filed under an area.
     @discardableResult
-    static func save(link: URL, info: VideoInfo?, place: MKMapItem?, area: String, to trip: Trip,
+    static func save(link: URL, info: VideoInfo?, place: MKMapItem?, area: String, folder: String? = nil, to trip: Trip,
                      context: NSManagedObjectContext) -> Item {
         let caption = info?.title ?? ""
         let shortCaption = caption.split(whereSeparator: \.isNewline).first.map { String($0.prefix(60)) } ?? ""
@@ -189,6 +225,7 @@ enum TravelVideos {
         var notes = "🎬 TikTok\(info?.author.map { " · \($0)" } ?? "")"
         if !caption.isEmpty { notes += "\n\(caption)" }
         notes += "\nArea: \(area)"
+        if let folder { notes += "\nFolder: \(folder)"; createFolder(folder) }
 
         let item = ItineraryStore(context: context).addItem(
             title: title, category: category, to: nil, in: trip,

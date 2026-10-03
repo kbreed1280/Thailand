@@ -1,3 +1,4 @@
+import MapKit
 import SwiftUI
 import CoreLocation
 
@@ -24,6 +25,7 @@ struct BangkokTransitView: View {
     @State private var to: RailEndpoint?
     @State private var choosing: Choosing?
     @State private var showContent: ShowModeContent?
+    @State private var showingMap = false
 
     private let rail = BangkokRail.shared
 
@@ -34,6 +36,7 @@ struct BangkokTransitView: View {
 
     var body: some View {
         List {
+            mapPreviewSection
             plannerSection
             if let journey {
                 Section("Your ride") {
@@ -69,6 +72,19 @@ struct BangkokTransitView: View {
         .fullScreenCover(item: $showContent) { content in
             ShowModeView(content: content)
         }
+        .fullScreenCover(isPresented: $showingMap) {
+            RailNetworkMapView(
+                onPlanTo: { station in
+                    to = RailEndpoint(id: "station-\(station.code)", name: "\(station.en) station", systemImage: "tram.fill", coordinate: station.coordinate)
+                },
+                onShowStation: { station in showContent = Self.showCard(for: station) }
+            )
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button { showingMap = true } label: { Label("Rail map", systemImage: "map") }
+            }
+        }
         .onAppear {
             if to == nil { to = initialDestination }
             location.requestPermission()
@@ -76,6 +92,37 @@ struct BangkokTransitView: View {
     }
 
     // MARK: Sections
+
+    /// Small, non-interactive preview of the whole network; tap for the full map.
+    private var mapPreviewSection: some View {
+        Section {
+            Button { showingMap = true } label: {
+                ZStack(alignment: .bottomTrailing) {
+                    Map(initialPosition: .region(MKCoordinateRegion(
+                        center: CLLocationCoordinate2D(latitude: 13.77, longitude: 100.56),
+                        span: MKCoordinateSpan(latitudeDelta: 0.32, longitudeDelta: 0.26))), interactionModes: []) {
+                        ForEach(rail.lines) { line in
+                            ForEach(Array(RailShapes.paths(for: line).enumerated()), id: \.offset) { _, path in
+                                MapPolyline(coordinates: path)
+                                    .stroke(Color(hex: line.color), style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+                            }
+                        }
+                    }
+                    .mapStyle(.standard(emphasis: .muted, pointsOfInterest: .excludingAll))
+                    .allowsHitTesting(false)
+                    Label("Open rail map", systemImage: "arrow.up.left.and.arrow.down.right")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(.regularMaterial, in: Capsule())
+                        .padding(8)
+                }
+                .frame(height: 190)
+            }
+            .buttonStyle(.plain)
+            .listRowInsets(EdgeInsets())
+        }
+    }
 
     private var plannerSection: some View {
         Section("Plan a ride") {

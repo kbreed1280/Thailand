@@ -8,6 +8,8 @@ struct RootTabView: View {
     @State private var showWeather = UserDefaults.standard.bool(forKey: "showWeather")
     /// Debug-only: `-showSevenEleven YES` opens the 7-Eleven map.
     @State private var showSevenEleven = UserDefaults.standard.bool(forKey: "showSevenEleven")
+    /// Debug-only: `-showRailMap YES` opens the BTS/MRT network map.
+    @State private var showRailMap = UserDefaults.standard.bool(forKey: "showRailMap")
     #endif
 
     var body: some View {
@@ -31,6 +33,7 @@ struct RootTabView: View {
         #if DEBUG
         .sheet(isPresented: $showWeather) { WeatherSheet() }
         .fullScreenCover(isPresented: $showSevenEleven) { SevenElevenMapView() }
+        .fullScreenCover(isPresented: $showRailMap) { RailNetworkMapView() }
         #endif
     }
 }

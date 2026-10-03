@@ -31,9 +31,20 @@ jobs:
             -configuration Debug \
             -destination "id=$DEST" \
             -derivedDataPath build \
+            -resultBundlePath TestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO \
             test | tee xcodebuild.log | grep -iE "error:|warning:|test case .*(passed|failed)|executed [0-9]+ test|TEST (SUCCEEDED|FAILED)|BUILD (SUCCEEDED|FAILED)" | sort -u || true
           grep -q "TEST SUCCEEDED" xcodebuild.log
+
+      - name: Show test failures
+        if: failure()
+        run: |
+          xcrun xcresulttool get test-results summary --path TestResults.xcresult --compact | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)
+          for f in d.get('testFailures',[]):
+              print('FAILURE:', f.get('testName'), '->', f.get('failureText'))
+          " || true
 
       - name: Count warnings
         if: always()

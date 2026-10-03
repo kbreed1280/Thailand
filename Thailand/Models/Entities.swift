@@ -330,3 +330,13 @@ final class PackingItem: NSManagedObject {
         set { categoryRaw = newValue.rawValue }
     }
 }
+
+// MARK: - Identifiable (object identity; used by ForEach and sheet(item:))
+
+extension Trip: Identifiable {}
+extension Day: Identifiable {}
+extension Item: Identifiable {}
+extension ItemPhoto: Identifiable {}
+extension VisitLog: Identifiable {}
+extension Expense: Identifiable {}
+extension PackingItem: Identifiable {}

@@ -12,11 +12,30 @@ struct TrackedFlight: Codable, Identifiable, Equatable {
     var status: FlightStatus?
     var lastError: String?
 
-    /// "tg103" / "TG-103" → "TG 103".
+    /// "tg103" / "TG-103" → "TG 103". Airline codes always contain a letter (TG, FD, 3K),
+    /// so a bare number like "701" is left as-is and treated as invalid.
     static func normalize(_ raw: String) -> String {
         let cleaned = raw.uppercased().filter { $0.isLetter || $0.isNumber }
-        guard let match = cleaned.wholeMatch(of: /([A-Z0-9]{2})([0-9]{1,4}[A-Z]?)/) else { return raw.uppercased() }
+        guard let match = cleaned.wholeMatch(of: /([A-Z][A-Z0-9]|[0-9][A-Z])([0-9]{1,4}[A-Z]?)/) else { return raw.uppercased() }
         return "\(match.1) \(match.2)"
+    }
+
+    /// True for "TG 103"-style numbers with an airline code.
+    static func isValidNumber(_ raw: String) -> Bool {
+        normalize(raw).wholeMatch(of: /([A-Z][A-Z0-9]|[0-9][A-Z]) [0-9]{1,4}[A-Z]?/) != nil
+    }
+
+    /// Why a number can't be looked up, for the add-flight form.
+    static func problem(with raw: String) -> String? {
+        let cleaned = raw.uppercased().filter { $0.isLetter || $0.isNumber }
+        if cleaned.isEmpty || isValidNumber(raw) { return nil }
+        if cleaned.allSatisfy(\.isNumber) {
+            return "Add the 2-character airline code in front, e.g. TG \(cleaned) for Thai Airways. It's printed on your ticket next to the flight number."
+        }
+        if cleaned.prefix(3).allSatisfy(\.isLetter) {
+            return "Use the 2-character airline code (e.g. TG, not THA). It's printed on your ticket next to the flight number."
+        }
+        return "Enter the airline code and number, e.g. TG 103."
     }
 
     var departureDate: Date? {
@@ -132,6 +151,14 @@ final class FlightStore: ObservableObject {
         if !force, !needsRefresh(flight) { return }
         // Even a manual refresh waits 2 minutes, to protect the monthly allowance.
         if force, let fetched = flight.status?.fetchedAt, Date().timeIntervalSince(fetched) < 120 { return }
+
+        // Numbers without an airline code (e.g. "701") can never be found; say why instead of calling the API.
+        if let problem = TrackedFlight.problem(with: flight.number) {
+            var current = flight
+            current.lastError = problem + " Delete this flight and add it again."
+            update(current)
+            return
+        }
 
         refreshing.insert(id)
         defer { refreshing.remove(id) }

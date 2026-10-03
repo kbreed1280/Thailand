@@ -25,7 +25,8 @@ struct NearbyTabView: View {
     @State private var savedMessage: String?
     @State private var showingEmergency = false
 
-    private let weatherProvider: WeatherProvider = WeatherKitProvider()
+    /// Apple Weather, falling back to Open-Meteo if WeatherKit isn't available.
+    private let weatherProvider: WeatherProvider = AutomaticWeatherProvider()
 
     var body: some View {
         NavigationStack {
@@ -111,6 +112,19 @@ struct NearbyTabView: View {
             VStack(alignment: .leading, spacing: 16) {
                 hereCard
 
+                if let weather {
+                    NavigationLink { WeatherView() } label: { WeatherCard(weather: weather) }
+                        .buttonStyle(.plain)
+                } else if weatherFailed {
+                    NavigationLink { WeatherView() } label: {
+                        Label("Weather unavailable here. Tap for city forecasts.", systemImage: "cloud.sun")
+                            .font(.subheadline)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .card()
+                    }
+                    .buttonStyle(.plain)
+                }
+
                 Map(position: $position) {
                     UserAnnotation()
                     ForEach(landmarks.prefix(15)) { landmark in
@@ -121,14 +135,6 @@ struct NearbyTabView: View {
                 .mapControls { MapUserLocationButton() }
                 .frame(height: 220)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-
-                if let weather {
-                    WeatherCard(weather: weather)
-                } else if weatherFailed {
-                    Label("Weather unavailable right now.", systemImage: "cloud.sun")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
 
                 CurrentTripReader { trip in
                     if let trip, let today = trip.today {
@@ -367,6 +373,13 @@ struct TodayWalkCard: View {
     }
 }
 
+/// Text then icon ("10-day forecast ›").
+struct TrailingIconLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 3) { configuration.title; configuration.icon }
+    }
+}
+
 struct WeatherCard: View {
     @Environment(\.colorScheme) private var colorScheme
     let weather: WeatherSnapshot
@@ -374,8 +387,7 @@ struct WeatherCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 14) {
-                Image(systemName: weather.symbolName)
-                    .symbolRenderingMode(.multicolor)
+                WeatherSymbol(name: weather.symbolName)
                     .font(.system(size: 40))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(Temperature.both(weather.temperatureC)).font(.title3.bold())
@@ -390,13 +402,23 @@ struct WeatherCard: View {
                 }
             }
 
+            HeatIndexBadge(heatIndexC: weather.heatIndexC)
+            if let best = weather.bestWalkingWindows.first {
+                Label("Best walking: \(WindowText.format(Array(weather.bestWalkingWindows.prefix(2)), timeZone: weather.timeZone))",
+                      systemImage: "figure.walk")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.lagoon)
+                    .accessibilityHint("Starts \(best.start.formatted(date: .omitted, time: .shortened))")
+            }
+
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 14) {
-                    ForEach(weather.hours) { hour in
+                    ForEach(weather.hours.prefix(12)) { hour in
                         VStack(spacing: 4) {
                             Text(hour.date.formatted(.dateTime.hour())).font(.caption2)
-                            Image(systemName: hour.symbolName).symbolRenderingMode(.multicolor)
+                            WeatherSymbol(name: hour.symbolName)
                             Text("\(Int(hour.temperatureC.rounded()))°").font(.caption.weight(.semibold))
+                            Circle().fill(hour.heatLevel.color).frame(width: 6, height: 6)
                             if hour.precipitationChance >= 0.3 {
                                 Text("\(Int(hour.precipitationChance * 100))%").font(.caption2).foregroundStyle(.blue)
                             }
@@ -411,17 +433,23 @@ struct WeatherCard: View {
                     .foregroundStyle(Theme.coral)
             }
 
-            // Apple Weather attribution (required by WeatherKit).
             HStack(spacing: 6) {
-                AsyncImage(url: colorScheme == .dark ? weather.attributionLogoDark : weather.attributionLogoLight) { image in
-                    image.resizable().scaledToFit()
-                } placeholder: {
-                    Text(" Weather").font(.caption2.weight(.semibold))
+                // Apple Weather attribution (required by WeatherKit).
+                if weather.source == .apple {
+                    AsyncImage(url: colorScheme == .dark ? weather.attributionLogoDark : weather.attributionLogoLight) { image in
+                        image.resizable().scaledToFit()
+                    } placeholder: {
+                        Text(" Weather").font(.caption2.weight(.semibold))
+                    }
+                    .frame(height: 12)
+                } else {
+                    Text("Open-Meteo.com").font(.caption2)
                 }
-                .frame(height: 12)
-                if let link = weather.attributionLink {
-                    Link("Data sources", destination: link).font(.caption2)
-                }
+                Spacer()
+                Label("10-day forecast", systemImage: "chevron.right")
+                    .labelStyle(TrailingIconLabelStyle())
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Theme.mango)
             }
             .foregroundStyle(.secondary)
         }

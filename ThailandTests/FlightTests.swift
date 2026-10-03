@@ -7,6 +7,13 @@ final class FlightTests: XCTestCase {
         XCTAssertEqual(TrackedFlight.normalize("tg103"), "TG 103")
         XCTAssertEqual(TrackedFlight.normalize("FD-3205"), "FD 3205")
         XCTAssertEqual(TrackedFlight.normalize(" 3K 511 "), "3K 511")
+        // A bare number has no airline code, so it must not be split into "70 1".
+        XCTAssertEqual(TrackedFlight.normalize("701"), "701")
+        XCTAssertFalse(TrackedFlight.isValidNumber("701"))
+        XCTAssertTrue(TrackedFlight.isValidNumber("tg701"))
+        XCTAssertNotNil(TrackedFlight.problem(with: "701"))
+        XCTAssertNotNil(TrackedFlight.problem(with: "THA701"))
+        XCTAssertNil(TrackedFlight.problem(with: "TG 701"))
     }
 
     func testParseAeroDataBoxResponse() throws {

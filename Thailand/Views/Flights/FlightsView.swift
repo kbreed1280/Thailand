@@ -364,9 +364,7 @@ struct AddFlightView: View {
         return FlightStore.detectFlights(in: text).filter { !tracked.contains($0) }
     }
 
-    private var isValid: Bool {
-        TrackedFlight.normalize(number).wholeMatch(of: /[A-Z0-9]{2} [0-9]{1,4}[A-Z]?/) != nil
-    }
+    private var isValid: Bool { TrackedFlight.isValidNumber(number) }
 
     var body: some View {
         NavigationStack {
@@ -384,6 +382,11 @@ struct AddFlightView: View {
                     TextField("Flight number, e.g. TG 103", text: $number)
                         .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
+                    if let problem = TrackedFlight.problem(with: number) {
+                        Label(problem, systemImage: "exclamationmark.circle")
+                            .font(.caption)
+                            .foregroundStyle(Theme.coral)
+                    }
                     DatePicker("Departure date", selection: $date, displayedComponents: .date)
                     TextField("Note (optional): seat, booking code", text: $note)
                 } footer: {

@@ -33,6 +33,16 @@ enum ExternalApps {
             }
         }
 
+        if let url = googleMapsWebURL(stops: stops, travelMode: travelMode) {
+            UIApplication.shared.open(url)
+        }
+    }
+
+    /// google.com/maps directions link (opens the Google Maps app when installed).
+    static func googleMapsWebURL(stops: [CLLocationCoordinate2D], travelMode: String = "walking") -> URL? {
+        guard let destination = stops.last else { return nil }
+        let waypoints = stops.dropLast()
+        let format: (CLLocationCoordinate2D) -> String = { String(format: "%.6f,%.6f", $0.latitude, $0.longitude) }
         var components = URLComponents(string: "https://www.google.com/maps/dir/")
         var items = [
             URLQueryItem(name: "api", value: "1"),
@@ -43,7 +53,7 @@ enum ExternalApps {
             items.append(URLQueryItem(name: "waypoints", value: waypoints.map(format).joined(separator: "|")))
         }
         components?.queryItems = items
-        if let url = components?.url { UIApplication.shared.open(url) }
+        return components?.url
     }
 
     // MARK: Apple Maps

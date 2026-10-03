@@ -23,6 +23,38 @@ It's built with Swift and SwiftUI for iOS 18 or later, using only Apple framewor
 | **Convert** | <ul><li>Two big THB/USD fields that update as you type, ⇅ to swap, and ฿20–฿1000 shortcuts.</li><li>"Rate as of…", a manual rate, and offline use with the last saved rate.</li><li>Tip & split calculator.</li><li>**Trip Spending** shows shared expenses and who owes whom.</li></ul> |
 | **Translate** | <ul><li>Type or **hold the mic to talk**; the translation is shown and spoken.</li><li>**Talk** mode splits the screen so the other person reads Thai the right way up.</li><li>**Show** mode displays huge Thai text for a driver or vendor.</li><li>**Phrases** has about 80 offline phrases with romanization and the ครับ/ค่ะ polite ending.</li><li>History & favorites.</li><li>🔍 scans menus and signs with Live Text.</li></ul> |
 
+**Trip menu extras** (tap the trip name at the top of the Trip tab):
+
+- **Saved Places:** your hotel and other spots you return to. A day's route can start and end there.
+- **Bookings:** flight, hotel and tour confirmations, shared with your partner.
+  - Chips under each booking let you call, open the address in Maps, add the date to a day, or log the price as an expense.
+- **Import a Booking (Smart Import):** pick a screenshot, photo, PDF or pasted email. The phone reads it and finds the dates, times, address, phone and price for you to check before saving. Nothing is uploaded.
+- **Calendar:**
+  - Shows your calendar events on each day; long-press one to add it to the trip.
+  - Can also copy timed plans into a calendar you choose (only on your own phone).
+- **Trip Book:** a shareable recap with days, places done, km and steps walked, photos, spending, a chart of your busiest day and your favorite kinds of places.
+
+**Planning a day:**
+
+- Between stops you'll see the **travel time** for each stop's "Getting there" mode (walk, transit or taxi). It turns **orange with "Running ~N min late"** when the gap is too tight.
+- Open 🗺 on a day to:
+  - start or end at your hotel
+  - drag stops into a new order and **Re-time Day**
+  - send the whole route to Google Maps
+- Each place has a **duration** and a **Getting there** mode.
+- **Edit Trip** sets the trip's color and cover photo.
+
+**Siri & Shortcuts:**
+
+| Say | What happens |
+|---|---|
+| "What's my plan today in Thailand Trip" | Siri reads today's stops |
+| "Add a place in Thailand Trip" | Adds a place to the wish list |
+| "Convert baht in Thailand Trip" | Siri reads the amount in dollars |
+| "Start today's walk in Thailand Trip" | Opens today's stops in Google Maps |
+
+You can also find these in the Shortcuts app.
+
 **The walking tracker** opens from Walk There and works while the app is open:
 
 - the route on a map, the next turn, and the distance and time left
@@ -80,7 +112,7 @@ The app syncs trips through **CloudKit**. While you run from Xcode, it uses Clou
 
 1. Run the app from Xcode on your iPhone and create every kind of data at least once:
    1. Load the demo trip; it includes days, places, packing items and expenses.
-   2. Add a photo to a place.
+   2. Add a photo to a place, a saved place (Trip menu → Saved Places) and a booking (Trip menu → Bookings).
    3. Turn on **Auto-log** on the Nearby tab once (that creates a journal entry).
    4. Wait a minute with Wi-Fi on so it syncs.
 2. Open the [CloudKit Console](https://icloud.developer.apple.com/) → **CloudKit Database** → choose `iCloud.com.kbreed.thailandtrip` → **Development**.
@@ -88,7 +120,8 @@ The app syncs trips through **CloudKit**. While you run from Xcode, it uses Clou
 
 **Schema notes (for reference):**
 
-- Core Data creates these record types: `CD_Trip`, `CD_Day`, `CD_Item`, `CD_ItemPhoto`, `CD_VisitLog`, `CD_Expense` and `CD_PackingItem`.
+- Core Data creates these record types: `CD_Trip`, `CD_Day`, `CD_Item`, `CD_ItemPhoto`, `CD_VisitLog`, `CD_Expense`, `CD_PackingItem`, `CD_SavedPlace` and `CD_TripDocument`.
+- Booking files are stored as CKAssets in `CD_TripDocument`.
 - Each attribute is stored as a field named `CD_<attributeName>`. Photos are stored as CKAssets.
 - Sharing uses CloudKit zone sharing: each shared trip lives in its own zone with a `CKShare`.
 - Your own trips live in the **private** database. Trips others share with you live in the **shared** database.
@@ -137,7 +170,9 @@ TestFlight builds expire after 90 days. Upload a new archive if you need more ti
   - **Apple Maps:** profile picture → Offline Maps.
 
   Walking directions in the app need internet, but Google and Apple Maps can work offline.
-- [ ] **Open each tab once** so iOS asks for Location (While Using), Microphone, Speech Recognition, Motion & Fitness and Camera. Choose **Allow**.
+- [ ] **Open each tab once** so iOS asks for Location (While Using), Microphone, Speech Recognition, Motion & Fitness and Camera. Choose **Allow**. If you want the calendar features, allow Calendar access under Trip menu → Calendar.
+- [ ] **Import your bookings** (Trip menu → Import a Booking) from confirmation emails or screenshots, and save your hotels under **Saved Places**.
+- [ ] **Try Siri once:** "What's my plan today in Thailand Trip".
 - [ ] **Accept the shared trip** on your partner's phone and check that an edit on one phone appears on the other.
 - [ ] **Trip menu → Emergency Info:** paste your hotel's address in Thai (ask the hotel or copy it from the booking).
 - [ ] **Trip menu → Travel Documents:** add photos of passports, visas, flights and hotel bookings. They stay only on that phone, locked with Face ID.
@@ -151,7 +186,8 @@ TestFlight builds expire after 90 days. Upload a new archive if you need more ti
 - **Location:** used only while the app is open (When In Use). There is no background tracking. Auto-log records a stop only while the Nearby tab is open.
 - **Sharing:** trips sync through your own iCloud account. Only people you invite can see a shared trip.
 - **Stays on your phone:** translation history and favorites, plus the travel documents vault, which also requires Face ID or your passcode.
-- **On-device processing:** translation runs on the phone with Apple's Translation framework once Thai is downloaded. Live Text scanning also runs on the phone.
+- **On-device processing:** translation runs on the phone with Apple's Translation framework once Thai is downloaded. Live Text scanning and Smart Import also run on the phone.
+- **Calendar:** the app reads your calendar only to show events next to your plans, and writes events only if you turn that on.
 
 ---
 
@@ -172,9 +208,11 @@ Thailand/
     Currency/ Network/        exchange rates, online/offline
     Translation/ Speech/      TranslationSession model, history, speech-to-text, text-to-speech
     Weather/ Motion/ Vault/   WeatherKit, pedometer, Face ID document vault
+    Import/ Calendar/         Vision/PDF text extraction, EventKit sync
+    Intents/                  App Intents + App Shortcuts (Siri)
     Permissions/ Imaging/
-  Views/                      Trip, Nearby, Explore, Convert, Translate, Extras, Components
-ThailandTests/                itinerary ordering + currency math unit tests
+  Views/                      Trip, Nearby, Explore, Convert, Translate, Bookings, Extras, Components
+ThailandTests/                itinerary ordering, currency math, schedule math, document insights
 ```
 
 - **Continuous integration:** every push is built and the unit tests run on an iPhone simulator by GitHub Actions ([.github/workflows/ios-build.yml](.github/workflows/ios-build.yml)).
@@ -187,10 +225,7 @@ ThailandTests/                itinerary ordering + currency math unit tests
 - **Look Around coverage** in Thailand is limited (mostly central Bangkok). Elsewhere you'll see a map snapshot instead.
 - **Newer Xcode versions** may show deprecation warnings for `CLGeocoder` and `MKPlacemark`. These are fine on iOS 18.
 
-### Planned next (steps 8–10)
+### Not built (ideas for later)
 
-These are Tripsy-style additions:
-
-- **Step 8:** a day timeline with walking time between stops and "running late" warnings, saved places such as the hotel, and trip colors and covers.
-- **Step 9:** bookings with Smart Import (scan a confirmation and it becomes itinerary items), plus calendar sync.
-- **Step 10:** a shareable **Trip Book**, plus Siri and Shortcuts.
+- A home-screen widget showing today's plan and the exchange rate. It needs a widget extension and an App Group.
+- Live traffic alerts and transit timetables. Apple's transit data for Thailand is limited, so transit legs are estimated from walking time.

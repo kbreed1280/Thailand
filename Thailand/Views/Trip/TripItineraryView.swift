@@ -26,6 +26,7 @@ struct TripItineraryView: View {
     @State private var showingBookings = false
     @State private var showingImport = false
     @State private var showingCalendar = false
+    @State private var showingBook = false
     @ObservedObject private var calendarSync = CalendarSyncService.shared
     @State private var walkTarget: WalkTarget?
     @State private var showingVault = false
@@ -136,6 +137,9 @@ struct TripItineraryView: View {
         }
         .sheet(isPresented: $showingCalendar) {
             CalendarSettingsView(trip: trip)
+        }
+        .sheet(isPresented: $showingBook) {
+            TripBookView(trip: trip)
         }
         .fullScreenCover(item: $walkTarget) { target in
             WalkingRouteView(destinationName: target.name, coordinate: target.coordinate)
@@ -363,6 +367,7 @@ struct TripItineraryView: View {
             Button("Import a Booking", systemImage: "wand.and.stars") { showingImport = true }
                 .disabled(!canEdit)
             Button("Calendar", systemImage: "calendar") { showingCalendar = true }
+            Button("Trip Book", systemImage: "book.pages.fill") { showingBook = true }
             Button("Starter Ideas", systemImage: "lightbulb") { showingStarterIdeas = true }
             Button("Your Name", systemImage: "person.crop.circle") { showingProfile = true }
         }

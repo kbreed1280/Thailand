@@ -24,11 +24,7 @@ struct RootTabView: View {
                 ConvertTabView()
             }
             Tab("Translate", systemImage: "character.bubble.fill") {
-                ComingSoonView(
-                    title: "Translate",
-                    systemImage: "character.bubble.fill",
-                    message: "English ⇄ Thai translator, voice mode and phrasebook. Coming in step 3."
-                )
+                TranslateTabView()
             }
         }
     }

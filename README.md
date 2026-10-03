@@ -23,6 +23,28 @@ It's built with Swift and SwiftUI for iOS 18 or later, using only Apple framewor
 | **Convert** | <ul><li>Two big THB/USD fields that update as you type, ⇅ to swap, and ฿20–฿1000 shortcuts.</li><li>"Rate as of…", a manual rate, and offline use with the last saved rate.</li><li>Tip & split calculator.</li><li>**Trip Spending** shows shared expenses and who owes whom.</li></ul> |
 | **Translate** | <ul><li>Type or **hold the mic to talk**; the translation is shown and spoken.</li><li>**Talk** mode splits the screen so the other person reads Thai the right way up.</li><li>**Show** mode displays huge Thai text for a driver or vendor.</li><li>**Phrases** has about 80 offline phrases with romanization and the ครับ/ค่ะ polite ending.</li><li>History & favorites.</li><li>🔍 scans menus and signs with Live Text.</li></ul> |
 
+**Getting-ready tools** (buttons on the trip card at the top of the Trip tab):
+
+- **Documents:** a Face ID–locked vault kept only on your phone.
+  - Scan multi-page documents into a PDF, or import photos and files.
+  - Sort documents by type: passport, visa, insurance, flights, hotels and more.
+  - Add expiry dates. The app warns you if a passport has less than the 6 months' validity Thailand requires.
+  - Long-press a document to copy it to the shared Bookings.
+- **Flights:** live status, delays, terminal, gate and baggage belt.
+  - Flight numbers are detected automatically in your bookings.
+  - Alerts when the gate or delay changes.
+  - A Lock Screen and Dynamic Island Live Activity on travel day.
+  - A "Show the driver" airport card in Thai.
+  - Needs a free [AeroDataBox](https://rapidapi.com/aedbx-aedbx/api/aerodatabox) key from RapidAPI (Flights → ⚙︎). The app spaces out its checks so the free plan lasts the trip.
+- **BTS & MRT:** works fully offline. Station data comes from OpenStreetMap.
+  - Covers BTS (Sukhumvit, Silom, Gold), MRT (Blue, Purple, Yellow, Pink), the Airport Rail Link and the SRT Dark Red line.
+  - Shows the nearest stations, and plans a ride from your location or any trip stop, with changes, the platform direction, time and an estimated fare.
+  - Every Bangkok stop gets a "By BTS / MRT" card.
+  - Tap any station to show its name in Thai.
+- **Offline:** saves walking routes between your stops, a map image of each day, and Thai addresses to show drivers.
+  - With no signal, Walk There and the day map use the saved routes.
+  - A per-city checklist walks you through downloading Apple Maps and Google Maps offline areas, which only those apps can do.
+
 **Trip menu extras** (tap the trip name at the top of the Trip tab):
 
 - **Saved Places:** your hotel and other spots you return to. A day's route can start and end there.
@@ -197,6 +219,7 @@ TestFlight builds expire after 90 days. Upload a new archive if you need more ti
 Thailand.xcodeproj            Xcode 16 project; Thailand/ and ThailandTests/ are synced folders
 Thailand-Info.plist           extra Info.plist keys (URL schemes, CKSharingSupported, push)
 Thailand.entitlements         iCloud/CloudKit, push, WeatherKit
+ThailandWidgets/              widget extension: the flight Live Activity (Lock Screen + Dynamic Island)
 Thailand/
   App/                        app entry, AppDelegate/SceneDelegate (share acceptance), tabs
   Models/                     Core Data model (in code), entities, ordering, currency math,

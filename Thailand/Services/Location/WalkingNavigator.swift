@@ -21,6 +21,17 @@ final class WalkingNavigator: ObservableObject {
     @Published private(set) var currentStepIndex = 0
     @Published private(set) var metersToNextStep: CLLocationDistance = 0
     @Published private(set) var isOffRoute = false
+    /// True when walking a route saved in the offline pack (no internet).
+    @Published private(set) var isUsingSavedRoute = false
+    @Published private(set) var steps: [NavStep] = []
+
+    struct NavStep {
+        let instructions: String
+        let distance: CLLocationDistance
+    }
+
+    private var totalDistance: CLLocationDistance = 0
+    private var expectedTravelTime: TimeInterval = 0
 
     let destination: CLLocationCoordinate2D
     let destinationName: String
@@ -37,10 +48,6 @@ final class WalkingNavigator: ObservableObject {
     init(destination: CLLocationCoordinate2D, destinationName: String) {
         self.destination = destination
         self.destinationName = destinationName
-    }
-
-    var steps: [MKRoute.Step] {
-        (route?.steps ?? []).filter { !$0.instructions.isEmpty }
     }
 
     var currentInstruction: String {
@@ -70,6 +77,12 @@ final class WalkingNavigator: ObservableObject {
             phase = .navigating
             update(with: location)
         } catch {
+            if let saved = OfflinePackStore.shared.cachedLeg(to: destination, from: location.coordinate) {
+                applySaved(saved)
+                phase = .navigating
+                update(with: location)
+                return
+            }
             phase = .failed(NetworkMonitor.shared.isOnline
                 ? "Couldn't get walking directions here. Try Google Maps."
                 : "Walking directions need internet. Google Maps works offline if you downloaded the area.")
@@ -78,8 +91,33 @@ final class WalkingNavigator: ObservableObject {
 
     private func apply(_ newRoute: MKRoute) {
         route = newRoute
+        isUsingSavedRoute = false
         let polyline = newRoute.polyline
-        points = (0..<polyline.pointCount).map { polyline.points()[$0] }
+        let routeSteps = newRoute.steps.filter { !$0.instructions.isEmpty }.map { NavStep(instructions: $0.instructions, distance: $0.distance) }
+        applyGeometry(
+            points: (0..<polyline.pointCount).map { polyline.points()[$0] },
+            steps: routeSteps,
+            distance: newRoute.distance,
+            time: newRoute.expectedTravelTime
+        )
+    }
+
+    private func applySaved(_ leg: OfflineLeg) {
+        route = nil
+        isUsingSavedRoute = true
+        applyGeometry(
+            points: leg.points.map { MKMapPoint($0.coordinate) },
+            steps: leg.steps.map { NavStep(instructions: $0.instructions, distance: $0.distance) },
+            distance: leg.meters,
+            time: leg.seconds
+        )
+    }
+
+    private func applyGeometry(points newPoints: [MKMapPoint], steps newSteps: [NavStep], distance: CLLocationDistance, time: TimeInterval) {
+        points = newPoints
+        steps = newSteps
+        totalDistance = distance
+        expectedTravelTime = time
         routeCoordinates = points.map(\.coordinate)
         cumulative = []
         var total: CLLocationDistance = 0
@@ -88,7 +126,7 @@ final class WalkingNavigator: ObservableObject {
             cumulative.append(total)
         }
         var running: CLLocationDistance = 0
-        stepEnds = newRoute.steps.filter { !$0.instructions.isEmpty }.map { step in
+        stepEnds = newSteps.map { step in
             running += step.distance
             return running
         }
@@ -107,7 +145,7 @@ final class WalkingNavigator: ObservableObject {
             remainingSeconds = 0
             return
         }
-        guard phase == .navigating, let route, !points.isEmpty else { return }
+        guard phase == .navigating, !points.isEmpty else { return }
 
         let here = MKMapPoint(location.coordinate)
         var nearestIndex = lastIndex
@@ -121,10 +159,10 @@ final class WalkingNavigator: ObservableObject {
         }
         lastIndex = nearestIndex
 
-        let total = cumulative.last ?? route.distance
+        let total = cumulative.last ?? totalDistance
         let traveled = cumulative[nearestIndex]
         remainingMeters = max(total - traveled, 0) + min(nearestDistance, Self.offRouteDistance)
-        let speed = route.expectedTravelTime > 0 ? route.distance / route.expectedTravelTime : 1.3
+        let speed = expectedTravelTime > 0 ? totalDistance / expectedTravelTime : 1.3
         remainingSeconds = remainingMeters / max(speed, 0.5)
 
         if let next = stepEnds.firstIndex(where: { $0 > traveled + 5 }) {
@@ -133,7 +171,7 @@ final class WalkingNavigator: ObservableObject {
         }
 
         isOffRoute = nearestDistance > Self.offRouteDistance
-        if isOffRoute, Date().timeIntervalSince(lastRerouteAt) > 20 {
+        if isOffRoute, !isUsingSavedRoute || NetworkMonitor.shared.isOnline, Date().timeIntervalSince(lastRerouteAt) > 20 {
             lastRerouteAt = .now
             Task { await calculate(from: location) }
         }

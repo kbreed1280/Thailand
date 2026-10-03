@@ -30,6 +30,9 @@ struct TripItineraryView: View {
     @ObservedObject private var calendarSync = CalendarSyncService.shared
     @State private var walkTarget: WalkTarget?
     @State private var showingVault = false
+    @State private var showingFlights = false
+    @State private var showingTransit = false
+    @State private var showingOffline = false
     @State private var sharingError: String?
 
     private var store: ItineraryStore { ItineraryStore(context: context) }
@@ -47,10 +50,15 @@ struct TripItineraryView: View {
                     members: persistence.participantNames(for: trip),
                     isSharedWithMe: persistence.isSharedWithMe(trip),
                     canEdit: canEdit
-                ) {
-                    showingPacking = true
-                } onIdeas: {
-                    showingStarterIdeas = true
+                ) { action in
+                    switch action {
+                    case .packing: showingPacking = true
+                    case .ideas: showingStarterIdeas = true
+                    case .documents: showingVault = true
+                    case .flights: showingFlights = true
+                    case .transit: showingTransit = true
+                    case .offline: showingOffline = true
+                    }
                 }
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
@@ -145,7 +153,21 @@ struct TripItineraryView: View {
             WalkingRouteView(destinationName: target.name, coordinate: target.coordinate)
         }
         .sheet(isPresented: $showingVault) {
-            DocumentVaultView()
+            DocumentVaultView(trip: trip)
+        }
+        .sheet(isPresented: $showingFlights) {
+            FlightsView(trip: trip)
+        }
+        .sheet(isPresented: $showingTransit) {
+            NavigationStack {
+                BangkokTransitView(trip: trip)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) { Button("Done") { showingTransit = false } }
+                    }
+            }
+        }
+        .sheet(isPresented: $showingOffline) {
+            OfflinePackView(trip: trip)
         }
         .sheet(item: $mapDay) { day in
             DayMapView(day: day)
@@ -374,6 +396,9 @@ struct TripItineraryView: View {
         Section {
             Button("Emergency Info", systemImage: "cross.case.fill") { showingEmergency = true }
             Button("Travel Documents", systemImage: "lock.doc.fill") { showingVault = true }
+            Button("Flights", systemImage: "airplane") { showingFlights = true }
+            Button("Offline Maps", systemImage: "arrow.down.circle") { showingOffline = true }
+            Button("BTS & MRT", systemImage: "tram.fill") { showingTransit = true }
         }
         Section {
             Button("New Trip", systemImage: "plus") { showingNewTrip = true }
@@ -521,8 +546,11 @@ private struct TripHeaderCard: View {
     var members: [String] = []
     var isSharedWithMe = false
     var canEdit = true
-    let onPacking: () -> Void
-    let onIdeas: () -> Void
+    let onAction: (HeaderAction) -> Void
+
+    enum HeaderAction { case packing, ideas, documents, flights, transit, offline }
+
+    @ObservedObject private var flights = FlightStore.shared
 
     private var countdown: String {
         guard let start = trip.startDate, let end = trip.endDate else { return "" }
@@ -576,17 +604,35 @@ private struct TripHeaderCard: View {
                 HeaderChip(systemImage: "ticket", text: "\(all.filter { $0.status == .booked }.count) booked")
             }
 
-            HStack(spacing: 10) {
-                Button(action: onPacking) {
-                    let packing = trip.sortedPackingItems
-                    Label("Packing \(packing.filter(\.isDone).count)/\(packing.count)", systemImage: "suitcase.rolling.fill")
+            if let next = flights.nextActive {
+                Button { onAction(.flights) } label: {
+                    let (status, _) = FlightStatusPill.describe(next)
+                    Label("\(next.title) · \(status)", systemImage: "airplane")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(.black.opacity(0.25), in: Capsule())
                 }
-                Button(action: onIdeas) {
-                    Label("Starter Ideas", systemImage: "lightbulb.fill")
-                }
+                .buttonStyle(.plain)
             }
-            .font(.subheadline.weight(.semibold))
-            .buttonStyle(HeaderButtonStyle())
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    Button { onAction(.documents) } label: { Label("Documents", systemImage: "lock.doc.fill") }
+                    Button { onAction(.flights) } label: { Label("Flights", systemImage: "airplane") }
+                    Button { onAction(.transit) } label: { Label("BTS & MRT", systemImage: "tram.fill") }
+                    Button { onAction(.offline) } label: { Label("Offline", systemImage: "arrow.down.circle.fill") }
+                    Button { onAction(.packing) } label: {
+                        let packing = trip.sortedPackingItems
+                        Label("Packing \(packing.filter(\.isDone).count)/\(packing.count)", systemImage: "suitcase.rolling.fill")
+                    }
+                    Button { onAction(.ideas) } label: { Label("Ideas", systemImage: "lightbulb.fill") }
+                }
+                .font(.subheadline.weight(.semibold))
+                .buttonStyle(HeaderButtonStyle())
+            }
+            .scrollClipDisabled()
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)

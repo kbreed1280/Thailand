@@ -15,6 +15,8 @@ struct DayMapView: View {
     @State private var startPlaceID: UUID?
     @State private var endPlaceID: UUID?
     @State private var routes: [MKRoute] = []
+    /// Routes from the offline pack, drawn when there's no internet.
+    @State private var savedLines: [[CLLocationCoordinate2D]] = []
     @State private var legSeconds: [TimeInterval] = []
     @State private var isRouting = false
     @State private var refreshTick = 0
@@ -78,6 +80,10 @@ struct DayMapView: View {
             ForEach(Array(routes.enumerated()), id: \.offset) { _, route in
                 MapPolyline(route)
                     .stroke(Theme.lagoon, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
+            }
+            ForEach(Array(savedLines.enumerated()), id: \.offset) { _, line in
+                MapPolyline(coordinates: line)
+                    .stroke(Theme.lagoon, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round, dash: [8, 6]))
             }
             ForEach(stops, id: \.number) { stop in
                 Annotation(stop.item.displayTitle, coordinate: stop.item.coordinate ?? CLLocationCoordinate2D()) {
@@ -254,6 +260,7 @@ struct DayMapView: View {
 
         let offset = startPlace == nil ? 0 : 1
         var newRoutes: [MKRoute] = []
+        var newSaved: [[CLLocationCoordinate2D]] = []
         var seconds: [TimeInterval] = []
         for index in 1..<points.count {
             // Travel mode belongs to the stop you're heading to; the end place uses walking.
@@ -262,11 +269,15 @@ struct DayMapView: View {
             if let route = await TravelTimeService.shared.route(from: points[index - 1], to: points[index], mode: mode) {
                 newRoutes.append(route)
                 seconds.append(route.expectedTravelTime)
+            } else if let saved = OfflinePackStore.shared.cachedLeg(from: points[index - 1], to: points[index]) {
+                newSaved.append(saved.points.map(\.coordinate))
+                seconds.append(mode == .walking ? saved.seconds : 0)
             } else {
                 seconds.append(0)
             }
         }
         routes = newRoutes
+        savedLines = newSaved
         // Keep only the legs between stops for re-timing.
         legSeconds = Array(seconds.dropFirst(offset).prefix(max(stops.count - 1, 0)))
     }

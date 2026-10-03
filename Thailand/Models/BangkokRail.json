@@ -1,0 +1,1425 @@
+{
+ "source": "OpenStreetMap contributors (ODbL), fetched 2026-10",
+ "lines": [
+  {
+   "id": "bts-sukhumvit",
+   "name": "BTS Sukhumvit Line",
+   "short": "Sukhumvit",
+   "system": "BTS",
+   "color": "#65B724",
+   "stations": [
+    {
+     "code": "N24",
+     "en": "Khu Khot",
+     "th": "คูคต",
+     "lat": 13.93237,
+     "lon": 100.64652
+    },
+    {
+     "code": "N23",
+     "en": "Yaek Kor Por Aor",
+     "th": "แยก คปอ.",
+     "lat": 13.92501,
+     "lon": 100.62584
+    },
+    {
+     "code": "N22",
+     "en": "Royal Thai Air Force Museum",
+     "th": "พิพิธภัณฑ์กองทัพอากาศ",
+     "lat": 13.91797,
+     "lon": 100.62169
+    },
+    {
+     "code": "N21",
+     "en": "Bhumibol Adulyadej Hospital",
+     "th": "โรงพยาบาลภูมิพลอดุลยเดช",
+     "lat": 13.91071,
+     "lon": 100.6174
+    },
+    {
+     "code": "N20",
+     "en": "Saphan Mai",
+     "th": "สะพานใหม่",
+     "lat": 13.89661,
+     "lon": 100.60908
+    },
+    {
+     "code": "N19",
+     "en": "Sai Yud",
+     "th": "สายหยุด",
+     "lat": 13.88845,
+     "lon": 100.60427
+    },
+    {
+     "code": "N18",
+     "en": "Phahonyothin 59",
+     "th": "พหลโยธิน 59",
+     "lat": 13.88245,
+     "lon": 100.60073
+    },
+    {
+     "code": "N17",
+     "en": "Wat Phra Sri Mahathat",
+     "th": "วัดพระศรีมหาธาตุ",
+     "lat": 13.87528,
+     "lon": 100.59673
+    },
+    {
+     "code": "N16",
+     "en": "11th Infantry Regiment",
+     "th": "กรมทหารราบที่ 11",
+     "lat": 13.86758,
+     "lon": 100.59197
+    },
+    {
+     "code": "N15",
+     "en": "Bang Bua",
+     "th": "บางบัว",
+     "lat": 13.85605,
+     "lon": 100.58518
+    },
+    {
+     "code": "N14",
+     "en": "Royal Forest Department",
+     "th": "กรมป่าไม้",
+     "lat": 13.85033,
+     "lon": 100.58182
+    },
+    {
+     "code": "N13",
+     "en": "Kasetsart University",
+     "th": "มหาวิทยาลัยเกษตรศาสตร์",
+     "lat": 13.84231,
+     "lon": 100.57711
+    },
+    {
+     "code": "N12",
+     "en": "Sena Nikhom",
+     "th": "เสนานิคม",
+     "lat": 13.83641,
+     "lon": 100.57363
+    },
+    {
+     "code": "N11",
+     "en": "Ratchayothin",
+     "th": "รัชโยธิน",
+     "lat": 13.82975,
+     "lon": 100.56972
+    },
+    {
+     "code": "N10",
+     "en": "Phahonyothin 24",
+     "th": "พหลโยธิน 24",
+     "lat": 13.82412,
+     "lon": 100.56643
+    },
+    {
+     "code": "N9",
+     "en": "Ha Yaek Lat Phrao",
+     "th": "ห้าแยกลาดพร้าว",
+     "lat": 13.81668,
+     "lon": 100.56204
+    },
+    {
+     "code": "N8",
+     "en": "Mo Chit",
+     "th": "หมอชิต",
+     "lat": 13.8026,
+     "lon": 100.55379
+    },
+    {
+     "code": "N7",
+     "en": "Saphan Khwai",
+     "th": "สะพานควาย",
+     "lat": 13.79382,
+     "lon": 100.54971
+    },
+    {
+     "code": "N5",
+     "en": "Ari",
+     "th": "อารีย์",
+     "lat": 13.77971,
+     "lon": 100.54462
+    },
+    {
+     "code": "N4",
+     "en": "Sanam Pao",
+     "th": "สนามเป้า",
+     "lat": 13.77262,
+     "lon": 100.54207
+    },
+    {
+     "code": "N3",
+     "en": "Victory Monument",
+     "th": "อนุสาวรีย์ชัยสมรภูมิ",
+     "lat": 13.76276,
+     "lon": 100.53705
+    },
+    {
+     "code": "N2",
+     "en": "Phaya Thai",
+     "th": "พญาไท",
+     "lat": 13.75696,
+     "lon": 100.53382
+    },
+    {
+     "code": "N1",
+     "en": "Ratchathewi",
+     "th": "ราชเทวี",
+     "lat": 13.75186,
+     "lon": 100.53155
+    },
+    {
+     "code": "CEN",
+     "en": "Siam",
+     "th": "สยาม",
+     "lat": 13.74562,
+     "lon": 100.53422
+    },
+    {
+     "code": "E1",
+     "en": "Chit Lom",
+     "th": "ชิดลม",
+     "lat": 13.7441,
+     "lon": 100.54307
+    },
+    {
+     "code": "E2",
+     "en": "Phloen Chit",
+     "th": "เพลินจิต",
+     "lat": 13.74307,
+     "lon": 100.54898
+    },
+    {
+     "code": "E3",
+     "en": "Nana",
+     "th": "นานา",
+     "lat": 13.74054,
+     "lon": 100.55543
+    },
+    {
+     "code": "E4",
+     "en": "Asok",
+     "th": "อโศก",
+     "lat": 13.73704,
+     "lon": 100.56036
+    },
+    {
+     "code": "E5",
+     "en": "Phrom Phong",
+     "th": "พร้อมพงษ์",
+     "lat": 13.73043,
+     "lon": 100.56971
+    },
+    {
+     "code": "E6",
+     "en": "Thong Lo",
+     "th": "ทองหล่อ",
+     "lat": 13.72423,
+     "lon": 100.57851
+    },
+    {
+     "code": "E7",
+     "en": "Ekkamai",
+     "th": "เอกมัย",
+     "lat": 13.71954,
+     "lon": 100.58511
+    },
+    {
+     "code": "E8",
+     "en": "Phra Khanong",
+     "th": "พระโขนง",
+     "lat": 13.71517,
+     "lon": 100.59124
+    },
+    {
+     "code": "E9",
+     "en": "On Nut",
+     "th": "อ่อนนุช",
+     "lat": 13.70562,
+     "lon": 100.601
+    },
+    {
+     "code": "E10",
+     "en": "Bang Chak",
+     "th": "บางจาก",
+     "lat": 13.69676,
+     "lon": 100.60534
+    },
+    {
+     "code": "E11",
+     "en": "Punnawithi",
+     "th": "ปุณณวิถี",
+     "lat": 13.68928,
+     "lon": 100.609
+    },
+    {
+     "code": "E12",
+     "en": "Udom Suk",
+     "th": "อุดมสุข",
+     "lat": 13.67987,
+     "lon": 100.60947
+    },
+    {
+     "code": "E13",
+     "en": "Bang Na",
+     "th": "บางนา",
+     "lat": 13.66814,
+     "lon": 100.60466
+    },
+    {
+     "code": "E14",
+     "en": "Bearing",
+     "th": "แบริ่ง",
+     "lat": 13.66118,
+     "lon": 100.60181
+    },
+    {
+     "code": "E15",
+     "en": "Samrong",
+     "th": "สำโรง",
+     "lat": 13.64649,
+     "lon": 100.59579
+    },
+    {
+     "code": "E16",
+     "en": "Pu Chao",
+     "th": "ปู่เจ้า",
+     "lat": 13.63728,
+     "lon": 100.59201
+    },
+    {
+     "code": "E17",
+     "en": "Chang Erawan",
+     "th": "ช้างเอราวัณ",
+     "lat": 13.62159,
+     "lon": 100.59016
+    },
+    {
+     "code": "E18",
+     "en": "Royal Thai Naval Academy",
+     "th": "โรงเรียนนายเรือ",
+     "lat": 13.60841,
+     "lon": 100.59491
+    },
+    {
+     "code": "E19",
+     "en": "Pak Nam",
+     "th": "ปากน้ำ",
+     "lat": 13.60212,
+     "lon": 100.59709
+    },
+    {
+     "code": "E20",
+     "en": "Srinagarindra",
+     "th": "ศรีนครินทร์",
+     "lat": 13.592,
+     "lon": 100.60904
+    },
+    {
+     "code": "E21",
+     "en": "Phraek Sa",
+     "th": "แพรกษา",
+     "lat": 13.58419,
+     "lon": 100.60791
+    },
+    {
+     "code": "E22",
+     "en": "Sai Luat",
+     "th": "สายลวด",
+     "lat": 13.57778,
+     "lon": 100.60546
+    },
+    {
+     "code": "E23",
+     "en": "Kheha",
+     "th": "เคหะฯ",
+     "lat": 13.56769,
+     "lon": 100.60769
+    }
+   ]
+  },
+  {
+   "id": "bts-silom",
+   "name": "BTS Silom Line",
+   "short": "Silom",
+   "system": "BTS",
+   "color": "#02817D",
+   "stations": [
+    {
+     "code": "W1",
+     "en": "National Stadium",
+     "th": "สนามกีฬาแห่งชาติ",
+     "lat": 13.74651,
+     "lon": 100.52909
+    },
+    {
+     "code": "CEN",
+     "en": "Siam",
+     "th": "สยาม",
+     "lat": 13.74562,
+     "lon": 100.53422
+    },
+    {
+     "code": "S1",
+     "en": "Ratchadamri",
+     "th": "ราชดำริ",
+     "lat": 13.73947,
+     "lon": 100.53945
+    },
+    {
+     "code": "S2",
+     "en": "Sala Daeng",
+     "th": "ศาลาแดง",
+     "lat": 13.72857,
+     "lon": 100.53434
+    },
+    {
+     "code": "S3",
+     "en": "Chong Nonsi",
+     "th": "ช่องนนทรี",
+     "lat": 13.7238,
+     "lon": 100.52933
+    },
+    {
+     "code": "S4",
+     "en": "Saint Louis",
+     "th": "เซนต์หลุยส์",
+     "lat": 13.72082,
+     "lon": 100.52669
+    },
+    {
+     "code": "S5",
+     "en": "Surasak",
+     "th": "สุรศักดิ์",
+     "lat": 13.71927,
+     "lon": 100.52146
+    },
+    {
+     "code": "S6",
+     "en": "Saphan Taksin",
+     "th": "สะพานตากสิน",
+     "lat": 13.71881,
+     "lon": 100.51422
+    },
+    {
+     "code": "S7",
+     "en": "Krung Thon Buri",
+     "th": "กรุงธนบุรี",
+     "lat": 13.72093,
+     "lon": 100.50272
+    },
+    {
+     "code": "S8",
+     "en": "Wongwian Yai",
+     "th": "วงเวียนใหญ่",
+     "lat": 13.72108,
+     "lon": 100.49516
+    },
+    {
+     "code": "S9",
+     "en": "Pho Nimit",
+     "th": "โพธิ์นิมิตร",
+     "lat": 13.71924,
+     "lon": 100.48597
+    },
+    {
+     "code": "S10",
+     "en": "Talat Phlu",
+     "th": "ตลาดพลู",
+     "lat": 13.71422,
+     "lon": 100.47669
+    },
+    {
+     "code": "S11",
+     "en": "Wutthakat",
+     "th": "วุฒากาศ",
+     "lat": 13.71302,
+     "lon": 100.4689
+    },
+    {
+     "code": "S12",
+     "en": "Bang Wa",
+     "th": "บางหว้า",
+     "lat": 13.72079,
+     "lon": 100.45779
+    }
+   ]
+  },
+  {
+   "id": "bts-gold",
+   "name": "BTS Gold Line",
+   "short": "Gold",
+   "system": "BTS",
+   "color": "#A58704",
+   "stations": [
+    {
+     "code": "G1",
+     "en": "Krung Thon Buri",
+     "th": "กรุงธนบุรี",
+     "lat": 13.72111,
+     "lon": 100.50371
+    },
+    {
+     "code": "G2",
+     "en": "Charoen Nakhon",
+     "th": "เจริญนคร",
+     "lat": 13.72646,
+     "lon": 100.50907
+    },
+    {
+     "code": "G3",
+     "en": "Khlong San",
+     "th": "คลองสาน",
+     "lat": 13.73031,
+     "lon": 100.50772
+    }
+   ]
+  },
+  {
+   "id": "mrt-blue",
+   "name": "MRT Blue Line",
+   "short": "Blue",
+   "system": "MRT",
+   "color": "#1E398D",
+   "stations": [
+    {
+     "code": "BL01",
+     "en": "Tha Phra",
+     "th": "ท่าพระ",
+     "lat": 13.72965,
+     "lon": 100.47404
+    },
+    {
+     "code": "BL02",
+     "en": "Charan 13",
+     "th": "จรัญฯ 13",
+     "lat": 13.74017,
+     "lon": 100.47071
+    },
+    {
+     "code": "BL03",
+     "en": "Fai Chai",
+     "th": "ไฟฉาย",
+     "lat": 13.7558,
+     "lon": 100.46932
+    },
+    {
+     "code": "BL04",
+     "en": "Bang Khun Non",
+     "th": "บางขุนนนท์",
+     "lat": 13.76333,
+     "lon": 100.4733
+    },
+    {
+     "code": "BL05",
+     "en": "Bang Yi Khan",
+     "th": "บางยี่ขัน",
+     "lat": 13.77738,
+     "lon": 100.48526
+    },
+    {
+     "code": "BL06",
+     "en": "Sirindhorn",
+     "th": "สิรินธร",
+     "lat": 13.78387,
+     "lon": 100.49333
+    },
+    {
+     "code": "BL07",
+     "en": "Bang Phlat",
+     "th": "บางพลัด",
+     "lat": 13.79241,
+     "lon": 100.50489
+    },
+    {
+     "code": "BL08",
+     "en": "Bang O",
+     "th": "บางอ้อ",
+     "lat": 13.79898,
+     "lon": 100.50979
+    },
+    {
+     "code": "BL09",
+     "en": "Bang Pho",
+     "th": "บางโพ",
+     "lat": 13.8064,
+     "lon": 100.52101
+    },
+    {
+     "code": "BL10",
+     "en": "Tao Poon",
+     "th": "เตาปูน",
+     "lat": 13.80616,
+     "lon": 100.53078
+    },
+    {
+     "code": "BL11",
+     "en": "Bang Sue",
+     "th": "บางซื่อ",
+     "lat": 13.80239,
+     "lon": 100.54105
+    },
+    {
+     "code": "BL12",
+     "en": "Kamphaeng Phet",
+     "th": "กำแพงเพชร",
+     "lat": 13.79795,
+     "lon": 100.54788
+    },
+    {
+     "code": "BL13",
+     "en": "Chatuchak Park",
+     "th": "สวนจตุจักร",
+     "lat": 13.80296,
+     "lon": 100.55328
+    },
+    {
+     "code": "BL14",
+     "en": "Phahon Yothin",
+     "th": "พหลโยธิน",
+     "lat": 13.81288,
+     "lon": 100.56146
+    },
+    {
+     "code": "BL15",
+     "en": "Lat Phrao",
+     "th": "ลาดพร้าว",
+     "lat": 13.8065,
+     "lon": 100.57287
+    },
+    {
+     "code": "BL16",
+     "en": "Ratchadaphisek",
+     "th": "รัชดาภิเษก",
+     "lat": 13.79897,
+     "lon": 100.57455
+    },
+    {
+     "code": "BL17",
+     "en": "Sutthisan",
+     "th": "สุทธิสาร",
+     "lat": 13.78949,
+     "lon": 100.57408
+    },
+    {
+     "code": "BL18",
+     "en": "Huai Khwang",
+     "th": "ห้วยขวาง",
+     "lat": 13.77869,
+     "lon": 100.57357
+    },
+    {
+     "code": "BL19",
+     "en": "Thailand Cultural Centre",
+     "th": "ศูนย์วัฒนธรรมแห่งประเทศไทย",
+     "lat": 13.76616,
+     "lon": 100.57012
+    },
+    {
+     "code": "BL20",
+     "en": "Phra Ram 9",
+     "th": "พระราม 9",
+     "lat": 13.75782,
+     "lon": 100.56528
+    },
+    {
+     "code": "BL21",
+     "en": "Phetchaburi",
+     "th": "เพชรบุรี",
+     "lat": 13.74919,
+     "lon": 100.56342
+    },
+    {
+     "code": "BL22",
+     "en": "Sukhumvit",
+     "th": "สุขุมวิท",
+     "lat": 13.73747,
+     "lon": 100.5615
+    },
+    {
+     "code": "BL23",
+     "en": "Queen Sirikit National Convention Centre",
+     "th": "ศูนย์การประชุมแห่งชาติสิริกิติ์",
+     "lat": 13.72267,
+     "lon": 100.55991
+    },
+    {
+     "code": "BL24",
+     "en": "Khlong Toei",
+     "th": "คลองเตย",
+     "lat": 13.72213,
+     "lon": 100.55437
+    },
+    {
+     "code": "BL25",
+     "en": "Lumphini",
+     "th": "ลุมพินี",
+     "lat": 13.72561,
+     "lon": 100.54572
+    },
+    {
+     "code": "BL26",
+     "en": "Si Lom",
+     "th": "สีลม",
+     "lat": 13.7292,
+     "lon": 100.53707
+    },
+    {
+     "code": "BL27",
+     "en": "Sam Yan",
+     "th": "สามย่าน",
+     "lat": 13.73206,
+     "lon": 100.53012
+    },
+    {
+     "code": "BL28",
+     "en": "Hua Lamphong",
+     "th": "หัวลำโพง",
+     "lat": 13.73757,
+     "lon": 100.51713
+    },
+    {
+     "code": "BL29",
+     "en": "Wat Mangkon",
+     "th": "วัดมังกร",
+     "lat": 13.74221,
+     "lon": 100.50991
+    },
+    {
+     "code": "BL30",
+     "en": "Sam Yot",
+     "th": "สามยอด",
+     "lat": 13.747,
+     "lon": 100.5023
+    },
+    {
+     "code": "BL31",
+     "en": "Sanam Chai",
+     "th": "สนามไชย",
+     "lat": 13.74433,
+     "lon": 100.49462
+    },
+    {
+     "code": "BL32",
+     "en": "Itsaraphap",
+     "th": "อิสรภาพ",
+     "lat": 13.73836,
+     "lon": 100.4857
+    },
+    {
+     "code": "BL33",
+     "en": "Bang Phai",
+     "th": "บางไผ่",
+     "lat": 13.72462,
+     "lon": 100.46508
+    },
+    {
+     "code": "BL34",
+     "en": "Bang Wa",
+     "th": "บางหว้า",
+     "lat": 13.72027,
+     "lon": 100.45702
+    },
+    {
+     "code": "BL35",
+     "en": "Phetkasem 48",
+     "th": "เพชรเกษม 48",
+     "lat": 13.71556,
+     "lon": 100.44545
+    },
+    {
+     "code": "BL36",
+     "en": "Phasi Charoen",
+     "th": "ภาษีเจริญ",
+     "lat": 13.71291,
+     "lon": 100.43433
+    },
+    {
+     "code": "BL37",
+     "en": "Bang Khae",
+     "th": "บางแค",
+     "lat": 13.71194,
+     "lon": 100.42234
+    },
+    {
+     "code": "BL38",
+     "en": "Lak Song",
+     "th": "หลักสอง",
+     "lat": 13.71088,
+     "lon": 100.40948
+    }
+   ],
+   "extraLinks": [
+    [
+     "BL32",
+     "BL01"
+    ],
+    [
+     "BL01",
+     "BL33"
+    ]
+   ],
+   "removeLinks": [
+    [
+     "BL32",
+     "BL33"
+    ]
+   ]
+  },
+  {
+   "id": "mrt-purple",
+   "name": "MRT Purple Line",
+   "short": "Purple",
+   "system": "MRT",
+   "color": "#893B90",
+   "stations": [
+    {
+     "code": "PP01",
+     "en": "Khlong Bang Phai",
+     "th": "คลองบางไผ่",
+     "lat": 13.89243,
+     "lon": 100.40822
+    },
+    {
+     "code": "PP02",
+     "en": "Talad Bang Yai",
+     "th": "ตลาดบางใหญ่",
+     "lat": 13.88101,
+     "lon": 100.40929
+    },
+    {
+     "code": "PP03",
+     "en": "Sam Yaek Bang Yai",
+     "th": "สามแยกบางใหญ่",
+     "lat": 13.87467,
+     "lon": 100.41936
+    },
+    {
+     "code": "PP04",
+     "en": "Bang Phlu",
+     "th": "บางพลู",
+     "lat": 13.87577,
+     "lon": 100.4338
+    },
+    {
+     "code": "PP05",
+     "en": "Bang Rak Yai",
+     "th": "บางรักใหญ่",
+     "lat": 13.87661,
+     "lon": 100.44494
+    },
+    {
+     "code": "PP06",
+     "en": "Bang Rak Noi Tha It",
+     "th": "บางรักน้อยท่าอิฐ",
+     "lat": 13.87481,
+     "lon": 100.45597
+    },
+    {
+     "code": "PP07",
+     "en": "Sai Ma",
+     "th": "ไทรม้า",
+     "lat": 13.87051,
+     "lon": 100.46669
+    },
+    {
+     "code": "PP08",
+     "en": "Phra Nang Klao Bridge",
+     "th": "สะพานพระนั่งเกล้า",
+     "lat": 13.87029,
+     "lon": 100.48013
+    },
+    {
+     "code": "PP09",
+     "en": "Yaek Nonthaburi 1",
+     "th": "แยกนนทบุรี 1",
+     "lat": 13.86596,
+     "lon": 100.49408
+    },
+    {
+     "code": "PP10",
+     "en": "Bang Krasor",
+     "th": "บางกระสอ",
+     "lat": 13.86165,
+     "lon": 100.50465
+    },
+    {
+     "code": "PP11",
+     "en": "Nonthaburi Civic Center",
+     "th": "ศูนย์ราชการนนทบุรี",
+     "lat": 13.86017,
+     "lon": 100.51307
+    },
+    {
+     "code": "PP12",
+     "en": "Ministry of Public Health",
+     "th": "กระทรวงสาธารณสุข",
+     "lat": 13.84853,
+     "lon": 100.51472
+    },
+    {
+     "code": "PP13",
+     "en": "Yaek Tiwanon",
+     "th": "แยกติวานนท์",
+     "lat": 13.83953,
+     "lon": 100.51497
+    },
+    {
+     "code": "PP14",
+     "en": "Wong Sawang",
+     "th": "วงศ์สว่าง",
+     "lat": 13.82986,
+     "lon": 100.5265
+    },
+    {
+     "code": "PP15",
+     "en": "Bang Son",
+     "th": "บางซ่อน",
+     "lat": 13.82008,
+     "lon": 100.53246
+    },
+    {
+     "code": "PP16",
+     "en": "Tao Poon",
+     "th": "เตาปูน",
+     "lat": 13.80616,
+     "lon": 100.53078
+    }
+   ]
+  },
+  {
+   "id": "mrt-yellow",
+   "name": "MRT Yellow Line",
+   "short": "Yellow",
+   "system": "MRT",
+   "color": "#FFD400",
+   "stations": [
+    {
+     "code": "YL01",
+     "en": "Lat Phrao",
+     "th": "ลาดพร้าว",
+     "lat": 13.80698,
+     "lon": 100.57478
+    },
+    {
+     "code": "YL02",
+     "en": "Phawana",
+     "th": "ภาวนา",
+     "lat": 13.80016,
+     "lon": 100.5842
+    },
+    {
+     "code": "YL03",
+     "en": "Chok Chai 4",
+     "th": "โชคชัย 4",
+     "lat": 13.79443,
+     "lon": 100.59443
+    },
+    {
+     "code": "YL04",
+     "en": "Lat Phrao 71",
+     "th": "ลาดพร้าว 71",
+     "lat": 13.78709,
+     "lon": 100.60757
+    },
+    {
+     "code": "YL05",
+     "en": "Lat Phrao 83",
+     "th": "ลาดพร้าว 83",
+     "lat": 13.7837,
+     "lon": 100.61366
+    },
+    {
+     "code": "YL06",
+     "en": "Mahatthai",
+     "th": "มหาดไทย",
+     "lat": 13.77837,
+     "lon": 100.62316
+    },
+    {
+     "code": "YL07",
+     "en": "Lat Phrao 101",
+     "th": "ลาดพร้าว 101",
+     "lat": 13.77463,
+     "lon": 100.62984
+    },
+    {
+     "code": "YL08",
+     "en": "Bang Kapi",
+     "th": "บางกะปิ",
+     "lat": 13.76908,
+     "lon": 100.63977
+    },
+    {
+     "code": "YL09",
+     "en": "Yaek Lam Sali",
+     "th": "แยกลำสาลี",
+     "lat": 13.76182,
+     "lon": 100.64557
+    },
+    {
+     "code": "YL10",
+     "en": "Si Kritha",
+     "th": "ศรีกรีฑา",
+     "lat": 13.75041,
+     "lon": 100.64479
+    },
+    {
+     "code": "YL11",
+     "en": "Hua Mak",
+     "th": "หัวหมาก",
+     "lat": 13.73615,
+     "lon": 100.64114
+    },
+    {
+     "code": "YL12",
+     "en": "Kalantan",
+     "th": "กลันตัน",
+     "lat": 13.72527,
+     "lon": 100.64178
+    },
+    {
+     "code": "YL13",
+     "en": "Si Nut",
+     "th": "ศรีนุช",
+     "lat": 13.7111,
+     "lon": 100.6442
+    },
+    {
+     "code": "YL14",
+     "en": "Srinagarindra 38",
+     "th": "ศรีนครินทร์ 38",
+     "lat": 13.70112,
+     "lon": 100.64647
+    },
+    {
+     "code": "YL15",
+     "en": "Suan Luang Rama IX",
+     "th": "สวนหลวง ร.9",
+     "lat": 13.69086,
+     "lon": 100.6471
+    },
+    {
+     "code": "YL16",
+     "en": "Si Udom",
+     "th": "ศรีอุดม",
+     "lat": 13.67664,
+     "lon": 100.64617
+    },
+    {
+     "code": "YL17",
+     "en": "Si Iam",
+     "th": "ศรีเอี่ยม",
+     "lat": 13.66769,
+     "lon": 100.64507
+    },
+    {
+     "code": "YL18",
+     "en": "Si La Salle",
+     "th": "ศรีลาซาล",
+     "lat": 13.65497,
+     "lon": 100.64216
+    },
+    {
+     "code": "YL19",
+     "en": "Si Bearing",
+     "th": "ศรีแบริ่ง",
+     "lat": 13.64349,
+     "lon": 100.63627
+    },
+    {
+     "code": "YL20",
+     "en": "Si Dan",
+     "th": "ศรีด่าน",
+     "lat": 13.6331,
+     "lon": 100.63011
+    },
+    {
+     "code": "YL21",
+     "en": "Si Thepha",
+     "th": "ศรีเทพา",
+     "lat": 13.62984,
+     "lon": 100.62269
+    },
+    {
+     "code": "YL22",
+     "en": "Thipphawan",
+     "th": "ทิพวัล",
+     "lat": 13.63673,
+     "lon": 100.6099
+    },
+    {
+     "code": "YL23",
+     "en": "Samrong",
+     "th": "สำโรง",
+     "lat": 13.64502,
+     "lon": 100.5966
+    }
+   ]
+  },
+  {
+   "id": "mrt-pink",
+   "name": "MRT Pink Line",
+   "short": "Pink",
+   "system": "MRT",
+   "color": "#E76589",
+   "stations": [
+    {
+     "code": "PK01",
+     "en": "Nonthaburi Civic Center",
+     "th": "ศูนย์ราชการนนทบุรี",
+     "lat": 13.85972,
+     "lon": 100.51812
+    },
+    {
+     "code": "PK02",
+     "en": "Khae Rai",
+     "th": "แคราย",
+     "lat": 13.86266,
+     "lon": 100.52065
+    },
+    {
+     "code": "PK03",
+     "en": "Sanambin Nam",
+     "th": "สนามบินน้ำ",
+     "lat": 13.87414,
+     "lon": 100.51632
+    },
+    {
+     "code": "PK04",
+     "en": "Samakkhi",
+     "th": "สามัคคี",
+     "lat": 13.88928,
+     "lon": 100.51057
+    },
+    {
+     "code": "PK05",
+     "en": "Royal Irrigation Department",
+     "th": "กรมชลประทาน",
+     "lat": 13.89857,
+     "lon": 100.50709
+    },
+    {
+     "code": "PK06",
+     "en": "Yaek Pak Kret",
+     "th": "แยกปากเกร็ด",
+     "lat": 13.9062,
+     "lon": 100.50539
+    },
+    {
+     "code": "PK07",
+     "en": "Pak Kret Bypass",
+     "th": "เลี่ยงเมืองปากเกร็ด",
+     "lat": 13.9065,
+     "lon": 100.51558
+    },
+    {
+     "code": "PK08",
+     "en": "Chaeng Watthana-Pak Kret 28",
+     "th": "แจ้งวัฒนะ-ปากเกร็ด 28",
+     "lat": 13.90416,
+     "lon": 100.52926
+    },
+    {
+     "code": "PK09",
+     "en": "Si Rat",
+     "th": "ศรีรัช",
+     "lat": 13.90057,
+     "lon": 100.54001
+    },
+    {
+     "code": "PK10",
+     "en": "Muang Thong Thani",
+     "th": "เมืองทองธานี",
+     "lat": 13.89743,
+     "lon": 100.54845
+    },
+    {
+     "code": "PK11",
+     "en": "Chaeng Watthana 14",
+     "th": "แจ้งวัฒนะ 14",
+     "lat": 13.8933,
+     "lon": 100.56015
+    },
+    {
+     "code": "PK12",
+     "en": "Government Complex",
+     "th": "ศูนย์ราชการเฉลิมพระเกียรติ",
+     "lat": 13.89077,
+     "lon": 100.56735
+    },
+    {
+     "code": "PK13",
+     "en": "National Telecom",
+     "th": "โทรคมนาคมแห่งชาติ",
+     "lat": 13.88758,
+     "lon": 100.57571
+    },
+    {
+     "code": "PK14",
+     "en": "Lak Si",
+     "th": "หลักสี่",
+     "lat": 13.88408,
+     "lon": 100.58269
+    },
+    {
+     "code": "PK15",
+     "en": "Rajabhat Phranakhon",
+     "th": "ราชภัฏพระนคร",
+     "lat": 13.87994,
+     "lon": 100.5893
+    },
+    {
+     "code": "PK16",
+     "en": "Wat Phra Sri Mahathat",
+     "th": "วัดพระศรีมหาธาตุ",
+     "lat": 13.87436,
+     "lon": 100.5972
+    },
+    {
+     "code": "PK17",
+     "en": "Ram Inthra 3",
+     "th": "รามอินทรา 3",
+     "lat": 13.87095,
+     "lon": 100.60262
+    },
+    {
+     "code": "PK18",
+     "en": "Lat Pla Khao",
+     "th": "ลาดปลาเค้า",
+     "lat": 13.8628,
+     "lon": 100.61781
+    },
+    {
+     "code": "PK19",
+     "en": "Ram Inthra Kor Mor 4",
+     "th": "รามอินทรา กม.4",
+     "lat": 13.85831,
+     "lon": 100.62613
+    },
+    {
+     "code": "PK20",
+     "en": "Maiyalap",
+     "th": "มัยลาภ",
+     "lat": 13.85501,
+     "lon": 100.63223
+    },
+    {
+     "code": "PK21",
+     "en": "Vacharaphol",
+     "th": "วัชรพล",
+     "lat": 13.84926,
+     "lon": 100.64288
+    },
+    {
+     "code": "PK22",
+     "en": "Ram Inthra Kor Mor 6",
+     "th": "รามอินทรา กม.6",
+     "lat": 13.84527,
+     "lon": 100.65024
+    },
+    {
+     "code": "PK23",
+     "en": "Khu Bon",
+     "th": "คู้บอน",
+     "lat": 13.84062,
+     "lon": 100.65879
+    },
+    {
+     "code": "PK24",
+     "en": "Ram Inthra Kor Mor 9",
+     "th": "รามอินทรา กม.9",
+     "lat": 13.83379,
+     "lon": 100.66757
+    },
+    {
+     "code": "PK25",
+     "en": "Outer Ring Road-Ram Inthra",
+     "th": "วงแหวนรามอินทรา",
+     "lat": 13.82445,
+     "lon": 100.67721
+    },
+    {
+     "code": "PK26",
+     "en": "Nopparat",
+     "th": "นพรัตน์",
+     "lat": 13.81653,
+     "lon": 100.68565
+    },
+    {
+     "code": "PK27",
+     "en": "Bang Chan",
+     "th": "บางชัน",
+     "lat": 13.81272,
+     "lon": 100.70294
+    },
+    {
+     "code": "PK28",
+     "en": "Setthabutbamphen",
+     "th": "เศรษฐบุตรบำเพ็ญ",
+     "lat": 13.81269,
+     "lon": 100.71263
+    },
+    {
+     "code": "PK29",
+     "en": "Min Buri Market",
+     "th": "ตลาดมีนบุรี",
+     "lat": 13.81251,
+     "lon": 100.72584
+    },
+    {
+     "code": "PK30",
+     "en": "Min Buri",
+     "th": "มีนบุรี",
+     "lat": 13.80841,
+     "lon": 100.73269
+    }
+   ]
+  },
+  {
+   "id": "arl",
+   "name": "Airport Rail Link",
+   "short": "Airport Link",
+   "system": "ARL",
+   "color": "#8E1B2E",
+   "stations": [
+    {
+     "code": "A1",
+     "en": "Suvarnabhumi",
+     "th": "สุวรรณภูมิ",
+     "lat": 13.6943,
+     "lon": 100.75134
+    },
+    {
+     "code": "A2",
+     "en": "Lat Krabang",
+     "th": "ลาดกระบัง",
+     "lat": 13.72771,
+     "lon": 100.74932
+    },
+    {
+     "code": "A3",
+     "en": "Ban Thap Chang",
+     "th": "บ้านทับช้าง",
+     "lat": 13.73291,
+     "lon": 100.69082
+    },
+    {
+     "code": "A4",
+     "en": "Hua Mak",
+     "th": "หัวหมาก",
+     "lat": 13.73806,
+     "lon": 100.64588
+    },
+    {
+     "code": "A5",
+     "en": "Ramkhamhaeng",
+     "th": "รามคำแหง",
+     "lat": 13.74297,
+     "lon": 100.60062
+    },
+    {
+     "code": "A6",
+     "en": "Makkasan",
+     "th": "มักกะสัน",
+     "lat": 13.75075,
+     "lon": 100.56219
+    },
+    {
+     "code": "A7",
+     "en": "Ratchaprarop",
+     "th": "ราชปรารภ",
+     "lat": 13.75507,
+     "lon": 100.54232
+    },
+    {
+     "code": "A8",
+     "en": "Phaya Thai",
+     "th": "พญาไท",
+     "lat": 13.75683,
+     "lon": 100.53449
+    }
+   ]
+  },
+  {
+   "id": "srt-dark-red",
+   "name": "SRT Dark Red Line",
+   "short": "Dark Red",
+   "system": "SRT",
+   "color": "#B5191E",
+   "stations": [
+    {
+     "code": "RN01",
+     "en": "Krung Thep Aphiwat",
+     "th": "กรุงเทพอภิวัฒน์",
+     "lat": 13.80404,
+     "lon": 100.54132
+    },
+    {
+     "code": "RN02",
+     "en": "Chatuchak",
+     "th": "จตุจักร",
+     "lat": 13.82665,
+     "lon": 100.54942
+    },
+    {
+     "code": "RN03",
+     "en": "Wat Samian Nari",
+     "th": "วัดเสมียนนารี",
+     "lat": 13.84163,
+     "lon": 100.55745
+    },
+    {
+     "code": "RN04",
+     "en": "Bang Khen",
+     "th": "บางเขน",
+     "lat": 13.84939,
+     "lon": 100.56162
+    },
+    {
+     "code": "RN05",
+     "en": "Thung Song Hong",
+     "th": "ทุ่งสองห้อง",
+     "lat": 13.86023,
+     "lon": 100.56748
+    },
+    {
+     "code": "RN06",
+     "en": "Lak Si",
+     "th": "หลักสี่",
+     "lat": 13.88634,
+     "lon": 100.58189
+    },
+    {
+     "code": "RN07",
+     "en": "Kan Kheha",
+     "th": "การเคหะ",
+     "lat": 13.89868,
+     "lon": 100.58882
+    },
+    {
+     "code": "RN08",
+     "en": "Don Muang",
+     "th": "ดอนเมือง",
+     "lat": 13.91475,
+     "lon": 100.59776
+    },
+    {
+     "code": "RN09",
+     "en": "Lak Hok (Rangsit U.)",
+     "th": "หลักหก (ม.รังสิต)",
+     "lat": 13.96572,
+     "lon": 100.60538
+    },
+    {
+     "code": "RN10",
+     "en": "Rangsit",
+     "th": "รังสิต",
+     "lat": 13.99054,
+     "lon": 100.60214
+    }
+   ]
+  }
+ ]
+}

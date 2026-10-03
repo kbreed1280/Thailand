@@ -19,15 +19,25 @@ struct TripItineraryView: View {
     @State private var showingProfile = false
     @State private var confirmingDelete = false
     @State private var mapDay: Day?
+    @State private var isPreparingShare = false
+    @State private var sharingError: String?
 
     private var store: ItineraryStore { ItineraryStore(context: context) }
+    private var persistence: PersistenceController { PersistenceController.shared }
+    /// False when the trip's owner gave you view-only access.
+    private var canEdit: Bool { persistence.canEdit(trip) }
 
     var body: some View {
         // Re-read relationships whenever anything in the store changes (local edits or sync).
         let _ = refreshTick
         List {
             Section {
-                TripHeaderCard(trip: trip) {
+                TripHeaderCard(
+                    trip: trip,
+                    members: persistence.participantNames(for: trip),
+                    isSharedWithMe: persistence.isSharedWithMe(trip),
+                    canEdit: canEdit
+                ) {
                     showingPacking = true
                 } onIdeas: {
                     showingStarterIdeas = true
@@ -48,16 +58,37 @@ struct TripItineraryView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarTitleMenu { tripMenu }
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    editingNewItemFor = NewItemTarget(day: trip.today)
-                } label: {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.title2)
-                        .symbolRenderingMode(.hierarchical)
+            ToolbarItemGroup(placement: .primaryAction) {
+                if persistence.isCloudEnabled {
+                    Button {
+                        shareTrip()
+                    } label: {
+                        if isPreparingShare {
+                            ProgressView()
+                        } else {
+                            Image(systemName: persistence.share(for: trip) == nil ? "person.crop.circle.badge.plus" : "person.2.circle.fill")
+                                .font(.title3)
+                        }
+                    }
+                    .accessibilityLabel("Share Trip")
+                    .disabled(isPreparingShare)
                 }
-                .accessibilityLabel("Add to itinerary")
+                if canEdit {
+                    Button {
+                        editingNewItemFor = NewItemTarget(day: trip.today)
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title2)
+                            .symbolRenderingMode(.hierarchical)
+                    }
+                    .accessibilityLabel("Add to itinerary")
+                }
             }
+        }
+        .alert("Couldn't Share", isPresented: Binding(get: { sharingError != nil }, set: { if !$0 { sharingError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(sharingError ?? "")
         }
         .onReceive(NotificationCenter.default.publisher(for: .NSManagedObjectContextObjectsDidChange, object: context)) { _ in
             refreshTick &+= 1
@@ -85,14 +116,33 @@ struct TripItineraryView: View {
         .sheet(item: $mapDay) { day in
             DayMapView(day: day)
         }
-        .confirmationDialog("Delete \(trip.displayName)?", isPresented: $confirmingDelete, titleVisibility: .visible) {
-            Button("Delete Trip", role: .destructive) {
-                store.delete(trip)
-                store.save()
-                selectedTripID = ""
+        .confirmationDialog(
+            persistence.isSharedWithMe(trip) ? "Leave \(trip.displayName)?" : "Delete \(trip.displayName)?",
+            isPresented: $confirmingDelete,
+            titleVisibility: .visible
+        ) {
+            if persistence.isSharedWithMe(trip) {
+                Button("Leave Trip", role: .destructive) {
+                    Task {
+                        try? await persistence.leave(trip)
+                        selectedTripID = ""
+                    }
+                }
+            } else {
+                Button("Delete Trip", role: .destructive) {
+                    store.delete(trip)
+                    store.save()
+                    selectedTripID = ""
+                }
             }
         } message: {
-            Text("Every day, place, photo, expense and packing item in this trip is deleted.")
+            if persistence.isSharedWithMe(trip) {
+                Text("The trip is removed from your phone. The owner and others keep it.")
+            } else if persistence.share(for: trip) != nil {
+                Text("This trip is shared. Deleting it removes it for everyone you shared it with.")
+            } else {
+                Text("Every day, place, photo, expense and packing item in this trip is deleted.")
+            }
         }
     }
 
@@ -171,7 +221,18 @@ struct TripItineraryView: View {
         }
     }
 
+    @ViewBuilder
     private func row(for item: Item, in day: Day?) -> some View {
+        if canEdit {
+            editableRow(for: item, in: day)
+        } else {
+            NavigationLink(value: item) {
+                ItemRow(item: item)
+            }
+        }
+    }
+
+    private func editableRow(for item: Item, in day: Day?) -> some View {
         NavigationLink(value: item) {
             ItemRow(item: item)
         }
@@ -247,14 +308,34 @@ struct TripItineraryView: View {
             }
         }
         Section {
+            if persistence.isCloudEnabled {
+                Button("Share Trip", systemImage: "person.crop.circle.badge.plus") { shareTrip() }
+            }
             Button("Edit Trip", systemImage: "pencil") { showingEditTrip = true }
+                .disabled(!canEdit)
             Button("Packing List", systemImage: "suitcase.rolling") { showingPacking = true }
             Button("Starter Ideas", systemImage: "lightbulb") { showingStarterIdeas = true }
             Button("Your Name", systemImage: "person.crop.circle") { showingProfile = true }
         }
         Section {
             Button("New Trip", systemImage: "plus") { showingNewTrip = true }
-            Button("Delete Trip", systemImage: "trash", role: .destructive) { confirmingDelete = true }
+            Button(
+                persistence.isSharedWithMe(trip) ? "Leave Trip" : "Delete Trip",
+                systemImage: persistence.isSharedWithMe(trip) ? "rectangle.portrait.and.arrow.right" : "trash",
+                role: .destructive
+            ) { confirmingDelete = true }
+        }
+    }
+
+    private func shareTrip() {
+        isPreparingShare = true
+        Task {
+            defer { isPreparingShare = false }
+            do {
+                try await TripSharing.presentShareSheet(for: trip)
+            } catch {
+                sharingError = error.localizedDescription
+            }
         }
     }
 
@@ -363,6 +444,9 @@ private struct DayHeader: View {
 /// Trip name, dates, countdown and quick links.
 private struct TripHeaderCard: View {
     @ObservedObject var trip: Trip
+    var members: [String] = []
+    var isSharedWithMe = false
+    var canEdit = true
     let onPacking: () -> Void
     let onIdeas: () -> Void
 
@@ -394,6 +478,21 @@ private struct TripHeaderCard: View {
                         .font(.subheadline)
                         .foregroundStyle(.white.opacity(0.9))
                 }
+            }
+
+            if !members.isEmpty || isSharedWithMe || !canEdit {
+                HStack(spacing: 6) {
+                    if !members.isEmpty {
+                        Label("With \(ListFormatter.localizedString(byJoining: members))", systemImage: "person.2.fill")
+                    } else if isSharedWithMe {
+                        Label("Shared with you", systemImage: "person.2.fill")
+                    }
+                    if !canEdit {
+                        Label("View only", systemImage: "eye.fill")
+                    }
+                }
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.white)
             }
 
             let all = trip.allItems

@@ -307,6 +307,7 @@ struct ExpenseEditorView: View {
     private func save() {
         let target = expense ?? {
             let new = Expense(context: context)
+            new.placeInSameStore(as: trip)
             new.uuid = UUID()
             new.addedBy = AppSettings.displayName
             new.trip = trip

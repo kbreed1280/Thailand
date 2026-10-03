@@ -280,6 +280,7 @@ struct ItemEditorView: View {
         }
         for data in newPhotos {
             let photo = ItemPhoto(context: context)
+            photo.placeInSameStore(as: trip)
             photo.uuid = UUID()
             photo.imageData = data
             photo.thumbnailData = ImageProcessing.thumbnail(from: data)

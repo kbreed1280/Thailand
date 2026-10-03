@@ -109,6 +109,7 @@ struct PackingListView: View {
 
     private func insert(_ title: String, category: PackingCategory) {
         let item = PackingItem(context: context)
+        item.placeInSameStore(as: trip)
         item.uuid = UUID()
         item.title = title
         item.category = category

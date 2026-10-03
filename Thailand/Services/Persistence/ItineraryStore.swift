@@ -44,6 +44,7 @@ struct ItineraryStore {
         for (index, date) in dates.enumerated() {
             let day = existing[date] ?? {
                 let day = Day(context: context)
+                day.placeInSameStore(as: trip)
                 day.uuid = UUID()
                 day.date = date
                 day.trip = trip
@@ -70,6 +71,7 @@ struct ItineraryStore {
         notes: String = ""
     ) -> Item {
         let item = Item(context: context)
+        item.placeInSameStore(as: trip)
         item.uuid = UUID()
         item.title = title
         item.category = category

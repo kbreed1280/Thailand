@@ -240,6 +240,7 @@ struct NearbyTabView: View {
 
         let nearbyLandmark = landmarks.first { $0.distance(from: here) < 150 }
         let visit = VisitLog(context: context)
+        visit.placeInSameStore(as: trip)
         visit.uuid = UUID()
         visit.date = .now
         visit.placeName = nearbyLandmark?.title ?? [areaName, cityName].filter { !$0.isEmpty }.joined(separator: ", ")

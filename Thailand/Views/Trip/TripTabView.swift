@@ -9,6 +9,7 @@ struct TripTabView: View {
 
     @AppStorage(AppSettings.selectedTripKey) private var selectedTripID = ""
     @State private var showingNewTrip = false
+    @State private var isJoiningShare = false
 
     private var currentTrip: Trip? {
         trips.first { $0.uuid?.uuidString == selectedTripID } ?? trips.first
@@ -52,6 +53,43 @@ struct TripTabView: View {
                 TripFormView(trip: nil) { trip in
                     selectedTripID = trip.uuid?.uuidString ?? ""
                 }
+            }
+            .safeAreaInset(edge: .bottom) {
+                if isJoiningShare {
+                    HStack(spacing: 10) {
+                        ProgressView()
+                        Text("Joining the shared trip. This can take a minute.")
+                            .font(.subheadline.weight(.medium))
+                    }
+                    .padding(12)
+                    .background(.regularMaterial, in: Capsule())
+                    .padding(.bottom, 8)
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .didAcceptTripShare)) { _ in
+                selectJoinedTripIfReady()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .NSManagedObjectContextObjectsDidChange, object: context)) { _ in
+                selectJoinedTripIfReady()
+            }
+            .onAppear { selectJoinedTripIfReady() }
+        }
+    }
+
+    /// After accepting an invitation, switch to that trip as soon as it has synced down.
+    private func selectJoinedTripIfReady() {
+        guard let pending = UserDefaults.standard.string(forKey: TripSharing.pendingShareKey) else {
+            isJoiningShare = false
+            return
+        }
+        isJoiningShare = true
+        let persistence = PersistenceController.shared
+        for trip in trips where persistence.isSharedWithMe(trip) {
+            if persistence.share(for: trip)?.recordID.recordName == pending {
+                selectedTripID = trip.uuid?.uuidString ?? ""
+                UserDefaults.standard.removeObject(forKey: TripSharing.pendingShareKey)
+                isJoiningShare = false
+                return
             }
         }
     }

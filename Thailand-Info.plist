@@ -9,5 +9,13 @@
 		<string>grab</string>
 		<string>bolt</string>
 	</array>
+	<!-- Lets iOS open this app when a trip invitation link is tapped. -->
+	<key>CKSharingSupported</key>
+	<true/>
+	<!-- Silent pushes from CloudKit when your travel partner changes the trip. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>

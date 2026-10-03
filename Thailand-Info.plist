@@ -19,6 +19,15 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
+		<string>fetch</string>
 	</array>
+	<!-- Background flight-status checks (gate changes, delays). -->
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.kbreed.thailandtrip.flightRefresh</string>
+	</array>
+	<!-- Lock Screen / Dynamic Island flight status. -->
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 </dict>
 </plist>

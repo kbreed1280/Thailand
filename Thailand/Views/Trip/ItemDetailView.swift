@@ -24,6 +24,9 @@ struct ItemDetailView: View {
 
                 if let coordinate = item.coordinate {
                     locationCard(coordinate)
+                    if BangkokRail.covers(coordinate) {
+                        StopRailCard(item: item, coordinate: coordinate)
+                    }
                 } else if let address = item.address, !address.isEmpty {
                     infoCard(title: "Address", systemImage: "mappin.and.ellipse") {
                         Text(address).textSelection(.enabled)

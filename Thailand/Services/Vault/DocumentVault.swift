@@ -6,11 +6,76 @@ struct VaultDocument: Codable, Identifiable, Equatable {
         case image, pdf
     }
 
+    enum Category: String, Codable, CaseIterable, Identifiable {
+        case passport, visa, insurance, flight, hotel, ticket, id, health, money, other
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .passport: "Passport"
+            case .visa: "Visa & Entry"
+            case .insurance: "Insurance"
+            case .flight: "Flights"
+            case .hotel: "Hotels"
+            case .ticket: "Tours & Tickets"
+            case .id: "ID & Driving Licence"
+            case .health: "Health & Vaccines"
+            case .money: "Cards & Money"
+            case .other: "Other"
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+            case .passport: "person.text.rectangle.fill"
+            case .visa: "checkmark.seal.fill"
+            case .insurance: "cross.case.fill"
+            case .flight: "airplane"
+            case .hotel: "bed.double.fill"
+            case .ticket: "ticket.fill"
+            case .id: "car.fill"
+            case .health: "syringe.fill"
+            case .money: "creditcard.fill"
+            case .other: "doc.fill"
+            }
+        }
+
+        /// Whether an expiry date matters for this kind of document.
+        var hasExpiry: Bool { [.passport, .visa, .insurance, .id, .money].contains(self) }
+    }
+
     var id = UUID()
     var title: String
     var fileName: String
     var kind: Kind
     var createdAt = Date()
+    // Added later; optional so older saved documents still load.
+    var category: Category?
+    var expiresAt: Date?
+    var pageCount: Int?
+
+    var resolvedCategory: Category { category ?? .other }
+
+    enum ExpiryWarning: Equatable {
+        case expired
+        /// Thailand requires a passport valid for 6 months after arrival.
+        case passportUnderSixMonths(Date)
+        case soon(Date)
+    }
+
+    /// Warning relative to a trip (passport rule) or today.
+    func expiryWarning(tripStart: Date?, now: Date = .now) -> ExpiryWarning? {
+        guard let expiresAt else { return nil }
+        if expiresAt < now { return .expired }
+        let reference = max(tripStart ?? now, now)
+        if resolvedCategory == .passport,
+           let sixMonths = Calendar.current.date(byAdding: .month, value: 6, to: reference), expiresAt < sixMonths {
+            return .passportUnderSixMonths(expiresAt)
+        }
+        if expiresAt.timeIntervalSince(now) < 45 * 24 * 3600 { return .soon(expiresAt) }
+        return nil
+    }
 }
 
 /// Passport, flight and hotel documents kept ONLY on this phone (never synced or shared),
@@ -66,16 +131,32 @@ final class DocumentVault: ObservableObject {
 
     // MARK: Documents
 
-    func add(data: Data, title: String, kind: VaultDocument.Kind) {
+    func add(data: Data, title: String, kind: VaultDocument.Kind, category: VaultDocument.Category = .other, expiresAt: Date? = nil, pageCount: Int? = nil) {
         guard isUnlocked else { return }
         let fileName = "\(UUID().uuidString).\(kind == .pdf ? "pdf" : "jpg")"
         do {
             try data.write(to: directory.appending(path: fileName), options: [.atomic, .completeFileProtection])
-            documents.insert(VaultDocument(title: title, fileName: fileName, kind: kind), at: 0)
+            documents.insert(VaultDocument(title: title, fileName: fileName, kind: kind, category: category, expiresAt: expiresAt, pageCount: pageCount), at: 0)
             saveIndex()
         } catch {
             lastError = "Couldn't save the document."
         }
+    }
+
+    func update(_ document: VaultDocument) {
+        guard let index = documents.firstIndex(where: { $0.id == document.id }) else { return }
+        documents[index] = document
+        saveIndex()
+    }
+
+    func data(for document: VaultDocument) -> Data? {
+        try? Data(contentsOf: url(for: document))
+    }
+
+    /// Documents with an expiry problem, read without unlocking (titles and dates only).
+    func expiryAlerts(tripStart: Date?) -> [(VaultDocument, VaultDocument.ExpiryWarning)] {
+        let list = isUnlocked ? documents : (try? JSONDecoder().decode([VaultDocument].self, from: Data(contentsOf: indexURL))) ?? []
+        return list.compactMap { doc in doc.expiryWarning(tripStart: tripStart).map { (doc, $0) } }
     }
 
     func rename(_ document: VaultDocument, to title: String) {

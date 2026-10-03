@@ -29,6 +29,15 @@ final class TravelTimeService {
     func leg(from: CLLocationCoordinate2D, to: CLLocationCoordinate2D, mode: TravelMode, at date: Date?) async -> TravelLeg? {
         let cacheKey = key(from, to, mode, date)
         if let cached = cache[cacheKey] { return cached }
+        // Bangkok: estimate transit from the bundled BTS/MRT network (works offline).
+        if mode == .transit, BangkokRail.covers(from), BangkokRail.covers(to),
+           let journey = BangkokRail.shared.journey(from: from, to: to) {
+            let meters = CLLocation(latitude: from.latitude, longitude: from.longitude)
+                .distance(from: CLLocation(latitude: to.latitude, longitude: to.longitude))
+            let leg = TravelLeg(seconds: journey.totalMinutes * 60, meters: meters)
+            cache[cacheKey] = leg
+            return leg
+        }
         if failures.contains(cacheKey) || !NetworkMonitor.shared.isOnline { return nil }
 
         let request = makeRequest(from: from, to: to, mode: mode, at: date)

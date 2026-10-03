@@ -49,6 +49,15 @@ struct NearbyTabView: View {
                 }
                 ToolbarItem(placement: .primaryAction) {
                     CurrentTripReader { trip in
+                        NavigationLink {
+                            BangkokTransitView(trip: trip)
+                        } label: {
+                            Label("BTS & MRT", systemImage: "tram.fill")
+                        }
+                    }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    CurrentTripReader { trip in
                         if let trip {
                             NavigationLink {
                                 JournalView(trip: trip)

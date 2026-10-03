@@ -30,8 +30,13 @@ struct WalkingRouteView: View {
                     MapCompass()
                 }
 
-                instructionBanner
-                    .padding()
+                VStack(spacing: 8) {
+                    instructionBanner
+                    if navigator.isUsingSavedRoute {
+                        OfflineBadge(text: "Offline · using your saved route")
+                    }
+                }
+                .padding()
             }
             .safeAreaInset(edge: .bottom) { bottomPanel }
             .navigationTitle("Walk to \(navigator.destinationName)")

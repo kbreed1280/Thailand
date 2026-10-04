@@ -9,8 +9,16 @@ enum TripModel {
     /// One shared instance: loading the same entities from two model objects confuses Core Data.
     static let model: NSManagedObjectModel = makeModel()
 
-    /// `includeSpots: false` rebuilds the pre-step-13 model, used by the migration test.
-    static func makeModel(includeSpots: Bool = true) -> NSManagedObjectModel {
+    /// Model versions shipped so far, rebuilt by the migration tests.
+    enum Version: Int, Comparable {
+        case step12 = 12, step13 = 13, current = 14
+        static func < (a: Version, b: Version) -> Bool { a.rawValue < b.rawValue }
+    }
+
+    static func makeModel(includeSpots: Bool) -> NSManagedObjectModel { makeModel(version: includeSpots ? .current : .step12) }
+
+    static func makeModel(version: Version = .current) -> NSManagedObjectModel {
+        let includeSpots = version >= .step13
         let trip = entity("Trip", [
             attribute("uuid", .UUIDAttributeType),
             attribute("name", .stringAttributeType, default: ""),
@@ -21,7 +29,11 @@ enum TripModel {
             attribute("createdAt", .dateAttributeType),
             attribute("colorHex", .stringAttributeType, default: ""),
             attribute("coverPhotoID", .UUIDAttributeType)
-        ])
+        ] + (version >= .current ? [
+            // Step 14: trip planner.
+            attribute("destination", .stringAttributeType, default: ""),
+            attribute("vibe", .stringAttributeType, default: "")
+        ] : []))
 
         let day = entity("Day", [
             attribute("uuid", .UUIDAttributeType),
@@ -161,6 +173,29 @@ enum TripModel {
         ])
 
         relate(trip, "days", toMany: day, inverse: "trip", deleteRule: .cascadeDeleteRule)
+        // Step 14: collections of spots (by trip, city or theme) with a note per spot.
+        let collection = entity("SpotCollection", [
+            attribute("uuid", .UUIDAttributeType),
+            attribute("name", .stringAttributeType, default: ""),
+            attribute("emoji", .stringAttributeType, default: "📍"),
+            attribute("kindRaw", .stringAttributeType, default: "theme"),
+            attribute("notes", .stringAttributeType, default: ""),
+            attribute("sortIndex", .integer64AttributeType, default: 0),
+            attribute("createdAt", .dateAttributeType),
+            attribute("updatedAt", .dateAttributeType)
+        ])
+        let entry = entity("CollectionEntry", [
+            attribute("uuid", .UUIDAttributeType),
+            attribute("note", .stringAttributeType, default: ""),
+            attribute("sortIndex", .integer64AttributeType, default: 0),
+            attribute("createdAt", .dateAttributeType)
+        ])
+        if version >= .current {
+            relate(trip, "collections", toMany: collection, inverse: "trip", deleteRule: .cascadeDeleteRule)
+            relate(collection, "entries", toMany: entry, inverse: "collection", deleteRule: .cascadeDeleteRule)
+            relate(spot, "collectionEntries", toMany: entry, inverse: "spot", deleteRule: .cascadeDeleteRule)
+        }
+
         if includeSpots {
             relate(trip, "spots", toMany: spot, inverse: "trip", deleteRule: .cascadeDeleteRule)
             relate(trip, "spotSources", toMany: spotSource, inverse: "trip", deleteRule: .cascadeDeleteRule)
@@ -179,6 +214,7 @@ enum TripModel {
         let model = NSManagedObjectModel()
         model.entities = [trip, day, item, photo, visit, expense, packing, savedPlace, document]
             + (includeSpots ? [spot, spotSource, spotScoop] : [])
+            + (version >= .current ? [collection, entry] : [])
         return model
     }
 

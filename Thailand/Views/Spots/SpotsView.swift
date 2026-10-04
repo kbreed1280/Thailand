@@ -12,7 +12,7 @@ struct SpotsView: View {
     @Environment(\.scenePhase) private var scenePhase
     @ObservedObject private var pipeline = ImportPipeline.shared
 
-    enum Tab: String, CaseIterable { case map = "Map", drafts = "Drafts", saved = "Saved", folders = "Folders" }
+    enum Tab: String, CaseIterable { case map = "Map", drafts = "Drafts", saved = "Saved", lists = "Lists" }
     @State private var tab: Tab = .map
     @State private var refreshTick = 0
     @State private var showingManualAdd = false
@@ -49,7 +49,7 @@ struct SpotsView: View {
                 case .map: SpotsMapView(trip: trip, refreshTick: refreshTick)
                 case .drafts: draftsList
                 case .saved: savedList
-                case .folders: foldersList
+                case .lists: SpotListsTab(trip: trip, refreshTick: refreshTick, folders: folders, sources: sources)
                 }
             }
             .background(Theme.background)
@@ -203,28 +203,6 @@ struct SpotsView: View {
             if savedSpots.isEmpty {
                 ContentUnavailableView("No saved spots", systemImage: "mappin.slash",
                                        description: Text("Confirm drafts, or tap + → Search for a place."))
-            }
-        }
-    }
-
-    // MARK: Folders (tip videos with no specific place)
-
-    private var foldersList: some View {
-        List {
-            ForEach(folders, id: \.self) { folder in
-                let inFolder = sources.filter { $0.folder == folder }
-                Section("\(folder) · \(inFolder.count)") {
-                    if inFolder.isEmpty {
-                        Text("Empty. Drafts with no specific place can be filed here.").font(.caption).foregroundStyle(.secondary)
-                    }
-                    ForEach(inFolder) { source in SourceHeader(source: source) }
-                }
-            }
-        }
-        .overlay {
-            if folders.isEmpty {
-                ContentUnavailableView("No folders", systemImage: "folder",
-                                       description: Text("Keep tip videos (\"what to pack\", \"scams to avoid\") in folders. Tap + → New folder."))
             }
         }
     }

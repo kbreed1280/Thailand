@@ -144,7 +144,7 @@ final class ImportPipeline: ObservableObject {
     }
 
     /// Same place if Apple Maps IDs match, or names match closely within ~75 m.
-    static func existingSpot(name: String, coordinate: CLLocationCoordinate2D?, appleMapsID: String?, in spots: [Spot]) -> Spot? {
+    nonisolated static func existingSpot(name: String, coordinate: CLLocationCoordinate2D?, appleMapsID: String?, in spots: [Spot]) -> Spot? {
         if let id = appleMapsID, !id.isEmpty, let hit = spots.first(where: { $0.appleMapsID == id }) { return hit }
         guard let coordinate else {
             return spots.first { !$0.hasCoordinate && NameMatch.similarity($0.displayName, name) >= 0.9 }

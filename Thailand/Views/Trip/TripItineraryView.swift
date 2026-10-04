@@ -406,7 +406,7 @@ struct TripItineraryView: View {
             Button("Calendar", systemImage: "calendar") { showingCalendar = true }
             Button("Trip Book", systemImage: "book.pages.fill") { showingBook = true }
             Button("Starter Ideas", systemImage: "lightbulb") { showingStarterIdeas = true }
-            Button("Your Name", systemImage: "person.crop.circle") { showingProfile = true }
+            Button("Profile", systemImage: "person.crop.circle") { showingProfile = true }
         }
         Section {
             Button("Emergency Info", systemImage: "cross.case.fill") { showingEmergency = true }

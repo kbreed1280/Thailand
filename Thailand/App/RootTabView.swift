@@ -4,6 +4,9 @@ import SwiftUI
 struct RootTabView: View {
     /// Reopens on the tab you were last using.
     @AppStorage("selectedTab") private var selectedTab = 0
+    /// A shared list (.wanderhub file) opened from Messages, Mail, AirDrop or Files.
+    @State private var incoming: IncomingCollection?
+    @State private var badFile = false
     #if DEBUG
     /// Debug-only: launch with `-showWeather YES` to open the weather screen directly.
     @State private var showWeather = UserDefaults.standard.bool(forKey: "showWeather")
@@ -33,6 +36,16 @@ struct RootTabView: View {
             Tab("Translate", systemImage: "character.bubble.fill", value: 4) {
                 TranslateTabView()
             }
+        }
+        .onOpenURL { url in
+            guard url.isFileURL else { return }
+            if let file = IncomingCollection.load(from: url) { incoming = file } else { badFile = true }
+        }
+        .sheet(item: $incoming) { SharedCollectionImportView(shared: $0.collection) }
+        .alert("Couldn't open that file", isPresented: $badFile) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("It isn't a WanderHub list, or it was made by a newer version of the app.")
         }
         #if DEBUG
         .sheet(isPresented: $showWeather) { WeatherSheet() }

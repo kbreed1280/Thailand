@@ -2,32 +2,68 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Merged with the generated Info.plist (privacy strings live in the build settings). -->
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.kbreed.thailandtrip.flightRefresh</string>
+	</array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>WanderHub Collection</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.kbreed.wanderhub.collection</string>
+			</array>
+		</dict>
+	</array>
+	<key>CKSharingSupported</key>
+	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>comgooglemaps</string>
 		<string>grab</string>
 		<string>bolt</string>
 	</array>
-	<!-- Only standard HTTPS encryption: skips the export-compliance question on every TestFlight upload. -->
-	<key>ITSAppUsesNonExemptEncryption</key>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<false/>
-	<!-- Lets iOS open this app when a trip invitation link is tapped. -->
-	<key>CKSharingSupported</key>
+	<key>NSSupportsLiveActivities</key>
 	<true/>
-	<!-- Silent pushes from CloudKit when your travel partner changes the trip. -->
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
 		<string>fetch</string>
 	</array>
-	<!-- Background flight-status checks (gate changes, delays). -->
-	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<key>UTExportedTypeDeclarations</key>
 	<array>
-		<string>com.kbreed.thailandtrip.flightRefresh</string>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.json</string>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>WanderHub Collection</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.kbreed.wanderhub.collection</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>wanderhub</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>application/vnd.wanderhub.collection+json</string>
+				</array>
+			</dict>
+		</dict>
 	</array>
-	<!-- Lock Screen / Dynamic Island flight status. -->
-	<key>NSSupportsLiveActivities</key>
-	<true/>
 </dict>
 </plist>

@@ -7,7 +7,8 @@ import Security
 /// WanderHubShare/SharedInbox.swift. Keep both in sync.
 struct SharedLink: Codable, Identifiable, Equatable {
     var id = UUID()
-    var url: URL
+    /// nil for a shared screenshot (its recognized text is in `text`).
+    var url: URL?
     var text: String?
     var sharedAt = Date()
 }
@@ -45,9 +46,11 @@ enum SharedInbox {
         }
     }
 
-    static func append(url: URL, text: String?) {
+    static func append(url: URL?, text: String?) {
         var links = load()
-        guard !links.contains(where: { $0.url == url }) else { return }
+        guard url != nil || !(text ?? "").isEmpty else { return }
+        if let url, links.contains(where: { $0.url == url }) { return }
+        if url == nil, links.contains(where: { $0.url == nil && $0.text == text }) { return }
         links.append(SharedLink(url: url, text: text))
         save(links)
     }

@@ -20,9 +20,15 @@ final class ShareViewController: UIViewController {
 
         Task { @MainActor in
             let (url, text) = await extractLink()
+            let screenshots = await extractScreenshotText()
             if let url {
                 SharedInbox.append(url: url, text: text)
-                model.state = .saved(isTikTok: url.host?.contains("tiktok") == true)
+            }
+            for text in screenshots where !text.isEmpty {
+                SharedInbox.append(url: nil, text: text)
+            }
+            if url != nil || !screenshots.isEmpty {
+                model.state = .saved(isTikTok: url?.host?.contains("tiktok") == true, screenshots: screenshots.count)
                 try? await Task.sleep(for: .seconds(1.6))
                 close()
             } else {
@@ -35,6 +41,21 @@ final class ShareViewController: UIViewController {
         extensionContext?.completeRequest(returningItems: nil)
     }
 
+    /// Text read from any shared screenshots (place names shown on screen).
+    private func extractScreenshotText() async -> [String] {
+        let providers = (extensionContext?.inputItems as? [NSExtensionItem] ?? []).flatMap { $0.attachments ?? [] }
+        var texts: [String] = []
+        for provider in providers where provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+            guard let item = try? await provider.loadItem(forTypeIdentifier: UTType.image.identifier) else { continue }
+            var image: UIImage?
+            if let url = item as? URL { image = UIImage(contentsOfFile: url.path) }
+            else if let data = item as? Data { image = UIImage(data: data) }
+            else if let ui = item as? UIImage { image = ui }
+            if let image { texts.append(await ScreenshotText.recognize(image)) }
+        }
+        return texts
+    }
+
     /// The shared URL, plus any text (TikTok shares "caption + link").
     private func extractLink() async -> (URL?, String?) {
         let providers = (extensionContext?.inputItems as? [NSExtensionItem] ?? []).flatMap { $0.attachments ?? [] }
@@ -42,7 +63,9 @@ final class ShareViewController: UIViewController {
         var foundText: String?
         for provider in providers {
             if foundURL == nil, provider.hasItemConformingToTypeIdentifier(UTType.url.identifier),
-               let url = try? await provider.loadItem(forTypeIdentifier: UTType.url.identifier) as? URL {
+               !provider.hasItemConformingToTypeIdentifier(UTType.image.identifier),
+               let url = try? await provider.loadItem(forTypeIdentifier: UTType.url.identifier) as? URL,
+               !url.isFileURL {
                 foundURL = url
             }
             if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier),
@@ -57,7 +80,7 @@ final class ShareViewController: UIViewController {
 
 @MainActor
 final class ShareModel: ObservableObject {
-    enum State { case working, saved(isTikTok: Bool), noLink }
+    enum State { case working, saved(isTikTok: Bool, screenshots: Int), noLink }
     @Published var state: State = .working
 }
 
@@ -73,10 +96,11 @@ private struct ShareCard: View {
                 case .working:
                     ProgressView()
                     Text("Saving to WanderHub…")
-                case .saved(let isTikTok):
+                case .saved(let isTikTok, let screenshots):
                     Image(systemName: "checkmark.circle.fill").font(.system(size: 44)).foregroundStyle(.green)
-                    Text(isTikTok ? "TikTok saved to WanderHub" : "Link saved to WanderHub").font(.headline)
-                    Text("Open WanderHub → TikTok to put it on your map.")
+                    Text(screenshots > 0 && !isTikTok ? "Screenshot\(screenshots == 1 ? "" : "s") saved to WanderHub"
+                         : isTikTok ? "TikTok saved to WanderHub" : "Saved to WanderHub").font(.headline)
+                    Text("Open WanderHub → Spots to review the places it found.")
                         .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
                 case .noLink:
                     Image(systemName: "link.badge.plus").font(.system(size: 40)).foregroundStyle(.orange)

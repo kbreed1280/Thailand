@@ -9,7 +9,8 @@ enum TripModel {
     /// One shared instance: loading the same entities from two model objects confuses Core Data.
     static let model: NSManagedObjectModel = makeModel()
 
-    private static func makeModel() -> NSManagedObjectModel {
+    /// `includeSpots: false` rebuilds the pre-step-13 model, used by the migration test.
+    static func makeModel(includeSpots: Bool = true) -> NSManagedObjectModel {
         let trip = entity("Trip", [
             attribute("uuid", .UUIDAttributeType),
             attribute("name", .stringAttributeType, default: ""),
@@ -111,7 +112,61 @@ enum TripModel {
             attribute("updatedAt", .dateAttributeType)
         ])
 
+        // Save-from-anywhere (step 13): places pulled from shared videos/links/screenshots.
+        let spot = entity("Spot", [
+            attribute("uuid", .UUIDAttributeType),
+            attribute("name", .stringAttributeType, default: ""),
+            attribute("address", .stringAttributeType, default: ""),
+            attribute("city", .stringAttributeType, default: ""),
+            attribute("hasCoordinate", .booleanAttributeType, default: false),
+            attribute("latitude", .doubleAttributeType, default: 0),
+            attribute("longitude", .doubleAttributeType, default: 0),
+            attribute("categoryRaw", .stringAttributeType, default: "explore"),
+            attribute("appleMapsID", .stringAttributeType, default: ""),
+            attribute("phone", .stringAttributeType, default: ""),
+            attribute("website", .stringAttributeType, default: ""),
+            attribute("statusRaw", .stringAttributeType, default: "draft"),
+            attribute("isFavorite", .booleanAttributeType, default: false),
+            attribute("isVisited", .booleanAttributeType, default: false),
+            attribute("notes", .stringAttributeType, default: ""),
+            attribute("reportReason", .stringAttributeType, default: ""),
+            attribute("addedBy", .stringAttributeType, default: ""),
+            attribute("createdAt", .dateAttributeType),
+            attribute("updatedAt", .dateAttributeType)
+        ])
+
+        let spotSource = entity("SpotSource", [
+            attribute("uuid", .UUIDAttributeType),
+            attribute("urlString", .stringAttributeType, default: ""),
+            attribute("platformRaw", .stringAttributeType, default: "web"),
+            attribute("creator", .stringAttributeType, default: ""),
+            attribute("title", .stringAttributeType, default: ""),
+            attribute("extractedText", .stringAttributeType, default: ""),
+            attribute("thumbnailURL", .stringAttributeType, default: ""),
+            attribute("statusRaw", .stringAttributeType, default: "queued"),
+            attribute("errorMessage", .stringAttributeType, default: ""),
+            attribute("folder", .stringAttributeType, default: ""),
+            attribute("extractor", .stringAttributeType, default: ""),
+            attribute("addedBy", .stringAttributeType, default: ""),
+            attribute("createdAt", .dateAttributeType)
+        ])
+
+        let spotScoop = entity("SpotScoop", [
+            attribute("uuid", .UUIDAttributeType),
+            attribute("recommendation", .stringAttributeType, default: ""),
+            attribute("whatToOrder", .stringAttributeType, default: ""),
+            attribute("whyItMatters", .stringAttributeType, default: ""),
+            attribute("mentionedAs", .stringAttributeType, default: ""),
+            attribute("createdAt", .dateAttributeType)
+        ])
+
         relate(trip, "days", toMany: day, inverse: "trip", deleteRule: .cascadeDeleteRule)
+        if includeSpots {
+            relate(trip, "spots", toMany: spot, inverse: "trip", deleteRule: .cascadeDeleteRule)
+            relate(trip, "spotSources", toMany: spotSource, inverse: "trip", deleteRule: .cascadeDeleteRule)
+            relate(spot, "scoops", toMany: spotScoop, inverse: "spot", deleteRule: .cascadeDeleteRule)
+            relate(spotSource, "scoops", toMany: spotScoop, inverse: "source", deleteRule: .cascadeDeleteRule)
+        }
         relate(trip, "documents", toMany: document, inverse: "trip", deleteRule: .cascadeDeleteRule)
         relate(trip, "savedPlaces", toMany: savedPlace, inverse: "trip", deleteRule: .cascadeDeleteRule)
         relate(trip, "wishItems", toMany: item, inverse: "wishTrip", deleteRule: .cascadeDeleteRule)
@@ -123,6 +178,7 @@ enum TripModel {
 
         let model = NSManagedObjectModel()
         model.entities = [trip, day, item, photo, visit, expense, packing, savedPlace, document]
+            + (includeSpots ? [spot, spotSource, spotScoop] : [])
         return model
     }
 

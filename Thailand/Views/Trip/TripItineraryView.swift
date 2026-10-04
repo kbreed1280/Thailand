@@ -171,7 +171,7 @@ struct TripItineraryView: View {
             TDACView(trip: trip)
         }
         .sheet(isPresented: $showingTikTok) {
-            TikTokLibraryView(trip: trip)
+            SpotsView(trip: trip)
         }
         .sheet(isPresented: $showingTransit) {
             NavigationStack {
@@ -414,7 +414,7 @@ struct TripItineraryView: View {
             Button("Flights", systemImage: "airplane") { showingFlights = true }
             Button("Weather", systemImage: "sun.max.fill") { showingWeather = true }
             Button("Arrival Card (TDAC)", systemImage: "person.text.rectangle") { showingTDAC = true }
-            Button("TikTok Videos", systemImage: "play.rectangle.on.rectangle") { showingTikTok = true }
+            Button("Spots (save from TikTok, Maps…)", systemImage: "mappin.and.ellipse") { showingTikTok = true }
             Button("Offline Maps", systemImage: "arrow.down.circle") { showingOffline = true }
             Button("BTS & MRT", systemImage: "tram.fill") { showingTransit = true }
         }
@@ -638,8 +638,8 @@ private struct TripHeaderCard: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     Button { onAction(.tiktok) } label: {
-                        let waiting = SharedInbox.load().count
-                        Label(waiting > 0 ? "TikTok (\(waiting) new)" : "TikTok", systemImage: "play.rectangle.on.rectangle.fill")
+                        let waiting = SharedInbox.load().count + trip.draftSpots.count
+                        Label(waiting > 0 ? "Spots (\(waiting) new)" : "Spots", systemImage: "mappin.and.ellipse")
                     }
                     Button { onAction(.tdac) } label: { Label("TDAC", systemImage: "person.text.rectangle") }
                     Button { onAction(.documents) } label: { Label("Documents", systemImage: "lock.doc.fill") }

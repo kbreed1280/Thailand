@@ -80,6 +80,14 @@ final class AutoPlannerTests: XCTestCase {
         XCTAssertEqual(plan.days[0].gaps, [.eat])
     }
 
+    func testShortestRouteUntanglesAZigzag() {
+        // Points along a line, given out of order.
+        let line = [0, 4, 1, 3, 2].map { stop("P\($0)", 13.70 + Double($0) * 0.01, 100.50, .explore) }
+        let route = AutoPlanner.shortestRoute(line, from: .init(latitude: 13.69, longitude: 100.50))
+        XCTAssertEqual(route.map(\.name), ["P0", "P1", "P2", "P3", "P4"])
+        XCTAssertLessThan(AutoPlanner.routeLength(route), AutoPlanner.routeLength(line))
+    }
+
     func testHotDayMovesShoppingIntoMiddayHeat() {
         XCTAssertEqual(AutoPlanner.slot(for: .vibe, hot: true), .midday)
         XCTAssertEqual(AutoPlanner.slot(for: .vibe, hot: false), .afternoon)

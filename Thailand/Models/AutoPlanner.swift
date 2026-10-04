@@ -237,6 +237,45 @@ enum AutoPlanner {
         return missing
     }
 
+    // MARK: Shortest route (Sidequests)
+
+    /// Visiting order that keeps total distance short: nearest-neighbour from `start` (or the
+    /// first stop), then 2-opt to untangle crossings. Open path, no return to start.
+    static func shortestRoute(_ stops: [Stop], from start: CLLocationCoordinate2D? = nil) -> [Stop] {
+        guard stops.count > 2 else { return stops }
+        var remaining = stops
+        var route: [Stop] = []
+        var here = start ?? stops[0].coordinate
+        while !remaining.isEmpty {
+            let i = remaining.indices.min { distance(remaining[$0].coordinate, here) < distance(remaining[$1].coordinate, here) }!
+            here = remaining[i].coordinate
+            route.append(remaining.remove(at: i))
+        }
+        func length(_ r: [Stop]) -> Double {
+            var total = start.map { distance($0, r[0].coordinate) } ?? 0
+            for k in 1..<r.count { total += distance(r[k - 1].coordinate, r[k].coordinate) }
+            return total
+        }
+        var improved = true
+        var best = length(route)
+        while improved {
+            improved = false
+            for i in 0..<(route.count - 1) {
+                for j in (i + 1)..<route.count {
+                    var candidate = route
+                    candidate[i...j].reverse()
+                    let l = length(candidate)
+                    if l + 1 < best { route = candidate; best = l; improved = true }
+                }
+            }
+        }
+        return route
+    }
+
+    static func routeLength(_ stops: [Stop]) -> CLLocationDistance {
+        zip(stops, stops.dropFirst()).map { distance($0.coordinate, $1.coordinate) }.reduce(0, +)
+    }
+
     // MARK: Geometry
 
     static func distance(_ a: CLLocationCoordinate2D, _ b: CLLocationCoordinate2D) -> CLLocationDistance {

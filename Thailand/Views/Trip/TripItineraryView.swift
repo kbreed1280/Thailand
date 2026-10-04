@@ -19,6 +19,7 @@ struct TripItineraryView: View {
     @State private var showingNewTrip = false
     @State private var showingProfile = false
     @State private var showingAutoPlan = false
+    @State private var showingSidequest = false
     @State private var confirmingDelete = false
     @State private var mapDay: Day?
     @State private var isPreparingShare = false
@@ -140,6 +141,9 @@ struct TripItineraryView: View {
         }
         .sheet(isPresented: $showingAutoPlan) {
             AutoPlanView(trip: trip)
+        }
+        .fullScreenCover(isPresented: $showingSidequest) {
+            SidequestView(trip: trip)
         }
         .task(id: trip.objectID) {
             await TripForecast.shared.refresh(trip)
@@ -416,6 +420,7 @@ struct TripItineraryView: View {
             Button("Starter Ideas", systemImage: "lightbulb") { showingStarterIdeas = true }
             Button("Auto-plan Days", systemImage: "wand.and.sparkles") { showingAutoPlan = true }
                 .disabled(!canEdit)
+            Button("Sidequest", systemImage: "dice") { showingSidequest = true }
             Button("Profile", systemImage: "person.crop.circle") { showingProfile = true }
         }
         Section {

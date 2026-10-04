@@ -148,6 +148,7 @@ struct CollectionDetailView: View {
     @ObservedObject var collection: SpotCollection
     @Environment(\.managedObjectContext) private var context
     @State private var editing = false
+    @State private var planning = false
     @State private var refreshTick = 0
 
     private var entries: [CollectionEntry] { _ = refreshTick; return collection.sortedEntries }
@@ -191,9 +192,16 @@ struct CollectionDetailView: View {
                         Image(systemName: "square.and.arrow.up")
                     }
                 }
-                Button("Edit", systemImage: "pencil") { editing = true }
+                Menu {
+                    Button("Plan these into days", systemImage: "wand.and.sparkles") { planning = true }
+                        .disabled(entries.isEmpty)
+                    Button("Edit list", systemImage: "pencil") { editing = true }
+                } label: { Image(systemName: "ellipsis.circle") }
                 EditButton()
             }
+        }
+        .sheet(isPresented: $planning) {
+            if let trip = collection.trip { AutoPlanView(trip: trip, collection: collection) }
         }
         .sheet(isPresented: $editing) {
             if let trip = collection.trip { CollectionEditor(trip: trip, collection: collection) }

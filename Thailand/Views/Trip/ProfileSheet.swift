@@ -8,6 +8,7 @@ struct ProfileSheet: View {
     @AppStorage(AppSettings.displayNameKey) private var displayName = ""
     @AppStorage(AppSettings.usernameKey) private var username = ""
     @AppStorage(AppSettings.avatarEmojiKey) private var avatarEmoji = ""
+    @AppStorage(DayReminders.enabledKey) private var dayReminders = true
     @State private var photoItem: PhotosPickerItem?
     @State private var photoVersion = 0
 
@@ -59,6 +60,11 @@ struct ProfileSheet: View {
                     }
                 } footer: {
                     Text("Shown next to places, expenses and packing items you add, and on lists you share, so your travel partner knows who added what.")
+                }
+                Section {
+                    Toggle("Evening reminder for tomorrow's plan", isOn: $dayReminders)
+                } footer: {
+                    Text("At 8 PM the night before each planned day: how many stops, the first one, and the weather and heat.")
                 }
             }
             .navigationTitle("Profile")

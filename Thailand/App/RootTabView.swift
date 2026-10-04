@@ -16,6 +16,8 @@ struct RootTabView: View {
     @State private var showRailMap = UserDefaults.standard.bool(forKey: "showRailMap")
     /// Debug-only: `-debugImportURL <link>` imports a link into the first trip and opens Spots.
     @State private var debugSpotsTrip: Trip?
+    /// Debug-only: `-showAutoPlan YES` (with `-debugImportURL`) opens Auto-plan after importing.
+    @State private var debugPlanTrip: Trip?
     @Environment(\.managedObjectContext) private var debugContext
     #endif
 
@@ -52,6 +54,7 @@ struct RootTabView: View {
         .fullScreenCover(isPresented: $showSevenEleven) { SevenElevenMapView() }
         .fullScreenCover(isPresented: $showRailMap) { RailNetworkMapView() }
         .sheet(item: $debugSpotsTrip) { trip in SpotsView(trip: trip) }
+        .sheet(item: $debugPlanTrip) { trip in AutoPlanView(trip: trip) }
         .task {
             guard let link = UserDefaults.standard.string(forKey: "debugImportURL"), let url = URL(string: link) else { return }
             try? await Task.sleep(for: .seconds(2))
@@ -65,7 +68,7 @@ struct RootTabView: View {
                 trip.draftSpots.forEach(debugContext.delete)
                 try? debugContext.save()
             }
-            debugSpotsTrip = trip
+            if UserDefaults.standard.bool(forKey: "showAutoPlan") { debugPlanTrip = trip } else { debugSpotsTrip = trip }
         }
         #endif
     }

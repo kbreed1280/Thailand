@@ -184,6 +184,15 @@ struct DayMapView: View {
                 }
                 .disabled(stops.isEmpty)
 
+                Button {
+                    ExternalApps.openAppleMapsRoute(stops.compactMap { stop in
+                        stop.item.coordinate.map { (name: stop.item.displayTitle, coordinate: $0) }
+                    }, walking: stops.first?.item.travelMode == .walking)
+                } label: {
+                    Label("Open Route in Apple Maps", systemImage: "apple.logo")
+                }
+                .disabled(stops.isEmpty)
+
                 if let first = stops.first, let coordinate = first.item.coordinate {
                     Button {
                         ExternalApps.openAppleMaps(to: coordinate, name: first.item.displayTitle, walking: first.item.travelMode == .walking)

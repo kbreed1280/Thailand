@@ -18,6 +18,7 @@ struct TripItineraryView: View {
     @State private var showingEditTrip = false
     @State private var showingNewTrip = false
     @State private var showingProfile = false
+    @State private var showingAutoPlan = false
     @State private var confirmingDelete = false
     @State private var mapDay: Day?
     @State private var isPreparingShare = false
@@ -136,6 +137,13 @@ struct TripItineraryView: View {
         }
         .sheet(isPresented: $showingProfile) {
             ProfileSheet()
+        }
+        .sheet(isPresented: $showingAutoPlan) {
+            AutoPlanView(trip: trip)
+        }
+        .task(id: trip.objectID) {
+            await TripForecast.shared.refresh(trip)
+            await DayReminders.reschedule(for: trip)
         }
         .sheet(isPresented: $showingEmergency) {
             EmergencyView(trip: trip)
@@ -406,6 +414,8 @@ struct TripItineraryView: View {
             Button("Calendar", systemImage: "calendar") { showingCalendar = true }
             Button("Trip Book", systemImage: "book.pages.fill") { showingBook = true }
             Button("Starter Ideas", systemImage: "lightbulb") { showingStarterIdeas = true }
+            Button("Auto-plan Days", systemImage: "wand.and.sparkles") { showingAutoPlan = true }
+                .disabled(!canEdit)
             Button("Profile", systemImage: "person.crop.circle") { showingProfile = true }
         }
         Section {
@@ -508,6 +518,7 @@ private struct DayHeader: View {
     let onMap: () -> Void
     let onAdd: () -> Void
     @State private var walked: WalkStats?
+    @ObservedObject private var forecast = TripForecast.shared
 
     var body: some View {
         HStack(spacing: 6) {
@@ -535,6 +546,18 @@ private struct DayHeader: View {
                     .background(Theme.lagoon, in: Capsule())
             }
             Spacer()
+            if let date = day.date, let trip = day.trip, let w = forecast.day(date, in: trip) {
+                VStack(alignment: .trailing, spacing: 0) {
+                    Label("\(Int(w.highC.rounded()))°", systemImage: w.symbolName)
+                        .font(.caption.weight(.semibold))
+                        .symbolRenderingMode(.multicolor)
+                    Text("Feels \(Int(w.maxHeatIndexC.rounded()))°")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(w.heatLevel.color)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("High \(Int(w.highC.rounded())) degrees, feels like \(Int(w.maxHeatIndexC.rounded())), \(w.heatLevel.title)")
+            }
             Button(action: onMap) {
                 Image(systemName: "map")
                     .font(.title3)

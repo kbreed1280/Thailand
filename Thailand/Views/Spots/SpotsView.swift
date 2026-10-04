@@ -22,6 +22,7 @@ struct SpotsView: View {
     @State private var newFolderPrompt = false
     @State private var newFolderName = ""
     @State private var filing: SpotSource?
+    @State private var showingAutoPlan = false
 
     private var sources: [SpotSource] { _ = refreshTick; return trip.allSpotSources }
     private var draftSources: [SpotSource] {
@@ -69,6 +70,7 @@ struct SpotsView: View {
             .onReceive(NotificationCenter.default.publisher(for: .NSManagedObjectContextObjectsDidChange, object: context)) { _ in
                 refreshTick &+= 1
             }
+            .sheet(isPresented: $showingAutoPlan) { AutoPlanView(trip: trip) }
             .sheet(isPresented: $showingManualAdd) {
                 SpotPlaceSearchSheet(title: "Add a spot", cityHint: nil) { item in addManual(item) }
             }
@@ -99,6 +101,7 @@ struct SpotsView: View {
                 }
             }
             Button("Search for a place", systemImage: "magnifyingglass") { showingManualAdd = true }
+            Button("Auto-plan days", systemImage: "wand.and.sparkles") { showingAutoPlan = true }
             Divider()
             Button("New folder", systemImage: "folder.badge.plus") { newFolderName = ""; newFolderPrompt = true }
         } label: {

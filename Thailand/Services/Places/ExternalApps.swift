@@ -1,3 +1,4 @@
+import MapKit
 import UIKit
 import CoreLocation
 
@@ -67,6 +68,19 @@ enum ExternalApps {
         if walking { items.append(URLQueryItem(name: "dirflg", value: "w")) }
         components?.queryItems = items
         if let url = components?.url { UIApplication.shared.open(url) }
+    }
+
+    /// The whole day's stops in Apple Maps (multi-stop directions from the first stop).
+    static func openAppleMapsRoute(_ stops: [(name: String, coordinate: CLLocationCoordinate2D)], walking: Bool) {
+        let items = stops.map { stop in
+            let item = MKMapItem(placemark: MKPlacemark(coordinate: stop.coordinate))
+            item.name = stop.name
+            return item
+        }
+        guard !items.isEmpty else { return }
+        MKMapItem.openMaps(with: items, launchOptions: [
+            MKLaunchOptionsDirectionsModeKey: walking ? MKLaunchOptionsDirectionsModeWalking : MKLaunchOptionsDirectionsModeDriving
+        ])
     }
 
     static func showInAppleMaps(_ coordinate: CLLocationCoordinate2D, name: String) {

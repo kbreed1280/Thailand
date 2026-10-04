@@ -91,6 +91,7 @@ struct SpotDetailView: View {
                     Button("Website", systemImage: "safari") { openURL(url) }
                 }
                 Button("Add to Wish List", systemImage: "star") { addToWishList() }
+                AddToDayMenu(spot: spot)
                 AddToCollectionMenu(spot: spot)
             }
 

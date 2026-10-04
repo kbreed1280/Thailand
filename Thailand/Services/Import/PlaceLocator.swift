@@ -74,7 +74,8 @@ struct AppleMapsLocator: PlaceLocating {
 enum NameMatch {
     static func tokens(_ s: String) -> Set<String> {
         let stop: Set<String> = ["the", "a", "of", "at", "and", "restaurant", "cafe", "café", "bar", "raan", "ร้าน", "bangkok", "thailand"]
-        return Set(s.lowercased()
+        // Drop apostrophes first so "I'm Chinatown" keeps "im" as a word instead of losing it.
+        return Set(s.lowercased().replacingOccurrences(of: "'", with: "").replacingOccurrences(of: "’", with: "")
             .components(separatedBy: CharacterSet.alphanumerics.inverted)
             .filter { $0.count > 1 && !stop.contains($0) })
     }

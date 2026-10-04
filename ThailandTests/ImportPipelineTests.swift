@@ -314,6 +314,7 @@ final class StrictMatchTests: XCTestCase {
         let anchor = CLLocationCoordinate2D(latitude: 13.75, longitude: 100.5)
         XCTAssertNil(AppleMapsLocator.bestMatch(for: "Chao Phraya River", in: [item("Four Seasons Hotel Bangkok at Chao Phraya River")], near: anchor, strict: true))
         XCTAssertNil(AppleMapsLocator.bestMatch(for: "Chinatown", in: [item("Chinatown Night Market Chaloem Buri")], near: anchor, strict: true))
+        XCTAssertNil(AppleMapsLocator.bestMatch(for: "Chinatown", in: [item("I'm Chinatown")], near: anchor, strict: true))
         XCTAssertEqual(AppleMapsLocator.bestMatch(for: "Grand Palace", in: [item("The Grand Palace")], near: anchor, strict: true)?.name, "The Grand Palace")
         // Non-strict (explicit 📍 / AI names) still allows "Jay Fai" → "Raan Jay Fai".
         XCTAssertNotNil(AppleMapsLocator.bestMatch(for: "Jay Fai", in: [item("Raan Jay Fai")], near: anchor))

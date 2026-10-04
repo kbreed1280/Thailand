@@ -12,8 +12,8 @@ struct SpotsView: View {
     @Environment(\.scenePhase) private var scenePhase
     @ObservedObject private var pipeline = ImportPipeline.shared
 
-    enum Tab: String, CaseIterable { case drafts = "Drafts", saved = "Saved", folders = "Folders" }
-    @State private var tab: Tab = .drafts
+    enum Tab: String, CaseIterable { case map = "Map", drafts = "Drafts", saved = "Saved", folders = "Folders" }
+    @State private var tab: Tab = .map
     @State private var refreshTick = 0
     @State private var showingManualAdd = false
     @State private var screenshotItems: [PhotosPickerItem] = []
@@ -46,6 +46,7 @@ struct SpotsView: View {
                 .padding(.bottom, 8)
 
                 switch tab {
+                case .map: SpotsMapView(trip: trip, refreshTick: refreshTick)
                 case .drafts: draftsList
                 case .saved: savedList
                 case .folders: foldersList
@@ -58,7 +59,11 @@ struct SpotsView: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
                 ToolbarItem(placement: .primaryAction) { addMenu }
             }
-            .task { await refreshInbox() }
+            .task {
+                // Open on Drafts when something new is waiting to be reviewed.
+                if !SharedInbox.load().isEmpty || !trip.draftSpots.isEmpty { tab = .drafts }
+                await refreshInbox()
+            }
             .onChange(of: scenePhase) { _, phase in if phase == .active { Task { await refreshInbox() } } }
             .onChange(of: screenshotItems) { _, items in Task { await importScreenshots(items) } }
             .onReceive(NotificationCenter.default.publisher(for: .NSManagedObjectContextObjectsDidChange, object: context)) { _ in

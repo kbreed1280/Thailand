@@ -45,6 +45,13 @@ struct RootTabView: View {
             let trips = (try? debugContext.fetch(NSFetchRequest<Trip>(entityName: "Trip"))) ?? []
             let trip = trips.first ?? ItineraryStore(context: debugContext).createTrip(name: "Debug Trip", start: .now, end: .now.addingTimeInterval(7 * 86_400))
             ImportPipeline.shared.addSource(url: url, text: nil, to: trip, context: debugContext)
+            if UserDefaults.standard.bool(forKey: "debugConfirmAll") {
+                // Debug-only: `-debugConfirmAll YES` imports, confirms every pinned draft, then opens Spots (Map).
+                await ImportPipeline.shared.importPending(in: trip, context: debugContext)
+                trip.draftSpots.filter { !$0.isUnplotted }.forEach { $0.status = .confirmed }
+                trip.draftSpots.forEach(debugContext.delete)
+                try? debugContext.save()
+            }
             debugSpotsTrip = trip
         }
         #endif

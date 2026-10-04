@@ -13,6 +13,7 @@ struct ThailandApp: App {
                 .task {
                     CalendarSyncService.shared.startObserving(persistence.viewContext)
                     CommunityService.shared.startObserving(persistence.viewContext)
+                    await Subscription.shared.start()
                     await IdentityService.refreshDisplayName()
                 }
                 .onChange(of: scenePhase) { _, phase in

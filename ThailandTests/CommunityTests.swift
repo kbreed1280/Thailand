@@ -50,3 +50,18 @@ final class CommunityTests: XCTestCase {
         XCTAssertEqual(CommunityAggregator.cells(around: c).count, 9)
     }
 }
+
+final class ImportQuotaTests: XCTestCase {
+    func testDailyLimitResetsNextDay() {
+        let cal = Calendar.current
+        let today = cal.date(from: DateComponents(year: 2026, month: 11, day: 3, hour: 9))!
+        let tomorrow = cal.date(byAdding: .day, value: 1, to: today)!
+        var q = ImportQuota()
+        for _ in 0..<5 { XCTAssertTrue(q.consume(limit: 5, now: today)) }
+        XCTAssertFalse(q.consume(limit: 5, now: today))
+        XCTAssertEqual(q.remaining(limit: 5, now: today), 0)
+        XCTAssertEqual(q.remaining(limit: 5, now: tomorrow), 5)
+        XCTAssertTrue(q.consume(limit: 5, now: tomorrow))
+        XCTAssertEqual(q.remaining(limit: 5, now: tomorrow), 4)
+    }
+}

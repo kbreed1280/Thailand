@@ -41,7 +41,7 @@ struct SpotsView: View {
             VStack(spacing: 0) {
                 Picker("View", selection: $tab) {
                     ForEach(Tab.allCases, id: \.self) { t in
-                        Text(t == .drafts && !draftSources.isEmpty ? "Drafts (\(draftSources.count))" : t.rawValue).tag(t)
+                        (t == .drafts && !draftSources.isEmpty ? Text("\(Text(LocalizedStringKey(t.rawValue))) (\(draftSources.count))") : Text(LocalizedStringKey(t.rawValue))).tag(t)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -228,6 +228,7 @@ private struct SourceDraftCard: View {
 
     @Environment(\.managedObjectContext) private var context
     @State private var editing: Spot?
+    @State private var showingPaywall = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -239,7 +240,15 @@ private struct SourceDraftCard: View {
             } else if source.status == .failed {
                 Label(source.errorMessage ?? "Couldn't import.", systemImage: "exclamationmark.triangle")
                     .font(.caption).foregroundStyle(Theme.coral)
-                Button("Try again", systemImage: "arrow.clockwise", action: onRetry).font(.caption.weight(.semibold))
+                HStack {
+                    Button("Try again", systemImage: "arrow.clockwise", action: onRetry)
+                    if source.errorMessage == Subscription.limitMessage {
+                        Spacer()
+                        Button("Upgrade", systemImage: "sparkles") { showingPaywall = true }
+                    }
+                }
+                .font(.caption.weight(.semibold))
+                .buttonStyle(.borderless)
             } else if source.spots.isEmpty {
                 Text(source.errorMessage ?? "No specific places found.").font(.caption).foregroundStyle(.secondary)
                 HStack {
@@ -281,6 +290,7 @@ private struct SourceDraftCard: View {
         }
         .padding(.vertical, 4)
         .sheet(item: $editing) { spot in NavigationStack { SpotEditor(spot: spot) } }
+        .sheet(isPresented: $showingPaywall) { PaywallView() }
     }
 
     private func delete(_ spot: Spot) {

@@ -13,6 +13,8 @@ struct ProfileSheet: View {
     @AppStorage(CommunityService.showUsernameKey) private var showUsername = false
     @Environment(\.managedObjectContext) private var context
     @State private var photoItem: PhotosPickerItem?
+    @State private var showingPaywall = false
+    @ObservedObject private var store = Subscription.shared
     @State private var photoVersion = 0
 
     private static let emojis = ["🧳", "🐘", "🌴", "🍜", "🛺", "🏝️", "🦩", "🌞", "🥥", "🐒", "🌺", "✈️"]
@@ -65,6 +67,11 @@ struct ProfileSheet: View {
                     Text("Shown next to places, expenses and packing items you add, and on lists you share, so your travel partner knows who added what.")
                 }
                 Section {
+                    Button { showingPaywall = true } label: {
+                        LabeledContent("WanderHub Pro", value: store.isPro ? "Active" : store.isTestBuild ? "Unlocked (test build)" : "Free plan")
+                    }
+                }
+                Section {
                     Toggle("Share my spots with the community", isOn: $community)
                         .onChange(of: community) { _, on in
                             Task {
@@ -90,6 +97,7 @@ struct ProfileSheet: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
             }
+            .sheet(isPresented: $showingPaywall) { PaywallView() }
             .onChange(of: photoItem) { _, item in
                 Task {
                     guard let data = try? await item?.loadTransferable(type: Data.self),

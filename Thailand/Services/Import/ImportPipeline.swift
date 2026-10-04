@@ -64,6 +64,11 @@ final class ImportPipeline: ObservableObject {
     // MARK: Pipeline
 
     private func run(_ source: SpotSource, in trip: Trip, context: NSManagedObjectContext) async {
+        guard Subscription.shared.consumeImport() else {
+            source.errorMessage = Subscription.limitMessage
+            set(source, .failed, context)
+            return
+        }
         working.insert(source.objectID)
         defer { working.remove(source.objectID) }
 

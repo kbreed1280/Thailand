@@ -12,6 +12,7 @@ struct ThailandApp: App {
                 .environment(\.managedObjectContext, persistence.viewContext)
                 .task {
                     CalendarSyncService.shared.startObserving(persistence.viewContext)
+                    CommunityService.shared.startObserving(persistence.viewContext)
                     await IdentityService.refreshDisplayName()
                 }
                 .onChange(of: scenePhase) { _, phase in

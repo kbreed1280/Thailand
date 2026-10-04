@@ -9,6 +9,9 @@ struct ProfileSheet: View {
     @AppStorage(AppSettings.usernameKey) private var username = ""
     @AppStorage(AppSettings.avatarEmojiKey) private var avatarEmoji = ""
     @AppStorage(DayReminders.enabledKey) private var dayReminders = true
+    @AppStorage(CommunityService.enabledKey) private var community = false
+    @AppStorage(CommunityService.showUsernameKey) private var showUsername = false
+    @Environment(\.managedObjectContext) private var context
     @State private var photoItem: PhotosPickerItem?
     @State private var photoVersion = 0
 
@@ -60,6 +63,21 @@ struct ProfileSheet: View {
                     }
                 } footer: {
                     Text("Shown next to places, expenses and packing items you add, and on lists you share, so your travel partner knows who added what.")
+                }
+                Section {
+                    Toggle("Share my spots with the community", isOn: $community)
+                        .onChange(of: community) { _, on in
+                            Task {
+                                if on { await CommunityService.shared.shareAll(in: context) }
+                                else { await CommunityService.shared.withdrawAll() }
+                            }
+                        }
+                    Toggle("Show my @username on tips", isOn: $showUsername)
+                        .disabled(!community || username.isEmpty)
+                } header: {
+                    Text("Privacy")
+                } footer: {
+                    Text("Off by default. When on, places you confirm are shared anonymously with other travelers: the place, the inside scoop and a link to the original post. Your notes, photos, trips and lists stay private. Turning it off removes what you shared.")
                 }
                 Section {
                     Toggle("Evening reminder for tomorrow's plan", isOn: $dayReminders)

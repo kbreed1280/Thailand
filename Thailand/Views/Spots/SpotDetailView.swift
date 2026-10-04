@@ -79,6 +79,8 @@ struct SpotDetailView: View {
                     .onSubmit { spot.notes = notes; save() }
             }
 
+            SpotCommunitySection(spot: spot)
+
             Section {
                 if let c = spot.coordinate {
                     Button("Walk there", systemImage: "figure.walk") { walkTarget = WalkTarget(name: spot.displayName, coordinate: c) }

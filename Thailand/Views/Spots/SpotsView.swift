@@ -24,6 +24,7 @@ struct SpotsView: View {
     @State private var filing: SpotSource?
     @State private var showingAutoPlan = false
     @State private var showingSidequest = false
+    @State private var showingTrending = false
 
     private var sources: [SpotSource] { _ = refreshTick; return trip.allSpotSources }
     private var draftSources: [SpotSource] {
@@ -73,6 +74,7 @@ struct SpotsView: View {
             }
             .sheet(isPresented: $showingAutoPlan) { AutoPlanView(trip: trip) }
             .fullScreenCover(isPresented: $showingSidequest) { SidequestView(trip: trip) }
+            .sheet(isPresented: $showingTrending) { TrendingNearbyView(trip: trip) }
             .sheet(isPresented: $showingManualAdd) {
                 SpotPlaceSearchSheet(title: "Add a spot", cityHint: nil) { item in addManual(item) }
             }
@@ -105,6 +107,7 @@ struct SpotsView: View {
             Button("Search for a place", systemImage: "magnifyingglass") { showingManualAdd = true }
             Button("Auto-plan days", systemImage: "wand.and.sparkles") { showingAutoPlan = true }
             Button("Sidequest", systemImage: "dice") { showingSidequest = true }
+            Button("Trending nearby", systemImage: "flame") { showingTrending = true }
             Divider()
             Button("New folder", systemImage: "folder.badge.plus") { newFolderName = ""; newFolderPrompt = true }
         } label: {

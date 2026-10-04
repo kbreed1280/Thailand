@@ -11,6 +11,7 @@ struct SpotListsTab: View {
     let sources: [SpotSource]
     @Environment(\.managedObjectContext) private var context
     @State private var creating = false
+    @State private var deletingFolder: String?
 
     private var collections: [SpotCollection] { _ = refreshTick; return trip.sortedCollections }
 
@@ -44,10 +45,27 @@ struct SpotListsTab: View {
                         Text("Empty. Drafts with no specific place can be filed here.").font(.caption).foregroundStyle(.secondary)
                     }
                     ForEach(inFolder) { source in SourceHeader(source: source) }
+                        .onDelete { offsets in
+                            offsets.map { inFolder[$0] }.forEach { ImportPipeline.deleteSource($0, context: context) }
+                            ItineraryStore(context: context).save()
+                        }
+                    Button("Delete folder", systemImage: "trash", role: .destructive) { deletingFolder = folder }
+                        .font(.callout)
                 }
             }
         }
         .sheet(isPresented: $creating) { CollectionEditor(trip: trip, collection: nil) }
+        .confirmationDialog("Delete \"\(deletingFolder ?? "")\"?", isPresented: Binding(get: { deletingFolder != nil }, set: { if !$0 { deletingFolder = nil } }),
+                            titleVisibility: .visible) {
+            Button("Delete folder and its posts", role: .destructive) {
+                guard let folder = deletingFolder else { return }
+                for source in sources where source.folder == folder { ImportPipeline.deleteSource(source, context: context) }
+                TravelVideos.deleteFolder(folder, in: trip, context: context)
+                deletingFolder = nil
+            }
+        } message: {
+            Text("The posts in this folder are removed, so you can share them to WanderHub again. Spots you already confirmed are kept.")
+        }
     }
 }
 

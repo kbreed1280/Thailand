@@ -59,3 +59,18 @@ final class CollectionTests: XCTestCase {
         XCTAssertEqual(imported.spots.count, 1)
     }
 }
+
+@MainActor
+final class FolderDeleteTests: XCTestCase {
+    func testDeletingASourceLetsYouShareTheLinkAgain() {
+        let context = PersistenceController(inMemory: true).viewContext
+        let trip = ItineraryStore(context: context).createTrip(name: "T", start: .now, end: .now.addingTimeInterval(86_400))
+        let url = URL(string: "https://www.tiktok.com/t/ZPLduUn3s/")!
+        let source = ImportPipeline.shared.addSource(url: url, text: nil, to: trip, context: context)!
+        source.folder = "Tips"
+        XCTAssertNil(ImportPipeline.shared.addSource(url: url, text: nil, to: trip, context: context), "duplicate is skipped")
+        ImportPipeline.deleteSource(source, context: context)
+        context.processPendingChanges()
+        XCTAssertNotNil(ImportPipeline.shared.addSource(url: url, text: nil, to: trip, context: context), "can re-share after delete")
+    }
+}

@@ -173,6 +173,15 @@ final class ImportPipeline: ObservableObject {
 
     // MARK: One-time move of step-12 TikTok saves (wish-list items) into spots
 
+    /// Removes an imported post and the drafts that came only from it (confirmed spots stay).
+    nonisolated static func deleteSource(_ source: SpotSource, context: NSManagedObjectContext) {
+        for scoop in source.sortedScoops {
+            if let spot = scoop.spot, spot.isDraft, spot.sortedScoops.allSatisfy({ $0.source == source }) { context.delete(spot) }
+            context.delete(scoop)
+        }
+        context.delete(source)
+    }
+
     func migrateLegacyVideos(in trip: Trip, context: NSManagedObjectContext) {
         let key = "spotsMigrated-\(trip.uuid?.uuidString ?? "")"
         guard !UserDefaults.standard.bool(forKey: key) else { return }

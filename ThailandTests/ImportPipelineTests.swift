@@ -6,6 +6,20 @@ import XCTest
 // MARK: - Link parsing
 
 final class LinkReaderTests: XCTestCase {
+    func testTikTokShareLinksAreShortLinks() {
+        XCTAssertTrue(LinkReader.isShortLink(URL(string: "https://www.tiktok.com/t/ZPLRKLpWT/")!))
+        XCTAssertTrue(LinkReader.isShortLink(URL(string: "https://tiktok.com/t/ZPLRKLpWT/")!))
+        XCTAssertTrue(LinkReader.isShortLink(URL(string: "https://vm.tiktok.com/ZMabc/")!))
+        XCTAssertFalse(LinkReader.isShortLink(URL(string: "https://www.tiktok.com/@a/video/1")!))
+    }
+
+    func testTikTokPhotoSlideshowFallsBackToVideoPath() {
+        let photo = URL(string: "https://www.tiktok.com/@digital.travels_/photo/7686750233367301398?_r=1&_t=ZP-9AH")!
+        XCTAssertEqual(LinkReader.tiktokVideoURL(forPhoto: photo)?.absoluteString,
+                       "https://www.tiktok.com/@digital.travels_/video/7686750233367301398")
+        XCTAssertNil(LinkReader.tiktokVideoURL(forPhoto: URL(string: "https://www.tiktok.com/@a/video/1")!))
+    }
+
     func testPlatformDetection() {
         XCTAssertEqual(SourcePlatform(url: URL(string: "https://www.tiktok.com/@x/video/1")), .tiktok)
         XCTAssertEqual(SourcePlatform(url: URL(string: "https://www.instagram.com/reel/Cabc/")), .instagram)

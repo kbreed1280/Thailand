@@ -40,7 +40,10 @@ enum LinkReader {
         case .googleMaps:
             if let place = parseGoogleMaps(target) { content.declaredPlaces = [place]; content.title = place.name }
         case .tiktok, .youtube:
-            if let o = await oEmbed(target, platform: platform) {
+            // TikTok's oEmbed rejects photo slideshows (/photo/<id>) but accepts the same id as /video/<id>.
+            var o = await oEmbed(target, platform: platform)
+            if o == nil, let videoURL = tiktokVideoURL(forPhoto: target) { o = await oEmbed(videoURL, platform: platform) }
+            if let o {
                 content.title = o.title
                 content.creator = o.author
                 content.thumbnailURL = o.thumbnail
@@ -71,7 +74,8 @@ enum LinkReader {
     // MARK: Network
 
     static func isShortLink(_ url: URL) -> Bool {
-        guard let host = url.host?.lowercased() else { return false }
+        guard var host = url.host?.lowercased() else { return false }
+        if host.hasPrefix("www.") { host.removeFirst(4) }
         return ["vm.tiktok.com", "vt.tiktok.com", "maps.app.goo.gl", "goo.gl", "youtu.be", "instagr.am"].contains(host)
             || (host == "tiktok.com" && url.path.hasPrefix("/t/"))
     }
@@ -107,6 +111,15 @@ enum LinkReader {
     }
 
     // MARK: Parsing (pure, tested)
+
+    /// https://www.tiktok.com/@user/photo/123?x → https://www.tiktok.com/@user/video/123
+    static func tiktokVideoURL(forPhoto url: URL) -> URL? {
+        guard url.host()?.hasSuffix("tiktok.com") == true, url.path.contains("/photo/"),
+              var c = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return nil }
+        c.path = c.path.replacingOccurrences(of: "/photo/", with: "/video/")
+        c.query = nil
+        return c.url
+    }
 
     static func parseOEmbed(_ data: Data) -> OEmbed? {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }

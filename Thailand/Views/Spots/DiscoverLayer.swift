@@ -48,6 +48,18 @@ enum DiscoverKind: String, CaseIterable, Identifiable {
         allCases.filter(kinds.contains).map(\.rawValue).joined(separator: ",")
     }
 
+    /// The map layer for a category pill (Vibe and Go have none).
+    static func forCategory(_ category: SpotCategory) -> DiscoverKind? {
+        switch category {
+        case .stay: .hotels
+        case .brew: .coffee
+        case .eat: .food
+        case .sip: .bars
+        case .explore: .sights
+        case .vibe, .go: nil
+        }
+    }
+
     /// Which kind shows a top pick (markets and malls count as sights).
     static func forTopPick(_ category: SpotCategory) -> DiscoverKind {
         switch category {

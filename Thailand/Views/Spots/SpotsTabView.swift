@@ -60,6 +60,17 @@ struct SpotsHomeView: View {
     @AppStorage("mapDiscover") private var discover = true
     @AppStorage(DiscoverKind.storageKey) private var discoverKindsRaw = DiscoverKind.encode(DiscoverKind.defaultSelection)
     private var discoverKinds: Set<DiscoverKind> { DiscoverKind.decode(discoverKindsRaw) }
+    /// Apple's own map places: only the tapped category (nil = all the usual kinds).
+    private var applePlaces: [MKPointOfInterestCategory]? {
+        guard let category else { return nil }
+        return DiscoverKind.forCategory(category)?.poiCategories ?? []
+    }
+
+    /// What the map layer shows: your picks, or only the tapped category (e.g. Brew → coffee shops only).
+    private var visibleKinds: Set<DiscoverKind> {
+        guard let category else { return discoverKinds }
+        return DiscoverKind.forCategory(category).map { [$0] } ?? []
+    }
     @State private var topPicks: [TopPick] = TopPicks.bangkok.filter { $0.coordinate != nil }
     @State private var addedTopPicks: Int?
     @State private var walkTarget: WalkTarget?
@@ -82,16 +93,25 @@ struct SpotsHomeView: View {
     private var pastedURL: URL? { SharedInbox.firstURL(in: search) }
 
     var body: some View {
+        withSheets(core)
+    }
+
+    private var mapLayer: some View {
+        ClusteredSpotMap(spots: spots.filter(\.hasCoordinate), selected: $selected, focus: focus,
+                         onPickPlace: { item in placeToAdd = PlaceToAdd(mapItem: item, coordinate: item.placemark.coordinate) },
+                         onDropPin: { c in placeToAdd = PlaceToAdd(mapItem: nil, coordinate: c) },
+                         discover: discover && !visibleKinds.isEmpty,
+                         discoverKinds: visibleKinds,
+                         onPickLandmark: { landmark = $0 },
+                         applePlaces: applePlaces,
+                         topPicks: topPicks)
+    }
+
+    private var core: some View {
         NavigationStack(path: $path) {
             GeometryReader { geo in
                 ZStack(alignment: .top) {
-                    ClusteredSpotMap(spots: spots.filter(\.hasCoordinate), selected: $selected, focus: focus,
-                                     onPickPlace: { item in placeToAdd = PlaceToAdd(mapItem: item, coordinate: item.placemark.coordinate) },
-                                     onDropPin: { c in placeToAdd = PlaceToAdd(mapItem: nil, coordinate: c) },
-                                     discover: discover && !discoverKinds.isEmpty,
-                                     discoverKinds: discoverKinds,
-                                     onPickLandmark: { landmark = $0 },
-                                     topPicks: topPicks)
+                    mapLayer
                         .ignoresSafeArea()
 
                     topBar
@@ -108,6 +128,8 @@ struct SpotsHomeView: View {
             guard focus == nil else { return }
             #if DEBUG
             // Debug-only: `-debugFocusBangkok YES` opens the map zoomed into central Bangkok.
+            // Debug-only: `-debugCategory brew` starts with a category pill selected.
+            if let raw = UserDefaults.standard.string(forKey: "debugCategory") { category = SpotCategory(rawValue: raw) }
             if UserDefaults.standard.bool(forKey: "debugFocusSilom") {
                 focus = .init(coordinates: [.init(latitude: 13.722, longitude: 100.524), .init(latitude: 13.735, longitude: 100.540)])
                 return
@@ -136,14 +158,20 @@ struct SpotsHomeView: View {
         .onReceive(NotificationCenter.default.publisher(for: .NSManagedObjectContextObjectsDidChange, object: context)) { _ in
             refreshTick &+= 1
         }
+    }
+
+    private func landmarkSheet(_ l: Landmark) -> some View {
+        let category: SpotCategory = topPicks.first(where: { $0.landmark?.id == l.id })?.spotCategory ?? .explore
+        return LandmarkDetailSheet(landmark: l, userLocation: location.lastLocation, onWalk: { target in
+            landmark = nil
+            walkTarget = target
+        }, spotCategory: category)
+    }
+
+    private func withSheets<V: View>(_ view: V) -> some View {
+        view
         .sheet(isPresented: $showingInbox) { SpotsView(trip: trip) }
-        .sheet(item: $landmark) { l in
-            LandmarkDetailSheet(landmark: l, userLocation: location.lastLocation, onWalk: { target in
-                                    landmark = nil
-                                    walkTarget = target
-                                },
-                                spotCategory: topPicks.first { $0.landmark?.id == l.id }?.spotCategory ?? .explore)
-        }
+        .sheet(item: $landmark) { landmarkSheet($0) }
         .task { topPicks = await TopPicks.bangkokLocated() }
         .fullScreenCover(item: $walkTarget) { target in
             WalkingRouteView(destinationName: target.name, coordinate: target.coordinate)
@@ -224,16 +252,23 @@ struct SpotsHomeView: View {
             }
             .padding(.horizontal)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    pill("All", icon: nil, color: PlotStyle.ink, selected: category == nil) { category = nil }
-                    ForEach(SpotCategory.allCases) { c in
-                        pill(c.title, icon: c.systemImage, color: c.color, selected: category == c) {
-                            category = category == c ? nil : c
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        pill("All", icon: nil, color: PlotStyle.ink, selected: category == nil) { category = nil }
+                            .id("all")
+                        ForEach(SpotCategory.allCases) { c in
+                            pill(c.title, icon: c.systemImage, color: c.color, selected: category == c) {
+                                category = category == c ? nil : c
+                            }
+                            .id(c.rawValue)
                         }
                     }
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
+                .onChange(of: category, initial: true) { _, c in
+                    withAnimation(.snappy) { proxy.scrollTo(c?.rawValue ?? "all", anchor: .center) }
+                }
             }
         }
         .padding(.top, 4)

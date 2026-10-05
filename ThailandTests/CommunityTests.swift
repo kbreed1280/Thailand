@@ -128,3 +128,15 @@ final class TopPicksTests: XCTestCase {
         XCTAssertEqual(trip.confirmedSpots.count, 5)
     }
 }
+
+final class DiscoverKindTests: XCTestCase {
+    func testCategoryPillsMapToOneLayer() {
+        XCTAssertEqual(DiscoverKind.forCategory(.stay), .hotels)
+        XCTAssertEqual(DiscoverKind.forCategory(.brew), .coffee)
+        XCTAssertEqual(DiscoverKind.forCategory(.eat), .food)
+        XCTAssertEqual(DiscoverKind.forCategory(.sip), .bars)
+        XCTAssertEqual(DiscoverKind.forCategory(.explore), .sights)
+        XCTAssertNil(DiscoverKind.forCategory(.vibe))
+        XCTAssertEqual(DiscoverKind.decode(DiscoverKind.encode([.hotels, .coffee])), [.hotels, .coffee])
+    }
+}

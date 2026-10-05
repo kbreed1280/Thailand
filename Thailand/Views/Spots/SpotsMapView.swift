@@ -201,6 +201,8 @@ struct ClusteredSpotMap: UIViewRepresentable {
     /// Which kinds of places the discover layer shows.
     var discoverKinds: Set<DiscoverKind> = DiscoverKind.defaultSelection
     var onPickLandmark: ((Landmark) -> Void)?
+    /// Apple's own tappable places to show (nil = the usual hotels, food, sights…; [] = none).
+    var applePlaces: [MKPointOfInterestCategory]?
     /// Researched must-sees, shown whenever discover is on.
     var topPicks: [TopPick] = []
 
@@ -235,6 +237,13 @@ struct ClusteredSpotMap: UIViewRepresentable {
 
     func updateUIView(_ map: MKMapView, context: Context) {
         context.coordinator.parent = self
+        if onPickPlace != nil {
+            let wanted = applePlaces ?? Self.addablePlaces
+            if context.coordinator.lastApplePlaces != wanted {
+                context.coordinator.lastApplePlaces = wanted
+                map.pointOfInterestFilter = wanted.isEmpty ? .excludingAll : MKPointOfInterestFilter(including: wanted)
+            }
+        }
         // Sync annotations (cheap even for hundreds of spots).
         let current = map.annotations.compactMap { $0 as? SpotAnnotation }
         let wanted = Set(spots.map(\.objectID))
@@ -306,6 +315,7 @@ struct ClusteredSpotMap: UIViewRepresentable {
         var parent: ClusteredSpotMap
         var lastFocus: SpotsMapView.MapFocus?
         var lastKinds: Set<DiscoverKind>?
+        var lastApplePlaces: [MKPointOfInterestCategory]?
         @MainActor private lazy var discoverLoader = DiscoverLoader()
 
         @MainActor func loadDiscover(_ map: MKMapView) {

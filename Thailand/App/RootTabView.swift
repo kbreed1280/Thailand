@@ -39,6 +39,8 @@ struct RootTabView: View {
                 TranslateTabView()
             }
         }
+        .tint(Theme.ink)
+        .fontDesign(.rounded)
         .onAppear { if selectedTab == 3 { selectedTab = 0 } } // Convert moved to the Trip screen
         .onOpenURL { url in
             guard url.isFileURL else { return }

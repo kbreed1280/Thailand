@@ -5,11 +5,11 @@ import SwiftUI
 
 /// Soft, paper-and-ink look for the Spots tab (light and dark).
 enum PlotStyle {
-    static let ink = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: "#8DB8D8") : UIColor(hex: "#4A7BA0") })
-    static let paper = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: "#1B1C1E") : UIColor(hex: "#F7F5F1") })
-    static let card = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: "#2A2B2E") : UIColor(hex: "#FFFFFF") })
-    static let chip = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: "#2A2B2E") : UIColor(hex: "#F1EEE9") })
-    static let line = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: "#3A3B3F") : UIColor(hex: "#E4E0DA") })
+    static let ink = Theme.ink
+    static let paper = Theme.background
+    static let card = Theme.cardBackground
+    static let chip = Theme.insetBackground
+    static let line = Theme.hairline
 }
 
 /// The Spots tab: every saved spot on a full-screen map, category pills on top, and a

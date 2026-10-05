@@ -12,7 +12,7 @@ struct ItemRow: View {
                     if let time = item.time {
                         Text(time.formatted(date: .omitted, time: .shortened))
                             .font(.subheadline.weight(.semibold).monospacedDigit())
-                            .foregroundStyle(Theme.mango)
+                            .foregroundStyle(Theme.ink)
                     }
                     Text(item.displayTitle)
                         .font(.body.weight(.semibold))

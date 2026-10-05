@@ -1,32 +1,46 @@
 import SwiftUI
 import UIKit
 
-/// Warm tropical palette: mango orange as the accent, lagoon teal as the partner color,
-/// soft cards on the grouped background. Works in light and dark mode.
+/// Calm traveler palette: deep lagoon "ink" as the primary color, warm paper backgrounds with
+/// white cards, and sunset mango kept as a small accent. Works in light and dark mode.
 enum Theme {
-    static let cornerRadius: CGFloat = 20
-    static let smallCornerRadius: CGFloat = 12
+    static let cornerRadius: CGFloat = 22
+    static let smallCornerRadius: CGFloat = 14
+
+    /// Primary: deep lagoon blue-teal (buttons, links, selected states).
+    static let ink = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: "#86C6D6") : UIColor(hex: "#15627A") })
+    static let inkDeep = Color(hex: "#0C3F52")
 
     static let mango = Color(hex: "#F4821C")
     static let mangoLight = Color(hex: "#FFB547")
     static let lagoon = Color(hex: "#1BA39C")
     static let coral = Color(hex: "#E8505B")
 
+    /// Hero / call-to-action gradient (deep lagoon with a hint of evening sky).
     static let sunsetGradient = LinearGradient(
+        colors: [Color(hex: "#1D7A8F"), Color(hex: "#15627A"), Color(hex: "#0C3F52")],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    /// The real sunset, for small accents (weather, badges).
+    static let warmGradient = LinearGradient(
         colors: [mangoLight, mango, coral.opacity(0.9)],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
     static let lagoonGradient = LinearGradient(
-        colors: [Color(hex: "#3CCFC1"), lagoon],
+        colors: [Color(hex: "#2FB6A8"), Color(hex: "#178A86")],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
-    static let background = Color(.systemGroupedBackground)
-    static let cardBackground = Color(.secondarySystemGroupedBackground)
-    static let insetBackground = Color(.tertiarySystemGroupedBackground)
+    /// Warm paper page background and white cards.
+    static let background = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: "#111315") : UIColor(hex: "#F6F4F0") })
+    static let cardBackground = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: "#1E2124") : UIColor(hex: "#FFFFFF") })
+    static let insetBackground = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: "#2A2D31") : UIColor(hex: "#EFECE6") })
+    static let hairline = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: "#34383C") : UIColor(hex: "#E5E1DA") })
 }
 
 extension UIColor {

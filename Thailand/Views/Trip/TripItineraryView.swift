@@ -51,15 +51,36 @@ struct TripItineraryView: View {
         let _ = refreshTick
         List {
             Section {
-                TripHeaderCard(
+                TripHero(
                     trip: trip,
                     members: persistence.participantNames(for: trip),
                     isSharedWithMe: persistence.isSharedWithMe(trip),
-                    canEdit: canEdit
-                ) { action in
-                    switch action {
+                    canEdit: canEdit,
+                    onFlights: { showingFlights = true },
+                    onWeather: { showingWeather = true }
+                )
+                .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 8, trailing: 0))
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+            }
+
+            Section {
+                TodayCard(trip: trip,
+                          onDirections: { item in
+                              if let c = item.coordinate { walkTarget = WalkTarget(name: item.displayTitle, coordinate: c) }
+                          },
+                          onOpenDay: { mapDay = $0 },
+                          onAddSpots: { spotPickerDay = $0 },
+                          onSidequest: { showingSidequest = true })
+                .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 8, trailing: 0))
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+            }
+
+            Section {
+                TravelToolsGrid(trip: trip) { tool in
+                    switch tool {
                     case .packing: showingPacking = true
-                    case .ideas: showingStarterIdeas = true
                     case .documents: showingVault = true
                     case .flights: showingFlights = true
                     case .weather: showingWeather = true
@@ -69,8 +90,9 @@ struct TripItineraryView: View {
                     case .offline: showingOffline = true
                     }
                 }
-                .listRowInsets(EdgeInsets())
+                .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
                 .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
             }
 
             wishListSection
@@ -81,6 +103,8 @@ struct TripItineraryView: View {
         }
         .listStyle(.insetGrouped)
         .listSectionSpacing(.compact)
+        .scrollContentBackground(.hidden)
+        .background(Theme.background)
         .navigationTitle(trip.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarTitleMenu { tripMenu }
@@ -256,7 +280,8 @@ struct TripItineraryView: View {
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "star.fill").foregroundStyle(Theme.mango)
-                        Text("Wish List")
+                        
+                        Text("Wish List").font(.title3.weight(.bold))
                         Text("\(trip.wishListPlaces.count)")
                             .foregroundStyle(.secondary)
                         Image(systemName: wishListExpanded ? "chevron.down" : "chevron.right")
@@ -289,9 +314,10 @@ struct TripItineraryView: View {
         Section {
             let items = day.sortedItems
             if items.isEmpty {
-                DropPlaceholder(text: "Nothing planned yet. Tap + or drag a place here.") { ids in
-                    drop(ids, onto: day, before: nil)
-                }
+                EmptyDayRow(canAddSpots: canEdit && !trip.confirmedSpots.isEmpty,
+                            onSpots: { spotPickerDay = day },
+                            onAdd: { editingNewItemFor = NewItemTarget(day: day) },
+                            onDrop: { ids in drop(ids, onto: day, before: nil) })
             }
             ForEach(Array(items.enumerated()), id: \.element.objectID) { index, item in
                 if index > 0, items[index - 1].hasCoordinate, item.hasCoordinate {
@@ -533,225 +559,67 @@ private struct DayHeader: View {
     @State private var walked: WalkStats?
     @ObservedObject private var forecast = TripForecast.shared
 
+    private var isToday: Bool { day.date.map { Calendar.current.isDateInToday($0) } ?? false }
+
     var body: some View {
-        HStack(spacing: 6) {
-            VStack(alignment: .leading, spacing: 1) {
-                Text("Day \(day.number)")
-                    .font(.headline)
-                    .foregroundStyle(.primary)
-                if let date = day.date {
-                    Text(date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+        HStack(alignment: .center, spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 8) {
+                    Text("Day \(day.number)")
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(.primary)
+                    if isToday {
+                        Text("TODAY")
+                            .font(.caption2.weight(.heavy))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 7).padding(.vertical, 3)
+                            .background(Theme.ink, in: Capsule())
+                    }
                 }
-                if let walked, walked.steps > 0 {
-                    Label("\(walked.steps.formatted()) steps · \(walked.kilometersText)", systemImage: "shoeprints.fill")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(Theme.lagoon)
+                HStack(spacing: 8) {
+                    if let date = day.date {
+                        Text(date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))
+                    }
+                    if let walked, walked.steps > 0 {
+                        Label("\(walked.steps.formatted()) steps", systemImage: "shoeprints.fill")
+                            .foregroundStyle(Theme.lagoon)
+                    }
                 }
-            }
-            if let date = day.date, Calendar.current.isDateInToday(date) {
-                Text("TODAY")
-                    .font(.caption2.weight(.heavy))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Theme.lagoon, in: Capsule())
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
             }
             Spacer()
             if let date = day.date, let trip = day.trip, let w = forecast.day(date, in: trip) {
-                VStack(alignment: .trailing, spacing: 0) {
-                    Label("\(Int(w.highC.rounded()))°", systemImage: w.symbolName)
-                        .font(.caption.weight(.semibold))
-                        .symbolRenderingMode(.multicolor)
-                    Text("Feels \(Int(w.maxHeatIndexC.rounded()))°")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(w.heatLevel.color)
+                HStack(spacing: 5) {
+                    Image(systemName: w.symbolName).symbolRenderingMode(.multicolor)
+                    Text("\(Int(w.highC.rounded()))°").font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
                 }
+                .padding(.horizontal, 9).padding(.vertical, 5)
+                .background(w.heatLevel.color.opacity(0.14), in: Capsule())
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("High \(Int(w.highC.rounded())) degrees, feels like \(Int(w.maxHeatIndexC.rounded())), \(w.heatLevel.title)")
             }
-            Button(action: onMap) {
-                Image(systemName: "map")
-                    .font(.title3)
-                    .frame(minWidth: 44, minHeight: 36)
+            Menu {
+                Button("Add a stop", systemImage: "plus", action: onAdd)
+                if canAddSpots { Button("Add from Spots", systemImage: "mappin.and.ellipse", action: onSpots) }
+                Button("Map & route", systemImage: "map", action: onMap)
+                    .disabled(!day.sortedItems.contains { $0.hasCoordinate })
+            } label: {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title2)
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(Theme.ink)
+                    .frame(minWidth: 44, minHeight: 40)
             }
-            .accessibilityLabel("Map of day \(day.number)")
-            .disabled(!day.sortedItems.contains { $0.hasCoordinate })
-            if canAddSpots {
-                Button(action: onSpots) {
-                    Image(systemName: "mappin.and.ellipse.circle")
-                        .font(.title3)
-                        .frame(minWidth: 40, minHeight: 36)
-                }
-                .accessibilityLabel("Add saved spots to day \(day.number)")
-            }
-            Button(action: onAdd) {
-                Image(systemName: "plus.circle")
-                    .font(.title3)
-                    .frame(minWidth: 44, minHeight: 36)
-            }
-            .accessibilityLabel("Add to day \(day.number)")
+            .accessibilityLabel("Day \(day.number) actions")
         }
         .textCase(nil)
+        .padding(.top, 10)
         .task(id: day.date) {
             if let date = day.date {
                 walked = await PedometerService.shared.stats(for: date)
             }
         }
-    }
-}
-
-/// Trip name, dates, countdown and quick links.
-private struct TripHeaderCard: View {
-    @ObservedObject var trip: Trip
-    var members: [String] = []
-    var isSharedWithMe = false
-    var canEdit = true
-    let onAction: (HeaderAction) -> Void
-
-    enum HeaderAction { case packing, ideas, documents, flights, weather, tdac, converter, transit, offline }
-
-    @ObservedObject private var flights = FlightStore.shared
-
-    private var countdown: String {
-        guard let start = trip.startDate, let end = trip.endDate else { return "" }
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: .now)
-        if today < start {
-            let days = calendar.dateComponents([.day], from: today, to: start).day ?? 0
-            return days == 1 ? "Starts tomorrow" : "Starts in \(days) days"
-        } else if today <= end, let day = trip.today {
-            return "Day \(day.number) of \(trip.sortedDays.count)"
-        } else {
-            return "Trip complete"
-        }
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(countdown.uppercased())
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.white.opacity(0.85))
-                Text(trip.displayName)
-                    .font(.title2.bold())
-                    .foregroundStyle(.white)
-                if let start = trip.startDate, let end = trip.endDate {
-                    Text("\(start.formatted(.dateTime.month(.abbreviated).day())) – \(end.formatted(.dateTime.month(.abbreviated).day().year()))")
-                        .font(.subheadline)
-                        .foregroundStyle(.white.opacity(0.9))
-                }
-            }
-
-            if !members.isEmpty || isSharedWithMe || !canEdit {
-                HStack(spacing: 6) {
-                    if !members.isEmpty {
-                        Label("With \(ListFormatter.localizedString(byJoining: members))", systemImage: "person.2.fill")
-                    } else if isSharedWithMe {
-                        Label("Shared with you", systemImage: "person.2.fill")
-                    }
-                    if !canEdit {
-                        Label("View only", systemImage: "eye.fill")
-                    }
-                }
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.white)
-            }
-
-            let all = trip.allItems
-            HStack(spacing: 8) {
-                HeaderChip(systemImage: "calendar", text: "\(trip.sortedDays.count) days")
-                HeaderChip(systemImage: "mappin", text: "\(all.count) places")
-                HeaderChip(systemImage: "ticket", text: "\(all.filter { $0.status == .booked }.count) booked")
-            }
-
-            if let next = flights.nextActive {
-                Button { onAction(.flights) } label: {
-                    let (status, _) = FlightStatusPill.describe(next)
-                    Label("\(next.title) · \(status)", systemImage: "airplane")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(.black.opacity(0.25), in: Capsule())
-                }
-                .buttonStyle(.plain)
-            }
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    Button { onAction(.converter) } label: { Label("Baht Converter", systemImage: "bahtsign.circle.fill") }
-                    Button { onAction(.tdac) } label: { Label("TDAC", systemImage: "person.text.rectangle") }
-                    Button { onAction(.documents) } label: { Label("Documents", systemImage: "lock.doc.fill") }
-                    Button { onAction(.weather) } label: { Label("Weather", systemImage: "sun.max.fill") }
-                    Button { onAction(.flights) } label: { Label("Flights", systemImage: "airplane") }
-                    Button { onAction(.transit) } label: { Label("BTS & MRT", systemImage: "tram.fill") }
-                    Button { onAction(.offline) } label: { Label("Offline", systemImage: "arrow.down.circle.fill") }
-                    Button { onAction(.packing) } label: {
-                        let packing = trip.sortedPackingItems
-                        Label("Packing \(packing.filter(\.isDone).count)/\(packing.count)", systemImage: "suitcase.rolling.fill")
-                    }
-                    Button { onAction(.ideas) } label: { Label("Ideas", systemImage: "lightbulb.fill") }
-                }
-                .font(.subheadline.weight(.semibold))
-                .buttonStyle(HeaderButtonStyle())
-            }
-            .scrollClipDisabled()
-        }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background {
-            ZStack {
-                LinearGradient(
-                    colors: [Color(hex: trip.accentHex).opacity(0.75), Color(hex: trip.accentHex)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                if let cover = trip.coverPhoto?.image {
-                    Image(uiImage: cover)
-                        .resizable()
-                        .scaledToFill()
-                        .overlay(LinearGradient(colors: [.black.opacity(0.15), .black.opacity(0.65)], startPoint: .top, endPoint: .bottom))
-                }
-            }
-            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-        }
-        .overlay(alignment: .topTrailing) {
-            if trip.coverPhoto == nil {
-                Image(systemName: "sun.max.fill")
-                    .font(.system(size: 54))
-                    .foregroundStyle(.white.opacity(0.18))
-                    .padding(14)
-                    .accessibilityHidden(true)
-            }
-        }
-        .padding(.vertical, 4)
-    }
-}
-
-private struct HeaderChip: View {
-    let systemImage: String
-    let text: String
-
-    var body: some View {
-        Label(text, systemImage: systemImage)
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(.white)
-            .padding(.horizontal, 9)
-            .padding(.vertical, 5)
-            .background(.white.opacity(0.2), in: Capsule())
-    }
-}
-
-private struct HeaderButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .foregroundStyle(.black.opacity(0.75))
-            .padding(.horizontal, 14)
-            .frame(minHeight: 40)
-            .background(.white, in: Capsule())
-            .opacity(configuration.isPressed ? 0.8 : 1)
     }
 }
 

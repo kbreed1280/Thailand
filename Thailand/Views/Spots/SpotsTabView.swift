@@ -75,6 +75,9 @@ struct SpotsHomeView: View {
     @State private var addedTopPicks: Int?
     @State private var walkTarget: WalkTarget?
 
+    /// False when this trip was shared with you as view-only.
+    private var canEdit: Bool { PersistenceController.shared.canEdit(trip) }
+
     private var waiting: Int { _ = refreshTick; return SharedInbox.load().count + trip.draftSpots.count }
 
     private var spots: [Spot] {
@@ -98,8 +101,8 @@ struct SpotsHomeView: View {
 
     private var mapLayer: some View {
         ClusteredSpotMap(spots: spots.filter(\.hasCoordinate), selected: $selected, focus: focus,
-                         onPickPlace: { item in placeToAdd = PlaceToAdd(mapItem: item, coordinate: item.placemark.coordinate) },
-                         onDropPin: { c in placeToAdd = PlaceToAdd(mapItem: nil, coordinate: c) },
+                         onPickPlace: canEdit ? { item in placeToAdd = PlaceToAdd(mapItem: item, coordinate: item.placemark.coordinate) } : nil,
+                         onDropPin: canEdit ? { c in placeToAdd = PlaceToAdd(mapItem: nil, coordinate: c) } : nil,
                          discover: discover && !visibleKinds.isEmpty,
                          discoverKinds: visibleKinds,
                          onPickLandmark: { landmark = $0 },
@@ -143,6 +146,7 @@ struct SpotsHomeView: View {
         }
         .task {
             location.requestPermission()
+            guard canEdit else { return } // imports go into trips you can edit
             await pipeline.processInbox(into: trip, context: context)
             refreshTick &+= 1
         }
@@ -208,6 +212,14 @@ struct SpotsHomeView: View {
                 }
                 .accessibilityLabel("Collections")
                 Spacer()
+                if !canEdit {
+                    Label("View only", systemImage: "eye.fill")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(PlotStyle.ink)
+                        .padding(.horizontal, 12).padding(.vertical, 8)
+                        .background(.regularMaterial, in: Capsule())
+                }
+                if canEdit {
                 Button { showingInbox = true } label: {
                     Image(systemName: "tray.full.fill")
                         .font(.title3.weight(.semibold))
@@ -224,6 +236,7 @@ struct SpotsHomeView: View {
                         }
                 }
                 .accessibilityLabel(waiting > 0 ? "Drafts, \(waiting) new" : "Drafts")
+                }
                 Menu {
                     Section("Show on the map when zoomed in") {
                         ForEach(DiscoverKind.allCases) { kind in
@@ -248,7 +261,7 @@ struct SpotsHomeView: View {
                         .background(on ? AnyShapeStyle(Theme.mango) : AnyShapeStyle(.regularMaterial), in: Circle())
                 }
                 .accessibilityLabel("Places shown on the map")
-                addMenu
+                if canEdit { addMenu }
             }
             .padding(.horizontal)
 

@@ -17,6 +17,9 @@ struct SpotDetailView: View {
     @State private var walkTarget: WalkTarget?
     @State private var notes = ""
 
+    /// False for a trip shared with you as view-only.
+    private var canEdit: Bool { spot.trip.map { PersistenceController.shared.canEdit($0) } ?? true }
+
     var body: some View {
         List {
             if let c = spot.coordinate {
@@ -92,12 +95,14 @@ struct SpotDetailView: View {
                 if let site = spot.website, let url = URL(string: site), !site.isEmpty {
                     Button("Website", systemImage: "safari") { openURL(url) }
                 }
-                Button("Add to Wish List", systemImage: "star") { addToWishList() }
-                AddToDayMenu(spot: spot)
-                AddToCollectionMenu(spot: spot)
+                if canEdit {
+                    Button("Add to Wish List", systemImage: "star") { addToWishList() }
+                    AddToDayMenu(spot: spot)
+                    AddToCollectionMenu(spot: spot)
+                }
             }
 
-            Section {
+            if canEdit { Section {
                 Button("Edit", systemImage: "pencil") { editing = true }
                 Button("Report incorrect point", systemImage: "exclamationmark.bubble") { reporting = true }
                 if let reason = spot.reportReason, !reason.isEmpty {
@@ -108,7 +113,7 @@ struct SpotDetailView: View {
                     save()
                     dismiss()
                 }
-            }
+            } }
         }
         .navigationTitle(spot.displayName)
         .navigationBarTitleDisplayMode(.inline)

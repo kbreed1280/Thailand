@@ -57,7 +57,9 @@ struct TripItineraryView: View {
                     isSharedWithMe: persistence.isSharedWithMe(trip),
                     canEdit: canEdit,
                     onFlights: { showingFlights = true },
-                    onWeather: { showingWeather = true }
+                    onWeather: { showingWeather = true },
+                    onShare: persistence.isCloudEnabled ? { shareTrip() } : nil,
+                    isPreparingShare: isPreparingShare
                 )
                 .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 8, trailing: 0))
                 .listRowBackground(Color.clear)

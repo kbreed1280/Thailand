@@ -10,6 +10,9 @@ struct TripHero: View {
     var canEdit = true
     let onFlights: () -> Void
     let onWeather: () -> Void
+    /// Opens Apple's sharing sheet (invite by Messages, Mail or link; view-only or can edit).
+    var onShare: (() -> Void)?
+    var isPreparingShare = false
 
     @ObservedObject private var flights = FlightStore.shared
     @ObservedObject private var forecast = TripForecast.shared
@@ -81,18 +84,33 @@ struct TripHero: View {
                 stat("\(all.filter { $0.status == .booked }.count)", "booked")
             }
 
-            if !members.isEmpty || isSharedWithMe || !canEdit {
-                HStack(spacing: 10) {
-                    if !members.isEmpty {
-                        Label("With \(ListFormatter.localizedString(byJoining: members))", systemImage: "person.2.fill")
-                    } else if isSharedWithMe {
-                        Label("Shared with you", systemImage: "person.2.fill")
-                    }
-                    if !canEdit { Label("View only", systemImage: "eye.fill") }
+            HStack(spacing: 10) {
+                if !members.isEmpty {
+                    Label("With \(ListFormatter.localizedString(byJoining: members))", systemImage: "person.2.fill")
+                        .lineLimit(1)
+                } else if isSharedWithMe {
+                    Label("Shared with you", systemImage: "person.2.fill")
                 }
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.white.opacity(0.9))
+                if !canEdit { Label("View only", systemImage: "eye.fill") }
+                Spacer(minLength: 0)
+                if let onShare, !isSharedWithMe {
+                    Button(action: onShare) {
+                        HStack(spacing: 6) {
+                            if isPreparingShare { ProgressView().tint(.white) } else { Image(systemName: "person.crop.circle.badge.plus") }
+                            Text(members.isEmpty ? "Invite" : "Manage")
+                        }
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(Theme.ink)
+                        .padding(.horizontal, 14).padding(.vertical, 8)
+                        .background(.white, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isPreparingShare)
+                    .accessibilityLabel(members.isEmpty ? "Invite people to this trip" : "Manage who's on this trip")
+                }
             }
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.white.opacity(0.9))
 
             if let next = flights.nextActive {
                 Button(action: onFlights) {

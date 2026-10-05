@@ -79,6 +79,19 @@ final class PersistenceController {
             }
         }
 
+        #if DEBUG
+        // Debug-only: `-initCloudKitSchema YES` uploads every record type (trips, spots, lists…) to the
+        // CloudKit Development schema, ready for "Deploy Schema Changes" to Production.
+        if isCloudEnabled, UserDefaults.standard.bool(forKey: "initCloudKitSchema") {
+            do {
+                try container.initializeCloudKitSchema(options: [])
+                NSLog("CLOUDKIT schema initialized")
+            } catch {
+                NSLog("CLOUDKIT schema failed: %@", String(describing: error))
+            }
+        }
+        #endif
+
         container.viewContext.automaticallyMergesChangesFromParent = true
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         container.viewContext.transactionAuthor = "app"

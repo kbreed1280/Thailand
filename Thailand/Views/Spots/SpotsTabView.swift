@@ -58,6 +58,8 @@ struct SpotsHomeView: View {
     @State private var placeToAdd: PlaceToAdd?
     @State private var landmark: Landmark?
     @AppStorage("mapDiscover") private var discover = true
+    @AppStorage(DiscoverKind.storageKey) private var discoverKindsRaw = DiscoverKind.encode(DiscoverKind.defaultSelection)
+    private var discoverKinds: Set<DiscoverKind> { DiscoverKind.decode(discoverKindsRaw) }
     @State private var topPicks: [TopPick] = TopPicks.bangkok.filter { $0.coordinate != nil }
     @State private var addedTopPicks: Int?
     @State private var walkTarget: WalkTarget?
@@ -86,7 +88,8 @@ struct SpotsHomeView: View {
                     ClusteredSpotMap(spots: spots.filter(\.hasCoordinate), selected: $selected, focus: focus,
                                      onPickPlace: { item in placeToAdd = PlaceToAdd(mapItem: item, coordinate: item.placemark.coordinate) },
                                      onDropPin: { c in placeToAdd = PlaceToAdd(mapItem: nil, coordinate: c) },
-                                     discover: discover,
+                                     discover: discover && !discoverKinds.isEmpty,
+                                     discoverKinds: discoverKinds,
                                      onPickLandmark: { landmark = $0 },
                                      topPicks: topPicks)
                         .ignoresSafeArea()
@@ -105,6 +108,10 @@ struct SpotsHomeView: View {
             guard focus == nil else { return }
             #if DEBUG
             // Debug-only: `-debugFocusBangkok YES` opens the map zoomed into central Bangkok.
+            if UserDefaults.standard.bool(forKey: "debugFocusSilom") {
+                focus = .init(coordinates: [.init(latitude: 13.722, longitude: 100.524), .init(latitude: 13.735, longitude: 100.540)])
+                return
+            }
             if UserDefaults.standard.bool(forKey: "debugFocusBangkok") {
                 focus = .init(coordinates: [.init(latitude: 13.70, longitude: 100.47), .init(latitude: 13.77, longitude: 100.56)])
                 return
@@ -189,14 +196,30 @@ struct SpotsHomeView: View {
                         }
                 }
                 .accessibilityLabel(waiting > 0 ? "Drafts, \(waiting) new" : "Drafts")
-                Button { withAnimation { discover.toggle() } } label: {
-                    Image(systemName: discover ? "photo.stack.fill" : "photo.stack")
+                Menu {
+                    Section("Show on the map when zoomed in") {
+                        ForEach(DiscoverKind.allCases) { kind in
+                            Toggle(isOn: Binding(
+                                get: { discover && discoverKinds.contains(kind) },
+                                set: { on in
+                                    var kinds = discoverKinds
+                                    if on { kinds.insert(kind); discover = true } else { kinds.remove(kind) }
+                                    discoverKindsRaw = DiscoverKind.encode(kinds)
+                                })) {
+                                Label(kind.title, systemImage: kind.spotCategory.systemImage)
+                            }
+                        }
+                    }
+                    Button(discover ? "Hide all" : "Show", systemImage: discover ? "eye.slash" : "eye") { discover.toggle() }
+                } label: {
+                    let on = discover && !discoverKinds.isEmpty
+                    Image(systemName: on ? "photo.stack.fill" : "photo.stack")
                         .font(.title3.weight(.semibold))
-                        .foregroundStyle(discover ? .white : PlotStyle.ink)
+                        .foregroundStyle(on ? .white : PlotStyle.ink)
                         .frame(width: 48, height: 48)
-                        .background(discover ? AnyShapeStyle(Theme.mango) : AnyShapeStyle(.regularMaterial), in: Circle())
+                        .background(on ? AnyShapeStyle(Theme.mango) : AnyShapeStyle(.regularMaterial), in: Circle())
                 }
-                .accessibilityLabel(discover ? "Hide places to discover" : "Show places to discover")
+                .accessibilityLabel("Places shown on the map")
                 addMenu
             }
             .padding(.horizontal)

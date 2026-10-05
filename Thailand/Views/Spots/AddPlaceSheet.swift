@@ -21,6 +21,7 @@ struct AddPlaceSheet: View {
     @State private var address = ""
     @State private var city = ""
     @State private var category: SpotCategory = .explore
+    @State private var photo: URL?
 
     private var existing: Spot? {
         ImportPipeline.existingSpot(name: name, coordinate: place.coordinate,
@@ -30,6 +31,14 @@ struct AddPlaceSheet: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 16) {
+                if let photo {
+                    AsyncImage(url: photo) { phase in
+                        if let image = phase.image { image.resizable().scaledToFill() } else { Theme.insetBackground }
+                    }
+                    .frame(height: 170)
+                    .frame(maxWidth: .infinity)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                }
                 HStack(spacing: 14) {
                     Image(systemName: category.systemImage)
                         .font(.title2.weight(.semibold))
@@ -76,7 +85,7 @@ struct AddPlaceSheet: View {
             .padding(20)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
         }
-        .presentationDetents([.height(330)])
+        .presentationDetents([.height(photo == nil ? 330 : 510)])
         .presentationBackground(Theme.background)
         .task { await load() }
     }
@@ -87,6 +96,9 @@ struct AddPlaceSheet: View {
             address = item.placemark.title ?? ""
             city = item.placemark.locality ?? item.placemark.administrativeArea ?? ""
             category = SpotCategory(poi: item.pointOfInterestCategory)
+            if let site = item.url {
+                photo = await PlacePhotos.shared.photo(name: name, coordinate: place.coordinate, website: site)
+            }
         } else {
             category = .stay
             let location = CLLocation(latitude: place.coordinate.latitude, longitude: place.coordinate.longitude)

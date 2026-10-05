@@ -198,6 +198,8 @@ struct ClusteredSpotMap: UIViewRepresentable {
     var onDropPin: ((CLLocationCoordinate2D) -> Void)?
     /// Photo pins of things to see (from Wikipedia) appear when you zoom into an area.
     var discover = false
+    /// Which kinds of places the discover layer shows.
+    var discoverKinds: Set<DiscoverKind> = DiscoverKind.defaultSelection
     var onPickLandmark: ((Landmark) -> Void)?
     /// Researched must-sees, shown whenever discover is on.
     var topPicks: [TopPick] = []
@@ -254,10 +256,19 @@ struct ClusteredSpotMap: UIViewRepresentable {
         if !discover {
             map.removeAnnotations(map.annotations.filter { $0 is DiscoverAnnotation })
         } else {
+            if context.coordinator.lastKinds != discoverKinds {
+                // Kinds changed: drop pins you turned off, load the ones you turned on.
+                context.coordinator.lastKinds = discoverKinds
+                map.removeAnnotations(map.annotations.filter { a in
+                    guard let d = a as? DiscoverAnnotation else { return false }
+                    return !discoverKinds.contains(d.kind)
+                })
+                context.coordinator.loadDiscover(map)
+            }
             // Top picks you haven't saved yet.
             let shownTop = Set(map.annotations.compactMap { ($0 as? DiscoverAnnotation).flatMap { $0.isTopPick ? $0.landmark.id : nil } })
             let unsaved = topPicks.filter { pick in
-                guard let c = pick.coordinate else { return false }
+                guard let c = pick.coordinate, discoverKinds.contains(DiscoverKind.forTopPick(pick.spotCategory)) else { return false }
                 return !spots.contains { s in s.coordinate.map { AutoPlanner.distance($0, c) < 120 } ?? false
                     && NameMatch.similarity(s.displayName, pick.name) >= 0.4 }
             }
@@ -267,7 +278,9 @@ struct ClusteredSpotMap: UIViewRepresentable {
                 return !wanted.contains(d.landmark.id)
             })
             map.addAnnotations(unsaved.compactMap { $0.landmark }.filter { !shownTop.contains($0.id) }
-                .map { DiscoverAnnotation($0, isTopPick: true) })
+                .compactMap { l in
+                    topPicks.first { $0.landmark?.id == l.id }.map { DiscoverAnnotation(l, isTopPick: true, kind: DiscoverKind.forTopPick($0.spotCategory)) }
+                })
             if !map.annotations.contains(where: { ($0 as? DiscoverAnnotation)?.isTopPick == false }) {
                 context.coordinator.loadDiscover(map)
             }
@@ -292,18 +305,21 @@ struct ClusteredSpotMap: UIViewRepresentable {
     final class Coordinator: NSObject, MKMapViewDelegate {
         var parent: ClusteredSpotMap
         var lastFocus: SpotsMapView.MapFocus?
+        var lastKinds: Set<DiscoverKind>?
         @MainActor private lazy var discoverLoader = DiscoverLoader()
 
         @MainActor func loadDiscover(_ map: MKMapView) {
             guard parent.discover else { return }
-            discoverLoader.regionChanged(map, savedSpots: parent.spots) { [weak map] landmarks in
+            discoverLoader.regionChanged(map, kinds: parent.discoverKinds, savedSpots: parent.spots) { [weak map] found in
                 guard let map, self.parent.discover else { return }
                 let shown = Set(map.annotations.compactMap { ($0 as? DiscoverAnnotation)?.landmark.id })
-                // Skip Wikipedia pins that duplicate a top pick.
+                // Skip pins that duplicate a top pick.
                 let tops = map.annotations.compactMap { ($0 as? DiscoverAnnotation).flatMap { $0.isTopPick ? $0.landmark : nil } }
-                map.addAnnotations(landmarks.filter { l in
-                    !shown.contains(l.id) && !tops.contains { AutoPlanner.distance($0.coordinate, l.coordinate) < 150 }
-                }.map { DiscoverAnnotation($0) })
+                let adding = found.filter { a in
+                    self.parent.discoverKinds.contains(a.kind) && !shown.contains(a.landmark.id)
+                        && !tops.contains { AutoPlanner.distance($0.coordinate, a.coordinate) < 150 }
+                }
+                map.addAnnotations(adding)
             }
         }
 
@@ -329,7 +345,7 @@ struct ClusteredSpotMap: UIViewRepresentable {
 
         func mapView(_ mapView: MKMapView, didSelect annotation: MKAnnotation) {
             if let discover = annotation as? DiscoverAnnotation {
-                parent.onPickLandmark?(discover.landmark)
+                if let item = discover.mapItem { parent.onPickPlace?(item) } else { parent.onPickLandmark?(discover.landmark) }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { mapView.deselectAnnotation(discover, animated: true) }
                 return
             }
@@ -448,6 +464,36 @@ final class SpotClusterView: MKAnnotationView {
         accessibilityLabel = "\(n) spots"
 
         let spots = cluster.memberAnnotations.compactMap { ($0 as? SpotAnnotation)?.spot }
+        let discovers = cluster.memberAnnotations.compactMap { $0 as? DiscoverAnnotation }
+        if let kind = discovers.first?.kind, spots.isEmpty {
+            // Hotels / cafés / … group: tinted by kind, with its icon in the count badge.
+            count.backgroundColor = UIColor(kind.spotCategory.color)
+            accessibilityLabel = "\(n) \(kind.title.lowercased())"
+            photo.image = UIImage(systemName: kind.spotCategory.systemImage)?
+                .withConfiguration(UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold))
+                .withTintColor(UIColor(kind.spotCategory.color), renderingMode: .alwaysOriginal)
+            photo.contentMode = .center
+            loadTask?.cancel()
+            loadTask = Task { @MainActor [weak self] in
+                for d in discovers.prefix(8) {
+                    guard !Task.isCancelled else { return }
+                    var url = d.landmark.imageURL
+                    if url == nil, let site = d.mapItem?.url {
+                        url = await PlacePhotos.shared.photo(name: d.landmark.title, coordinate: d.coordinate, website: site)
+                    }
+                    if let url, let image = await ImageCache.image(at: url) {
+                        guard let self, self.annotation === cluster else { return }
+                        UIView.transition(with: self.photo, duration: 0.25, options: .transitionCrossDissolve) {
+                            self.photo.contentMode = .scaleAspectFill
+                            self.photo.image = image
+                        }
+                        return
+                    }
+                }
+            }
+            return
+        }
+        count.backgroundColor = UIColor(Theme.ink)
         photo.image = UIImage(systemName: "mappin.and.ellipse")?
             .withConfiguration(UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold))
             .withTintColor(UIColor(Theme.ink), renderingMode: .alwaysOriginal)

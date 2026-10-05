@@ -7,6 +7,8 @@ struct LandmarkDetailSheet: View {
     let landmark: Landmark
     let userLocation: CLLocation?
     let onWalk: (WalkTarget) -> Void
+    /// What it's saved as in Spots (top picks know their category).
+    var spotCategory: SpotCategory = .explore
 
     @State private var savedMessage: String?
 
@@ -52,6 +54,8 @@ struct LandmarkDetailSheet: View {
                     }
                     .buttonStyle(.primary)
 
+                    SaveLandmarkToSpots(landmark: landmark, category: spotCategory) { savedMessage = "Saved to Spots" }
+
                     PlaceActions(place: landmark.asPlace)
 
                     SaveToTripMenu(place: landmark.asPlace, category: .place, notes: landmark.summary, onSaved: { savedMessage = "Saved to \($0)" }) {
@@ -78,5 +82,33 @@ struct LandmarkDetailSheet: View {
             }
             .savedToast($savedMessage)
         }
+    }
+}
+
+/// Full-width "Save to Spots" for a Wikipedia place.
+private struct SaveLandmarkToSpots: View {
+    let landmark: Landmark
+    var category: SpotCategory = .explore
+    let onSaved: () -> Void
+    @Environment(\.managedObjectContext) private var context
+    @State private var saved = false
+
+    var body: some View {
+        Button {
+            if SpotSaver.save(name: landmark.title, coordinate: landmark.coordinate, address: landmark.shortDescription ?? "",
+                              category: category, context: context) != nil {
+                saved = true
+                onSaved()
+            }
+        } label: {
+            Label(saved ? "Saved to Spots" : "Save to Spots", systemImage: saved ? "heart.fill" : "heart")
+                .font(.headline)
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity, minHeight: 52)
+                .background(saved ? Theme.coral : Theme.ink, in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(saved)
+        .onAppear { saved = SpotSaver.isSaved(name: landmark.title, coordinate: landmark.coordinate, context: context) }
     }
 }

@@ -56,6 +56,11 @@ struct SpotsHomeView: View {
     @State private var screenshotItems: [PhotosPickerItem] = []
     @State private var showingScreenshots = false
     @State private var placeToAdd: PlaceToAdd?
+    @State private var landmark: Landmark?
+    @AppStorage("mapDiscover") private var discover = true
+    @State private var topPicks: [TopPick] = TopPicks.bangkok.filter { $0.coordinate != nil }
+    @State private var addedTopPicks: Int?
+    @State private var walkTarget: WalkTarget?
 
     private var waiting: Int { _ = refreshTick; return SharedInbox.load().count + trip.draftSpots.count }
 
@@ -80,7 +85,10 @@ struct SpotsHomeView: View {
                 ZStack(alignment: .top) {
                     ClusteredSpotMap(spots: spots.filter(\.hasCoordinate), selected: $selected, focus: focus,
                                      onPickPlace: { item in placeToAdd = PlaceToAdd(mapItem: item, coordinate: item.placemark.coordinate) },
-                                     onDropPin: { c in placeToAdd = PlaceToAdd(mapItem: nil, coordinate: c) })
+                                     onDropPin: { c in placeToAdd = PlaceToAdd(mapItem: nil, coordinate: c) },
+                                     discover: discover,
+                                     onPickLandmark: { landmark = $0 },
+                                     topPicks: topPicks)
                         .ignoresSafeArea()
 
                     topBar
@@ -122,6 +130,22 @@ struct SpotsHomeView: View {
             refreshTick &+= 1
         }
         .sheet(isPresented: $showingInbox) { SpotsView(trip: trip) }
+        .sheet(item: $landmark) { l in
+            LandmarkDetailSheet(landmark: l, userLocation: location.lastLocation, onWalk: { target in
+                                    landmark = nil
+                                    walkTarget = target
+                                },
+                                spotCategory: topPicks.first { $0.landmark?.id == l.id }?.spotCategory ?? .explore)
+        }
+        .task { topPicks = await TopPicks.bangkokLocated() }
+        .fullScreenCover(item: $walkTarget) { target in
+            WalkingRouteView(destinationName: target.name, coordinate: target.coordinate)
+        }
+        .alert("Bangkok Top Picks added", isPresented: Binding(get: { addedTopPicks != nil }, set: { if !$0 { addedTopPicks = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("\(addedTopPicks ?? 0) places are in your Spots and in the \"Bangkok Top Picks\" list (Collections).")
+        }
         .sheet(item: $placeToAdd) { place in
             AddPlaceSheet(place: place, trip: trip) { spot in selected = spot }
         }
@@ -165,6 +189,14 @@ struct SpotsHomeView: View {
                         }
                 }
                 .accessibilityLabel(waiting > 0 ? "Drafts, \(waiting) new" : "Drafts")
+                Button { withAnimation { discover.toggle() } } label: {
+                    Image(systemName: discover ? "photo.stack.fill" : "photo.stack")
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(discover ? .white : PlotStyle.ink)
+                        .frame(width: 48, height: 48)
+                        .background(discover ? AnyShapeStyle(Theme.mango) : AnyShapeStyle(.regularMaterial), in: Circle())
+                }
+                .accessibilityLabel(discover ? "Hide places to discover" : "Show places to discover")
                 addMenu
             }
             .padding(.horizontal)
@@ -207,6 +239,15 @@ struct SpotsHomeView: View {
             Button("Auto-plan days", systemImage: "wand.and.sparkles") { showingAutoPlan = true }
             Button("Sidequest", systemImage: "dice") { showingSidequest = true }
             Button("Trending nearby", systemImage: "flame") { showingTrending = true }
+            Divider()
+            Button("Add Bangkok Top Picks (\(TopPicks.bangkok.count))", systemImage: "star.circle") {
+                Task {
+                    let picks = await TopPicks.bangkokLocated()
+                    topPicks = picks
+                    let list = TopPicks.saveAll(picks, to: trip, context: context)
+                    addedTopPicks = list.spots.count
+                }
+            }
         } label: {
             Image(systemName: "plus")
                 .font(.title3.weight(.bold))

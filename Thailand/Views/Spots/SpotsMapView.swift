@@ -196,6 +196,11 @@ struct ClusteredSpotMap: UIViewRepresentable {
     var onPickPlace: ((MKMapItem) -> Void)?
     /// When set, long-press anywhere drops a pin (for places Apple doesn't list, like an Airbnb).
     var onDropPin: ((CLLocationCoordinate2D) -> Void)?
+    /// Photo pins of things to see (from Wikipedia) appear when you zoom into an area.
+    var discover = false
+    var onPickLandmark: ((Landmark) -> Void)?
+    /// Researched must-sees, shown whenever discover is on.
+    var topPicks: [TopPick] = []
 
     static let addablePlaces: [MKPointOfInterestCategory] = [
         .hotel, .restaurant, .cafe, .bakery, .foodMarket, .nightlife, .brewery, .winery, .museum, .park, .nationalPark,
@@ -221,6 +226,7 @@ struct ClusteredSpotMap: UIViewRepresentable {
         }
         map.register(SpotMarkerView.self, forAnnotationViewWithReuseIdentifier: SpotMarkerView.id)
         map.register(SpotPhotoAnnotationView.self, forAnnotationViewWithReuseIdentifier: SpotPhotoAnnotationView.id)
+        map.register(DiscoverAnnotationView.self, forAnnotationViewWithReuseIdentifier: DiscoverAnnotationView.id)
         map.register(SpotClusterView.self, forAnnotationViewWithReuseIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier)
         return map
     }
@@ -244,7 +250,28 @@ struct ClusteredSpotMap: UIViewRepresentable {
             context.coordinator.lastFocus = focus
             fit(map, focus.coordinates)
         }
-        if selected == nil { map.selectedAnnotations.forEach { map.deselectAnnotation($0, animated: true) } }
+        if selected == nil { map.selectedAnnotations.filter { $0 is SpotAnnotation }.forEach { map.deselectAnnotation($0, animated: true) } }
+        if !discover {
+            map.removeAnnotations(map.annotations.filter { $0 is DiscoverAnnotation })
+        } else {
+            // Top picks you haven't saved yet.
+            let shownTop = Set(map.annotations.compactMap { ($0 as? DiscoverAnnotation).flatMap { $0.isTopPick ? $0.landmark.id : nil } })
+            let unsaved = topPicks.filter { pick in
+                guard let c = pick.coordinate else { return false }
+                return !spots.contains { s in s.coordinate.map { AutoPlanner.distance($0, c) < 120 } ?? false
+                    && NameMatch.similarity(s.displayName, pick.name) >= 0.4 }
+            }
+            let wanted = Set(unsaved.compactMap { $0.landmark?.id })
+            map.removeAnnotations(map.annotations.filter { a in
+                guard let d = a as? DiscoverAnnotation, d.isTopPick else { return false }
+                return !wanted.contains(d.landmark.id)
+            })
+            map.addAnnotations(unsaved.compactMap { $0.landmark }.filter { !shownTop.contains($0.id) }
+                .map { DiscoverAnnotation($0, isTopPick: true) })
+            if !map.annotations.contains(where: { ($0 as? DiscoverAnnotation)?.isTopPick == false }) {
+                context.coordinator.loadDiscover(map)
+            }
+        }
     }
 
     private func fit(_ map: MKMapView, _ coordinates: [CLLocationCoordinate2D]) {
@@ -265,10 +292,31 @@ struct ClusteredSpotMap: UIViewRepresentable {
     final class Coordinator: NSObject, MKMapViewDelegate {
         var parent: ClusteredSpotMap
         var lastFocus: SpotsMapView.MapFocus?
+        @MainActor private lazy var discoverLoader = DiscoverLoader()
+
+        @MainActor func loadDiscover(_ map: MKMapView) {
+            guard parent.discover else { return }
+            discoverLoader.regionChanged(map, savedSpots: parent.spots) { [weak map] landmarks in
+                guard let map, self.parent.discover else { return }
+                let shown = Set(map.annotations.compactMap { ($0 as? DiscoverAnnotation)?.landmark.id })
+                // Skip Wikipedia pins that duplicate a top pick.
+                let tops = map.annotations.compactMap { ($0 as? DiscoverAnnotation).flatMap { $0.isTopPick ? $0.landmark : nil } }
+                map.addAnnotations(landmarks.filter { l in
+                    !shown.contains(l.id) && !tops.contains { AutoPlanner.distance($0.coordinate, l.coordinate) < 150 }
+                }.map { DiscoverAnnotation($0) })
+            }
+        }
+
+        func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+            MainActor.assumeIsolated { loadDiscover(mapView) }
+        }
 
         init(_ parent: ClusteredSpotMap) { self.parent = parent }
 
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            if annotation is DiscoverAnnotation {
+                return mapView.dequeueReusableAnnotationView(withIdentifier: DiscoverAnnotationView.id, for: annotation)
+            }
             guard annotation is SpotAnnotation else { return nil } // user dot + clusters use defaults/registered
             return mapView.dequeueReusableAnnotationView(withIdentifier: SpotPhotoAnnotationView.id, for: annotation)
         }
@@ -280,6 +328,11 @@ struct ClusteredSpotMap: UIViewRepresentable {
         }
 
         func mapView(_ mapView: MKMapView, didSelect annotation: MKAnnotation) {
+            if let discover = annotation as? DiscoverAnnotation {
+                parent.onPickLandmark?(discover.landmark)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { mapView.deselectAnnotation(discover, animated: true) }
+                return
+            }
             if let feature = annotation as? MKMapFeatureAnnotation {
                 // One of Apple's places: look it up and offer to add it.
                 mapView.deselectAnnotation(feature, animated: false)

@@ -80,3 +80,51 @@ final class PlacePhotosTests: XCTestCase {
         XCTAssertNil(PlacePhotos.bestPhoto(in: json, for: "Jay Fai"), "no matching article")
     }
 }
+
+final class DiscoverFilterTests: XCTestCase {
+    private func l(_ title: String, _ desc: String?, image: Bool = true) -> Landmark {
+        Landmark(id: Int.random(in: 1...999_999), title: title, summary: "", shortDescription: desc,
+                 imageURL: image ? URL(string: "https://upload.wikimedia.org/x.jpg") : nil, latitude: 13.75, longitude: 100.5)
+    }
+
+    func testKeepsSightsDropsAdministrativeAndPhotoless() {
+        XCTAssertTrue(DiscoverFilter.isInteresting(l("Wat Arun", "Buddhist temple in Bangkok")))
+        XCTAssertTrue(DiscoverFilter.isInteresting(l("Chatuchak Weekend Market", "market in Bangkok")))
+        XCTAssertFalse(DiscoverFilter.isInteresting(l("Bang Rak District", "district of Bangkok")))
+        XCTAssertFalse(DiscoverFilter.isInteresting(l("Silom Road", "road in Bangkok")))
+        XCTAssertFalse(DiscoverFilter.isInteresting(l("Sala Daeng BTS station", "Skytrain station")))
+        XCTAssertFalse(DiscoverFilter.isInteresting(l("Wat Pho", "temple", image: false)), "needs a photo")
+    }
+}
+
+@MainActor
+final class TopPicksTests: XCTestCase {
+    func testBangkokPicksLoadWithLocationsAndPhotos() {
+        let picks = TopPicks.bangkok
+        XCTAssertGreaterThanOrEqual(picks.count, 35)
+        let located = picks.filter { $0.coordinate != nil }
+        XCTAssertGreaterThanOrEqual(located.count, 35)
+        for p in located {
+            let c = p.coordinate!
+            XCTAssertTrue((13.4...14.0).contains(c.latitude) && (99.8...100.8).contains(c.longitude), "\(p.name) is near Bangkok")
+        }
+        XCTAssertGreaterThanOrEqual(picks.filter { $0.photoURL != nil }.count, 30)
+        XCTAssertEqual(Set(picks.compactMap { $0.landmark?.id }).count, located.count, "unique ids")
+        XCTAssertTrue(picks.contains { $0.name == "Wat Pho (Reclining Buddha)" && $0.spotCategory == .explore })
+        XCTAssertTrue(picks.contains { $0.name == "Jay Fai" && $0.spotCategory == .eat })
+    }
+
+    func testSaveAllCreatesListWithPhotos() {
+        let context = PersistenceController(inMemory: true).viewContext
+        let trip = ItineraryStore(context: context).createTrip(name: "BKK", start: .now, end: .now.addingTimeInterval(86_400))
+        UserDefaults.standard.set(trip.uuid?.uuidString, forKey: AppSettings.selectedTripKey)
+        let picks = Array(TopPicks.bangkok.filter { $0.coordinate != nil }.prefix(5))
+        let list = TopPicks.saveAll(picks, to: trip, context: context)
+        XCTAssertEqual(list.spots.count, 5)
+        XCTAssertEqual(list.displayName, "Bangkok Top Picks")
+        XCTAssertTrue(list.spots.allSatisfy { $0.status == .confirmed })
+        // Saving again doesn't duplicate.
+        _ = TopPicks.saveAll(picks, to: trip, context: context)
+        XCTAssertEqual(trip.confirmedSpots.count, 5)
+    }
+}

@@ -33,7 +33,8 @@ enum WikipediaService {
         URL.cachesDirectory.appending(path: "nearby-landmarks.json")
     }
 
-    static func landmarks(near coordinate: CLLocationCoordinate2D, radius: Int = 5_000) async throws -> [Landmark] {
+    static func landmarks(near coordinate: CLLocationCoordinate2D, radius: Int = 5_000, limit: Int = 20,
+                          remember: Bool = true) async throws -> [Landmark] {
         var components = URLComponents(string: "https://en.wikipedia.org/w/api.php")!
         components.queryItems = [
             URLQueryItem(name: "action", value: "query"),
@@ -42,7 +43,7 @@ enum WikipediaService {
             URLQueryItem(name: "generator", value: "geosearch"),
             URLQueryItem(name: "ggscoord", value: "\(coordinate.latitude)|\(coordinate.longitude)"),
             URLQueryItem(name: "ggsradius", value: "\(min(radius, 10_000))"),
-            URLQueryItem(name: "ggslimit", value: "20"),
+            URLQueryItem(name: "ggslimit", value: "\(min(limit, 50))"),
             URLQueryItem(name: "prop", value: "coordinates|pageimages|extracts|description"),
             URLQueryItem(name: "piprop", value: "thumbnail"),
             URLQueryItem(name: "pithumbsize", value: "640"),
@@ -73,7 +74,7 @@ enum WikipediaService {
         }
         .sorted { $0.distance(from: origin) < $1.distance(from: origin) }
 
-        if let encoded = try? JSONEncoder().encode(landmarks) {
+        if remember, let encoded = try? JSONEncoder().encode(landmarks) {
             try? encoded.write(to: cacheURL, options: .atomic)
         }
         return landmarks

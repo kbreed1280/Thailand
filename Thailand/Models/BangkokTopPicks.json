@@ -1,0 +1,351 @@
+{
+ "city": "Bangkok",
+ "updated": "2026-10",
+ "sources": [
+  "trip.com top Bangkok attractions",
+  "thaiest.com best sky bars",
+  "frommers.com Jay Fai",
+  "Wikipedia / Wikidata (locations, photos)"
+ ],
+ "places": [
+  {
+   "name": "Grand Palace",
+   "category": "explore",
+   "tip": "Thailand's royal palace complex. Go at 8:30 AM opening; shoulders and knees covered.",
+   "latitude": 13.7501,
+   "longitude": 100.492,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c7/0005574_-_Wat_Phra_Kaew_006.jpg/960px-0005574_-_Wat_Phra_Kaew_006.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Grand_Palace"
+  },
+  {
+   "name": "Wat Phra Kaew (Emerald Buddha)",
+   "category": "explore",
+   "tip": "Inside the Grand Palace grounds; the country's most sacred temple.",
+   "latitude": 13.751389,
+   "longitude": 100.4925,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c1/Wat_Phra_Kaew_by_Ninara_TSP_edit_crop.jpg/960px-Wat_Phra_Kaew_by_Ninara_TSP_edit_crop.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Wat_Phra_Kaew"
+  },
+  {
+   "name": "Wat Pho (Reclining Buddha)",
+   "category": "explore",
+   "tip": "The 46 m golden Reclining Buddha, plus a famous Thai massage school on site.",
+   "latitude": 13.746389,
+   "longitude": 100.493611,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/53/%E0%B8%9E%E0%B8%A3%E0%B8%B0%E0%B8%9E%E0%B8%B8%E0%B8%97%E0%B8%98%E0%B9%84%E0%B8%AA%E0%B8%A2%E0%B8%B2%E0%B8%AA%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%9E%E0%B8%A3%E0%B8%B0%E0%B9%80%E0%B8%8A%E0%B8%95%E0%B8%B8%E0%B8%9E%E0%B8%99.jpg/960px-%E0%B8%9E%E0%B8%A3%E0%B8%B0%E0%B8%9E%E0%B8%B8%E0%B8%97%E0%B8%98%E0%B9%84%E0%B8%AA%E0%B8%A2%E0%B8%B2%E0%B8%AA%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%9E%E0%B8%A3%E0%B8%B0%E0%B9%80%E0%B8%8A%E0%B8%95%E0%B8%B8%E0%B8%9E%E0%B8%99.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Wat_Pho"
+  },
+  {
+   "name": "Wat Arun (Temple of Dawn)",
+   "category": "explore",
+   "tip": "Cross by ferry from Tha Tien pier; best in late-afternoon light and at sunset.",
+   "latitude": 13.743611,
+   "longitude": 100.488889,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2a/%E0%B9%80%E0%B8%88%E0%B8%94%E0%B8%B5%E0%B8%A2%E0%B9%8C%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%98%E0%B8%B2%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B8%87%E0%B8%9B%E0%B8%A3%E0%B8%B2%E0%B8%87%E0%B8%84%E0%B9%8C%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%AD%E0%B8%A3%E0%B8%B8%E0%B8%932.jpg/960px-%E0%B9%80%E0%B8%88%E0%B8%94%E0%B8%B5%E0%B8%A2%E0%B9%8C%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%98%E0%B8%B2%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B8%87%E0%B8%9B%E0%B8%A3%E0%B8%B2%E0%B8%87%E0%B8%84%E0%B9%8C%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%AD%E0%B8%A3%E0%B8%B8%E0%B8%932.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Wat_Arun"
+  },
+  {
+   "name": "Golden Mount (Wat Saket)",
+   "category": "explore",
+   "tip": "344 steps to a golden chedi with one of the best views over old Bangkok.",
+   "latitude": 13.75383,
+   "longitude": 100.50679,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%AA%E0%B8%A3%E0%B8%B0%E0%B9%80%E0%B8%81%E0%B8%A8-2.jpg/960px-%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%AA%E0%B8%A3%E0%B8%B0%E0%B9%80%E0%B8%81%E0%B8%A8-2.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Wat_Saket"
+  },
+  {
+   "name": "Marble Temple",
+   "category": "explore",
+   "tip": "Elegant Italian-marble temple; quieter than the big three.",
+   "latitude": 13.766583,
+   "longitude": 100.514083,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/30/Wat_Benjamabophit1.jpg/960px-Wat_Benjamabophit1.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Wat_Benchamabophit"
+  },
+  {
+   "name": "Golden Buddha (Wat Traimit)",
+   "category": "explore",
+   "tip": "A 5.5-tonne solid gold Buddha at the start of Chinatown.",
+   "latitude": 13.738083,
+   "longitude": 100.513975,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/0005387_-_Wat_Traimitr_Withayaram_002.jpg/960px-0005387_-_Wat_Traimitr_Withayaram_002.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Wat_Traimit"
+  },
+  {
+   "name": "Loha Prasat (Wat Ratchanatdaram)",
+   "category": "explore",
+   "tip": "The only metal-spired 'iron castle' of its kind; climb to the top.",
+   "latitude": 13.754722,
+   "longitude": 100.504722,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d4/03-%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%A3%E0%B8%B2%E0%B8%8A%E0%B8%99%E0%B8%B1%E0%B8%94%E0%B8%94%E0%B8%B2%E0%B8%A3%E0%B8%B2%E0%B8%A1.jpg/960px-03-%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%A3%E0%B8%B2%E0%B8%8A%E0%B8%99%E0%B8%B1%E0%B8%94%E0%B8%94%E0%B8%B2%E0%B8%A3%E0%B8%B2%E0%B8%A1.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Wat_Ratchanatdaram"
+  },
+  {
+   "name": "Wat Suthat & Giant Swing",
+   "category": "explore",
+   "tip": "Huge royal temple with beautiful murals, next to the red Giant Swing.",
+   "latitude": 13.750556,
+   "longitude": 100.501111,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d0/%282019%29_%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%AA%E0%B8%B8%E0%B8%97%E0%B8%B1%E0%B8%A8%E0%B8%99%E0%B9%80%E0%B8%97%E0%B8%9E%E0%B8%A7%E0%B8%A3%E0%B8%B2%E0%B8%A3%E0%B8%B2%E0%B8%A1%E0%B8%A3%E0%B8%B2%E0%B8%8A%E0%B8%A7%E0%B8%A3%E0%B8%A1%E0%B8%AB%E0%B8%B2%E0%B8%A7%E0%B8%B4%E0%B8%AB%E0%B8%B2%E0%B8%A3_4.jpg/960px-%282019%29_%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%AA%E0%B8%B8%E0%B8%97%E0%B8%B1%E0%B8%A8%E0%B8%99%E0%B9%80%E0%B8%97%E0%B8%9E%E0%B8%A7%E0%B8%A3%E0%B8%B2%E0%B8%A3%E0%B8%B2%E0%B8%A1%E0%B8%A3%E0%B8%B2%E0%B8%8A%E0%B8%A7%E0%B8%A3%E0%B8%A1%E0%B8%AB%E0%B8%B2%E0%B8%A7%E0%B8%B4%E0%B8%AB%E0%B8%B2%E0%B8%A3_4.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Wat_Suthat"
+  },
+  {
+   "name": "Jim Thompson House",
+   "category": "explore",
+   "tip": "Teak houses, silk and gardens of the American who revived Thai silk. Guided tours only.",
+   "latitude": 13.749167,
+   "longitude": 100.528333,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Main_House_of_Jim_Thompson_photo_Don_Ramey_Logan.jpg/960px-Main_House_of_Jim_Thompson_photo_Don_Ramey_Logan.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Jim_Thompson_House"
+  },
+  {
+   "name": "Museum Siam",
+   "category": "explore",
+   "tip": "Fun, interactive 'what makes Thai people Thai' museum near Wat Pho.",
+   "latitude": 13.74414,
+   "longitude": 100.494125,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5f/Museum_Siam_20250825.jpg/960px-Museum_Siam_20250825.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Museum_Siam"
+  },
+  {
+   "name": "Bangkok Art & Culture Centre",
+   "category": "explore",
+   "tip": "Free contemporary art across many floors, right by MBK and Siam.",
+   "latitude": 13.746701,
+   "longitude": 100.530224,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b2/BKK_Art_and_Culture_Centre_%28II%29.jpg/960px-BKK_Art_and_Culture_Centre_%28II%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Bangkok_Art_and_Culture_Centre"
+  },
+  {
+   "name": "Erawan Shrine",
+   "category": "explore",
+   "tip": "Busy Hindu shrine with live Thai dancers performing for answered prayers.",
+   "latitude": 13.744361,
+   "longitude": 100.540444,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bb/Erawan_statue_restored.jpg/960px-Erawan_statue_restored.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Erawan_Shrine"
+  },
+  {
+   "name": "Mahanakhon SkyWalk",
+   "category": "explore",
+   "tip": "Glass-floor skywalk on the 78th floor; go for sunset.",
+   "latitude": 13.723611,
+   "longitude": 100.528333,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/King_Power_Mahanakhon_Logo.jpg/960px-King_Power_Mahanakhon_Logo.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/King_Power_Mahanakhon"
+  },
+  {
+   "name": "Lumphini Park",
+   "category": "explore",
+   "tip": "Bangkok's central park: joggers, paddle boats and wild monitor lizards.",
+   "latitude": 13.731111,
+   "longitude": 100.541667,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Aerial_view_of_Lumphini_Park.jpg/960px-Aerial_view_of_Lumphini_Park.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Lumphini_Park"
+  },
+  {
+   "name": "Benjakitti Forest Park",
+   "category": "explore",
+   "tip": "Elevated boardwalks over wetlands with skyline views; lovely at golden hour.",
+   "latitude": 13.7294,
+   "longitude": 100.5586,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6b/Bangkok_Benjakiti_Park_2.jpg/960px-Bangkok_Benjakiti_Park_2.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Benjakitti_Park"
+  },
+  {
+   "name": "Santichaiprakan Park & Phra Sumen Fort",
+   "category": "explore",
+   "tip": "Riverside park and whitewashed fort at the end of Khao San, nice at sunset.",
+   "latitude": 13.763772,
+   "longitude": 100.496086,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/ff/Bangkokphrasumenfort03.jpg/960px-Bangkokphrasumenfort03.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Santichaiprakarn_Park"
+  },
+  {
+   "name": "Damnoen Saduak Floating Market",
+   "category": "explore",
+   "tip": "Day trip (~2 h away). Go very early for boat vendors before the crowds.",
+   "latitude": 13.519408,
+   "longitude": 99.959231,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9a/Understanding_the_%22floating_market%22_%2815801439261%29.jpg/960px-Understanding_the_%22floating_market%22_%2815801439261%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Damnoen_Saduak_Floating_Market"
+  },
+  {
+   "name": "Chinatown (Yaowarat)",
+   "category": "eat",
+   "tip": "After dark the whole street turns into a street-food festival. Come hungry.",
+   "latitude": 13.741667,
+   "longitude": 100.508333,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/64/Yaowarat_at_night_%2832455695783%29.jpg/960px-Yaowarat_at_night_%2832455695783%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Chinatown,_Bangkok"
+  },
+  {
+   "name": "Jay Fai",
+   "category": "eat",
+   "tip": "Michelin-starred street-food legend: crab omelette and drunken noodles. Book ahead or expect a long wait.",
+   "latitude": 13.752568,
+   "longitude": 100.504737,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/22/Jay_Fai%2C_bangkok_20180406.jpg/960px-Jay_Fai%2C_bangkok_20180406.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Jay_Fai"
+  },
+  {
+   "name": "Thipsamai Pad Thai",
+   "category": "eat",
+   "tip": "Bangkok's most famous pad thai, a few doors from Jay Fai; try the version wrapped in egg.",
+   "latitude": 13.754816,
+   "longitude": 100.504108,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0a/Thipsamai_%28September_2016%29.jpeg/960px-Thipsamai_%28September_2016%29.jpeg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Thipsamai"
+  },
+  {
+   "name": "Or Tor Kor Market",
+   "category": "eat",
+   "tip": "Spotless premium fresh market: the best mangoes and Thai snacks in town.",
+   "latitude": 13.7971,
+   "longitude": 100.5475,
+   "photo": null,
+   "wikipedia": "https://en.wikipedia.org/wiki/Or_Tor_Kor_Market"
+  },
+  {
+   "name": "Wang Lang Market",
+   "category": "eat",
+   "tip": "Local riverside market for cheap snacks across the river from the Grand Palace.",
+   "latitude": 13.755497,
+   "longitude": 100.485075,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7c/Rear_Palace_Sushi_-_2017-02-25_%28001%29.jpg/960px-Rear_Palace_Sushi_-_2017-02-25_%28001%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Wang_Lang_Market"
+  },
+  {
+   "name": "Chatuchak Weekend Market",
+   "category": "vibe",
+   "tip": "15,000+ stalls on Sat and Sun. Go in the morning before the heat.",
+   "latitude": 13.800833,
+   "longitude": 100.551389,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/33/Bangkok_-_Jatujak_Market_02.JPG/960px-Bangkok_-_Jatujak_Market_02.JPG?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Chatuchak_Weekend_Market"
+  },
+  {
+   "name": "Pak Khlong Talat (Flower Market)",
+   "category": "vibe",
+   "tip": "24-hour flower market; most colorful late at night.",
+   "latitude": 13.742209,
+   "longitude": 100.496567,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d5/Flowermarket.jpg/960px-Flowermarket.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Pak_Khlong_Talat"
+  },
+  {
+   "name": "Sampeng Market",
+   "category": "vibe",
+   "tip": "Narrow wholesale lanes in Chinatown selling everything imaginable.",
+   "latitude": 13.742869,
+   "longitude": 100.504253,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/Shopping_along_narrow_Sampeng_Lane_in_Chinatown_%286491931589%29.jpg/960px-Shopping_along_narrow_Sampeng_Lane_in_Chinatown_%286491931589%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Sampheng"
+  },
+  {
+   "name": "Asiatique The Riverfront",
+   "category": "vibe",
+   "tip": "Night market and Ferris wheel on the river; free shuttle boat from Saphan Taksin.",
+   "latitude": 13.706,
+   "longitude": 100.5047,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8b/Asiatique_%28II%29.jpg/960px-Asiatique_%28II%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Asiatique"
+  },
+  {
+   "name": "Talat Noi",
+   "category": "vibe",
+   "tip": "Old riverside neighborhood with street art, cafés and car-part alleys.",
+   "latitude": 13.733333,
+   "longitude": 100.513889,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/Rong_Kuak_Shrine_Talat_Noi_%E0%B8%A8%E0%B8%B2%E0%B8%A5%E0%B9%80%E0%B8%88%E0%B9%89%E0%B8%B2%E0%B9%82%E0%B8%A3%E0%B8%87%E0%B9%80%E0%B8%81%E0%B8%B7%E0%B8%AD%E0%B8%81_%E0%B8%95%E0%B8%A5%E0%B8%B2%E0%B8%94%E0%B8%99%E0%B9%89%E0%B8%AD%E0%B8%A2_2021_June.jpg/960px-Rong_Kuak_Shrine_Talat_Noi_%E0%B8%A8%E0%B8%B2%E0%B8%A5%E0%B9%80%E0%B8%88%E0%B9%89%E0%B8%B2%E0%B9%82%E0%B8%A3%E0%B8%87%E0%B9%80%E0%B8%81%E0%B8%B7%E0%B8%AD%E0%B8%81_%E0%B8%95%E0%B8%A5%E0%B8%B2%E0%B8%94%E0%B8%99%E0%B9%89%E0%B8%AD%E0%B8%A2_2021_June.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Talat_Noi"
+  },
+  {
+   "name": "Khao San Road",
+   "category": "sip",
+   "tip": "Backpacker street: bars, street food and people-watching until late.",
+   "latitude": 13.758889,
+   "longitude": 100.497222,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4b/2016_Bangkok%2C_Dystrykt_Phra_Nakhon%2C_Ulica_Khaosan_%2808%29.jpg/960px-2016_Bangkok%2C_Dystrykt_Phra_Nakhon%2C_Ulica_Khaosan_%2808%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Khaosan_Road"
+  },
+  {
+   "name": "Sky Bar at Lebua",
+   "category": "sip",
+   "tip": "The Hangover II rooftop with the golden dome. Smart dress code.",
+   "latitude": 13.721403,
+   "longitude": 100.5168,
+   "photo": "https://upload.wikimedia.org/wikipedia/commons/1/17/Lebua_at_state_tower_%288468453666%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+   "wikipedia": "https://en.wikipedia.org/wiki/State_Tower"
+  },
+  {
+   "name": "ICONSIAM",
+   "category": "vibe",
+   "tip": "Giant riverside mall with an indoor floating market (SookSiam) on the ground floor.",
+   "latitude": 13.72667,
+   "longitude": 100.51039,
+   "photo": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Magnolias_Waterfront_Residences_Iconsiam.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+   "wikipedia": "https://en.wikipedia.org/wiki/Iconsiam"
+  },
+  {
+   "name": "Siam Paragon",
+   "category": "vibe",
+   "tip": "Luxury mall with a huge food hall and the SEA LIFE aquarium.",
+   "latitude": 13.746389,
+   "longitude": 100.535,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4d/Siam_Paragon_06.23.jpg/960px-Siam_Paragon_06.23.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Siam_Paragon"
+  },
+  {
+   "name": "MBK Center",
+   "category": "vibe",
+   "tip": "Bargain mall for phones, souvenirs and knock-offs; haggle.",
+   "latitude": 13.745556,
+   "longitude": 100.53,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/MBK_CENTER_%288%29.jpg/960px-MBK_CENTER_%288%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/MBK_Center"
+  },
+  {
+   "name": "Terminal 21",
+   "category": "vibe",
+   "tip": "Each floor themed like a city; the Pier 21 food court is cheap and great.",
+   "latitude": 13.7375,
+   "longitude": 100.560556,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/Terminal_21_Asok_Bangkok_20202021.jpg/960px-Terminal_21_Asok_Bangkok_20202021.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/Terminal_21"
+  },
+  {
+   "name": "EmQuartier",
+   "category": "vibe",
+   "tip": "Stylish mall with a hanging garden and plenty of good restaurants.",
+   "latitude": 13.73082,
+   "longitude": 100.56911,
+   "photo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6e/EmQuartier_2018.jpg/960px-EmQuartier_2018.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "wikipedia": "https://en.wikipedia.org/wiki/EmQuartier"
+  },
+  {
+   "name": "Jodd Fairs",
+   "category": "eat",
+   "tip": "The most popular night market: giant 'leng saeb' pork-bone soup, seafood and desserts.",
+   "query": "Jodd Fairs Rama 9"
+  },
+  {
+   "name": "Vertigo & Moon Bar",
+   "category": "sip",
+   "tip": "Open-air rooftop on the 61st floor of Banyan Tree. Classic first-timer view.",
+   "query": "Vertigo and Moon Bar Banyan Tree Bangkok"
+  },
+  {
+   "name": "Octave Rooftop Lounge",
+   "category": "sip",
+   "tip": "Three-level rooftop with 360° views at the Marriott Sukhumvit; relaxed and well-priced.",
+   "query": "Octave Rooftop Lounge Bangkok Marriott Sukhumvit"
+  },
+  {
+   "name": "SIN Rooftop",
+   "category": "sip",
+   "tip": "Trendy riverside rooftop at Avani+ with DJs and Chao Phraya views.",
+   "query": "Avani Riverside Bangkok"
+  }
+ ]
+}

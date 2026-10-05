@@ -176,7 +176,10 @@ final class PlaceExtractionTests: XCTestCase {
         XCTAssertEqual(SpotCategory(word: "temple"), .explore)
         XCTAssertEqual(SpotCategory(poi: .cafe), .brew)
         XCTAssertEqual(SpotCategory(poi: .nightlife), .sip)
-        XCTAssertEqual(SpotCategory(poi: .hotel), .go)
+        XCTAssertEqual(SpotCategory(poi: .hotel), .stay)
+        XCTAssertEqual(SpotCategory(word: "boutique hostel"), .stay)
+        XCTAssertEqual(SpotCategory(word: "ferry to Koh Tao"), .go)
+        XCTAssertEqual(AutoPlanView.itemCategory(.stay), .hotel)
     }
 }
 

@@ -25,6 +25,7 @@ struct NearbyTabView: View {
     @State private var savedMessage: String?
     @State private var showingEmergency = false
     @State private var showingSevenEleven = false
+    @State private var essential: Essential?
 
     /// Apple Weather, falling back to Open-Meteo if WeatherKit isn't available.
     private let weatherProvider: WeatherProvider = AutomaticWeatherProvider()
@@ -114,6 +115,16 @@ struct NearbyTabView: View {
             VStack(alignment: .leading, spacing: 16) {
                 hereCard
 
+                if let here = lastLoadedAt {
+                    EssentialsRow { picked in
+                        if picked == .sevenEleven { showingSevenEleven = true } else { essential = picked }
+                    }
+                    .sheet(item: $essential) { e in
+                        EssentialsSheet(essential: e, here: here) { walkTarget = $0 }
+                    }
+                }
+
+
                 if let weather {
                     NavigationLink { WeatherView() } label: { WeatherCard(weather: weather) }
                         .buttonStyle(.plain)
@@ -127,6 +138,14 @@ struct NearbyTabView: View {
                     .buttonStyle(.plain)
                 }
 
+                CurrentTripReader { trip in
+                    if let trip, let today = trip.today {
+                        TodayWalkCard(day: today) { walkTarget = $0 }
+                    }
+                }
+
+                carousel
+
                 Map(position: $position) {
                     UserAnnotation()
                     ForEach(landmarks.prefix(15)) { landmark in
@@ -138,17 +157,7 @@ struct NearbyTabView: View {
                 .frame(height: 220)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
 
-                if let here = lastLoadedAt {
-                    NearestSevenElevenRow(here: here, onWalk: { walkTarget = $0 }, onShowMap: { showingSevenEleven = true })
-                }
 
-                CurrentTripReader { trip in
-                    if let trip, let today = trip.today {
-                        TodayWalkCard(day: today) { walkTarget = $0 }
-                    }
-                }
-
-                carousel
 
                 Toggle(isOn: $autoLog) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -173,9 +182,19 @@ struct NearbyTabView: View {
                     .foregroundStyle(.white.opacity(0.85))
                 Spacer()
                 if !network.isOnline { OfflineBadge() }
+                if let weather {
+                    HStack(spacing: 5) {
+                        WeatherSymbol(name: weather.symbolName)
+                        Text("\(Int(weather.temperatureC.rounded()))°").font(.headline)
+                        Text("feels \(Int(weather.feelsLikeC.rounded()))°").font(.caption.weight(.semibold)).opacity(0.85)
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10).padding(.vertical, 6)
+                    .background(.white.opacity(0.18), in: Capsule())
+                }
             }
             Text(areaName.isEmpty ? (location.lastLocation == nil ? "Finding you…" : "Somewhere nice") : areaName)
-                .font(.title.bold())
+                .font(.system(size: 30, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
             if !cityName.isEmpty {
                 Text(cityName).font(.headline).foregroundStyle(.white.opacity(0.9))
@@ -195,16 +214,26 @@ struct NearbyTabView: View {
                 }
             }
         }
-        .padding(18)
+        .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.sunsetGradient, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+        .background {
+            Theme.sunsetGradient
+                .overlay(alignment: .topTrailing) {
+                    Circle()
+                        .fill(RadialGradient(colors: [Theme.mangoLight.opacity(0.5), .clear], center: .center, startRadius: 0, endRadius: 120))
+                        .frame(width: 240, height: 240)
+                        .offset(x: 80, y: -110)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        }
+        .shadow(color: Theme.inkDeep.opacity(0.22), radius: 14, y: 6)
         .accessibilityElement(children: .combine)
     }
 
     private var carousel: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Around You").font(.title3.bold())
+                Text("Sights near you").font(.title3.bold())
                 Spacer()
                 if isLoading { ProgressView() }
             }
@@ -293,7 +322,9 @@ private struct LandmarkCard: View {
     let distance: CLLocationDistance?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        PhotoPlaceCard(title: landmark.title,
+                       subtitle: distance.map { "\(DistanceText.distance($0)) · \(DistanceText.walkingTime($0))" } ?? landmark.shortDescription,
+                       width: 240, height: 230) {
             AsyncImage(url: landmark.imageURL) { phase in
                 if let image = phase.image {
                     image.resizable().scaledToFill()
@@ -303,21 +334,12 @@ private struct LandmarkCard: View {
                     Color(.tertiarySystemFill).overlay(ProgressView())
                 }
             }
-            .frame(width: 200, height: 190)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-
-            Text(landmark.title)
-                .font(.subheadline.weight(.semibold))
-                .lineLimit(1)
-            if let distance {
-                Text("\(DistanceText.distance(distance)) · \(DistanceText.walkingTime(distance))")
-                    .font(.caption)
-                    .foregroundStyle(Theme.lagoon)
-            }
+        } trailing: {
+            SaveToSpotsButton(name: landmark.title, coordinate: landmark.coordinate, address: landmark.shortDescription ?? "",
+                              category: .explore, onDark: true)
         }
-        .frame(width: 200)
         .contentShape(Rectangle())
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isButton)
     }
 }

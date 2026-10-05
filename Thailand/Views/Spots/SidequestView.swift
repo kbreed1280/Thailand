@@ -73,7 +73,7 @@ struct SidequestView: View {
                 }
             }
             Section {
-                ForEach(SpotCategory.allCases.filter { $0 != .go }) { c in
+                ForEach(SpotCategory.allCases.filter { $0 != .go && $0 != .stay }) { c in
                     Button {
                         if moods.contains(c) { moods.remove(c) } else { moods.insert(c) }
                     } label: {
@@ -279,6 +279,7 @@ struct SidequestView: View {
         case .vibe: ["market", "spa", "boutique"]
         case .explore: ["temple", "museum", "viewpoint"]
         case .go: ["tour"]
+        case .stay: ["hotel"]
         }
     }
 

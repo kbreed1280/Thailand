@@ -192,6 +192,15 @@ struct ClusteredSpotMap: UIViewRepresentable {
     let spots: [Spot]
     @Binding var selected: Spot?
     let focus: SpotsMapView.MapFocus?
+    /// When set, Apple's places (hotels, restaurants, sights…) show faintly and can be tapped to add.
+    var onPickPlace: ((MKMapItem) -> Void)?
+    /// When set, long-press anywhere drops a pin (for places Apple doesn't list, like an Airbnb).
+    var onDropPin: ((CLLocationCoordinate2D) -> Void)?
+
+    static let addablePlaces: [MKPointOfInterestCategory] = [
+        .hotel, .restaurant, .cafe, .bakery, .foodMarket, .nightlife, .brewery, .winery, .museum, .park, .nationalPark,
+        .beach, .landmark, .amusementPark, .aquarium, .zoo, .store, .spa, .marina, .theater, .musicVenue,
+    ]
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -199,7 +208,17 @@ struct ClusteredSpotMap: UIViewRepresentable {
         let map = MKMapView()
         map.delegate = context.coordinator
         map.showsUserLocation = true
-        map.pointOfInterestFilter = .excludingAll // your spots, not Apple's
+        if onPickPlace != nil {
+            map.pointOfInterestFilter = MKPointOfInterestFilter(including: Self.addablePlaces)
+            map.selectableMapFeatures = [.pointsOfInterest]
+        } else {
+            map.pointOfInterestFilter = .excludingAll // your spots, not Apple's
+        }
+        if onDropPin != nil {
+            let press = UILongPressGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.longPressed(_:)))
+            press.minimumPressDuration = 0.5
+            map.addGestureRecognizer(press)
+        }
         map.register(SpotMarkerView.self, forAnnotationViewWithReuseIdentifier: SpotMarkerView.id)
         map.register(SpotClusterView.self, forAnnotationViewWithReuseIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier)
         return map
@@ -253,7 +272,23 @@ struct ClusteredSpotMap: UIViewRepresentable {
             return mapView.dequeueReusableAnnotationView(withIdentifier: SpotMarkerView.id, for: annotation)
         }
 
+        @objc func longPressed(_ gesture: UILongPressGestureRecognizer) {
+            guard gesture.state == .began, let map = gesture.view as? MKMapView else { return }
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            parent.onDropPin?(map.convert(gesture.location(in: map), toCoordinateFrom: map))
+        }
+
         func mapView(_ mapView: MKMapView, didSelect annotation: MKAnnotation) {
+            if let feature = annotation as? MKMapFeatureAnnotation {
+                // One of Apple's places: look it up and offer to add it.
+                mapView.deselectAnnotation(feature, animated: false)
+                Task { @MainActor in
+                    if let item = try? await MKMapItemRequest(mapFeatureAnnotation: feature).mapItem {
+                        self.parent.onPickPlace?(item)
+                    }
+                }
+                return
+            }
             if let cluster = annotation as? MKClusterAnnotation {
                 // Zoom into a cluster instead of selecting it.
                 let rect = cluster.memberAnnotations.reduce(MKMapRect.null) { r, a in

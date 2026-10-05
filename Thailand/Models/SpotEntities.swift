@@ -7,7 +7,7 @@ import SwiftUI
 
 /// Plotline-style spot categories.
 enum SpotCategory: String, CaseIterable, Identifiable {
-    case eat, brew, sip, vibe, explore, go
+    case eat, brew, sip, vibe, explore, stay, go
 
     var id: String { rawValue }
 
@@ -18,6 +18,7 @@ enum SpotCategory: String, CaseIterable, Identifiable {
         case .sip: "Sip"
         case .vibe: "Vibe"
         case .explore: "Explore"
+        case .stay: "Stay"
         case .go: "Go"
         }
     }
@@ -30,7 +31,8 @@ enum SpotCategory: String, CaseIterable, Identifiable {
         case .sip: "Bars, rooftops, nightlife"
         case .vibe: "Shops, spas, neighborhoods"
         case .explore: "Temples, sights, nature, beaches"
-        case .go: "Hotels, transport, tours"
+        case .stay: "Hotels, hostels, resorts, Airbnbs"
+        case .go: "Transport, tours, day trips"
         }
     }
 
@@ -41,6 +43,7 @@ enum SpotCategory: String, CaseIterable, Identifiable {
         case .sip: "wineglass.fill"
         case .vibe: "sparkles"
         case .explore: "binoculars.fill"
+        case .stay: "bed.double.fill"
         case .go: "airplane"
         }
     }
@@ -52,6 +55,7 @@ enum SpotCategory: String, CaseIterable, Identifiable {
         case .sip: Color(hex: "#7B4FC9")
         case .vibe: Color(hex: "#E0559A")
         case .explore: Theme.lagoon
+        case .stay: Color(hex: "#15627A")
         case .go: Color(hex: "#3B82F6")
         }
     }
@@ -63,7 +67,8 @@ enum SpotCategory: String, CaseIterable, Identifiable {
         case .cafe?, .bakery?: self = .brew
         case .brewery?, .winery?, .nightlife?, .distillery?: self = .sip
         case .store?, .spa?, .beauty?, .fitnessCenter?, .musicVenue?, .theater?, .movieTheater?: self = .vibe
-        case .hotel?, .airport?, .publicTransport?, .carRental?, .gasStation?, .parking?, .evCharger?: self = .go
+        case .hotel?: self = .stay
+        case .airport?, .publicTransport?, .carRental?, .gasStation?, .parking?, .evCharger?: self = .go
         case .museum?, .park?, .nationalPark?, .beach?, .landmark?, .castle?, .amusementPark?, .aquarium?, .zoo?,
              .marina?, .hiking?, .fortress?, .nationalMonument?, .stadium?, .university?, .library?, .planetarium?:
             self = .explore
@@ -77,7 +82,8 @@ enum SpotCategory: String, CaseIterable, Identifiable {
         if ["eat", "food", "restaurant", "street food", "market", "noodle", "dinner", "lunch", "breakfast"].contains(where: w.contains) { self = .eat }
         else if ["brew", "coffee", "cafe", "café", "bakery", "dessert", "tea"].contains(where: w.contains) { self = .brew }
         else if ["sip", "bar", "rooftop", "cocktail", "club", "nightlife", "beer", "wine"].contains(where: w.contains) { self = .sip }
-        else if ["go", "hotel", "hostel", "resort", "airport", "transport", "tour", "ferry"].contains(where: w.contains) { self = .go }
+        else if ["hotel", "hostel", "resort", "airbnb", "villa", "guesthouse", "stay"].contains(where: w.contains) { self = .stay }
+        else if ["go", "airport", "transport", "tour", "ferry"].contains(where: w.contains) { self = .go }
         else if ["vibe", "shop", "spa", "massage", "mall", "neighborhood", "boutique"].contains(where: w.contains) { self = .vibe }
         else { self = .explore }
     }

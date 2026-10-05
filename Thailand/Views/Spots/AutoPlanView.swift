@@ -26,7 +26,7 @@ struct AutoPlanView: View {
         let all = collection?.spots ?? trip.confirmedSpots
         let planned = trip.sortedDays.flatMap(\.sortedItems)
         return all.filter { spot in
-            spot.coordinate != nil && !planned.contains { Self.same($0, spot) }
+            spot.coordinate != nil && spot.category != .stay && !planned.contains { Self.same($0, spot) }
         }
     }
 
@@ -260,6 +260,7 @@ struct AutoPlanView: View {
         case .explore: .place
         case .vibe, .sip: .activity
         case .go: .activity
+        case .stay: .hotel
         }
     }
 

@@ -120,11 +120,13 @@ struct TripHero: View {
                         .overlay(LinearGradient(colors: [.black.opacity(0.2), .black.opacity(0.7)], startPoint: .top, endPoint: .bottom))
                 } else {
                     Theme.sunsetGradient
-                    // A low evening sun on the horizon.
-                    Circle()
-                        .fill(RadialGradient(colors: [Theme.mangoLight.opacity(0.55), .clear], center: .center, startRadius: 0, endRadius: 140))
-                        .frame(width: 280, height: 280)
-                        .offset(x: 130, y: -90)
+                        .overlay(alignment: .topTrailing) {
+                            // A low evening sun.
+                            Circle()
+                                .fill(RadialGradient(colors: [Theme.mangoLight.opacity(0.55), .clear], center: .center, startRadius: 0, endRadius: 140))
+                                .frame(width: 280, height: 280)
+                                .offset(x: 90, y: -120)
+                        }
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))

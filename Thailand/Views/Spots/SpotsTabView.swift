@@ -55,6 +55,7 @@ struct SpotsHomeView: View {
     @State private var showingTrending = false
     @State private var screenshotItems: [PhotosPickerItem] = []
     @State private var showingScreenshots = false
+    @State private var placeToAdd: PlaceToAdd?
 
     private var waiting: Int { _ = refreshTick; return SharedInbox.load().count + trip.draftSpots.count }
 
@@ -77,7 +78,9 @@ struct SpotsHomeView: View {
         NavigationStack(path: $path) {
             GeometryReader { geo in
                 ZStack(alignment: .top) {
-                    ClusteredSpotMap(spots: spots.filter(\.hasCoordinate), selected: $selected, focus: focus)
+                    ClusteredSpotMap(spots: spots.filter(\.hasCoordinate), selected: $selected, focus: focus,
+                                     onPickPlace: { item in placeToAdd = PlaceToAdd(mapItem: item, coordinate: item.placemark.coordinate) },
+                                     onDropPin: { c in placeToAdd = PlaceToAdd(mapItem: nil, coordinate: c) })
                         .ignoresSafeArea()
 
                     topBar
@@ -109,6 +112,9 @@ struct SpotsHomeView: View {
             refreshTick &+= 1
         }
         .sheet(isPresented: $showingInbox) { SpotsView(trip: trip) }
+        .sheet(item: $placeToAdd) { place in
+            AddPlaceSheet(place: place, trip: trip) { spot in selected = spot }
+        }
         .sheet(isPresented: $showingCollections) { SpotCollectionsHome(trip: trip) }
         .sheet(isPresented: $showingSearchPlace) {
             SpotPlaceSearchSheet(title: "Add a spot", cityHint: nil) { addManual($0) }
@@ -340,7 +346,7 @@ struct SpotsHomeView: View {
                         Image(systemName: "mappin.and.ellipse").font(.largeTitle).foregroundStyle(PlotStyle.ink)
                         Text(trip.confirmedSpots.isEmpty ? "No spots yet" : "No spots match").font(.headline)
                         Text(trip.confirmedSpots.isEmpty
-                             ? "In TikTok, Instagram, YouTube, Google Maps or Safari, tap Share → WanderHub. Or paste a link above."
+                             ? "Tap any hotel, restaurant or sight on the map to add it, or long-press to drop a pin. You can also share posts from TikTok, Instagram, YouTube or Google Maps to WanderHub."
                              : "Try another category or filter.")
                             .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
                     }

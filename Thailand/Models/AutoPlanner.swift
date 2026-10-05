@@ -158,6 +158,7 @@ enum AutoPlanner {
         case .eat: .midday
         case .vibe: hot ? .midday : .afternoon // shops, spas, malls: indoor through the heat
         case .go: .afternoon
+        case .stay: .evening
         case .sip: .evening
         }
     }
@@ -200,6 +201,7 @@ enum AutoPlanner {
         case .vibe: 90
         case .explore: 90
         case .go: 60
+        case .stay: 30
         }
     }
 

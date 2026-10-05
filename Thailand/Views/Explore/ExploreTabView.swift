@@ -12,12 +12,22 @@ struct ExploreTabView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Picker("Category", selection: $model.segment) {
+                    HStack(spacing: 8) {
                         ForEach(ExploreSegment.allCases) { segment in
-                            Label(segment.rawValue, systemImage: segment.systemImage).tag(segment)
+                            let on = model.segment == segment
+                            Button { withAnimation(.snappy) { model.segment = segment } } label: {
+                                Label(LocalizedStringKey(segment.rawValue), systemImage: segment.systemImage)
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(on ? .white : .primary)
+                                    .padding(.horizontal, 16).padding(.vertical, 10)
+                                    .background(on ? Theme.ink : Theme.cardBackground, in: Capsule())
+                                    .overlay(Capsule().stroke(on ? .clear : Theme.hairline))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityAddTraits(on ? .isSelected : [])
                         }
+                        Spacer()
                     }
-                    .pickerStyle(.segmented)
 
                     guideCard
 
@@ -138,9 +148,29 @@ private struct GuideLinkCard<Destination: View>: View {
                 Image(systemName: "chevron.right").foregroundStyle(.white.opacity(0.8))
             }
             .padding(16)
-            .background(Theme.lagoonGradient, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+            .background(Theme.sunsetGradient, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
         }
         .buttonStyle(PressableStyle())
+    }
+}
+
+/// A real photo of the place when Wikipedia has one, else a clean map with its pin.
+struct PlacePhotoView: View {
+    let name: String
+    let coordinate: CLLocationCoordinate2D
+    @State private var photo: URL?
+
+    var body: some View {
+        Group {
+            if let photo {
+                AsyncImage(url: photo) { phase in
+                    if let image = phase.image { image.resizable().scaledToFill() } else { PlaceImage(coordinate: coordinate) }
+                }
+            } else {
+                PlaceImage(coordinate: coordinate)
+            }
+        }
+        .task(id: name) { photo = await PlacePhotos.shared.photo(name: name, coordinate: coordinate) }
     }
 }
 
@@ -172,44 +202,50 @@ struct PlaceCard: View {
     let category: ItemCategory
     var onSaved: ((String) -> Void)? = nil
 
+    private var spotCategory: SpotCategory {
+        switch category {
+        case .meal: .eat
+        case .hotel: .stay
+        default: .explore
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            PlaceImage(coordinate: place.coordinate)
-                .frame(height: 150)
-
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(place.name).font(.headline).lineLimit(2)
-                        if !place.address.isEmpty {
-                            Text(place.address).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                        }
-                    }
-                    Spacer()
-                    SaveToTripMenu(place: place, category: category, onSaved: onSaved) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title)
-                            .foregroundStyle(Theme.mango)
-                            .frame(minWidth: 44, minHeight: 44)
-                    }
-                    .accessibilityLabel("Save \(place.name) to your trip")
-                }
-                HStack(spacing: 6) {
-                    if let categoryName = place.categoryName {
-                        StatPill(systemImage: "tag", text: categoryName)
+            PhotoPlaceCard(title: place.name,
+                           subtitle: place.categoryName,
+                           width: nil, height: 190) {
+                PlacePhotoView(name: place.name, coordinate: place.coordinate)
+            } trailing: {
+                SaveToSpotsButton(name: place.name, coordinate: place.coordinate, address: place.address,
+                                  category: spotCategory, onDark: true) { onSaved?($0) }
+            }
+            HStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 3) {
+                    if !place.address.isEmpty {
+                        Text(place.address).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     }
                     if let distance {
-                        StatPill(systemImage: "figure.walk", text: "\(DistanceText.distance(distance)) · \(DistanceText.walkingTime(distance))", tint: Theme.lagoon)
+                        Label("\(DistanceText.distance(distance)) · \(DistanceText.walkingTime(distance))", systemImage: "figure.walk")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Theme.lagoon)
                     }
                 }
+                Spacer()
+                SaveToTripMenu(place: place, category: category, onSaved: onSaved) {
+                    Label("Add to trip", systemImage: "calendar.badge.plus")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Theme.ink)
+                        .padding(.horizontal, 12).padding(.vertical, 8)
+                        .background(Theme.ink.opacity(0.1), in: Capsule())
+                }
+                .accessibilityLabel("Add \(place.name) to your trip")
             }
-            .padding(14)
+            .padding(.horizontal, 6)
+            .padding(.top, 10)
         }
-        .background(Theme.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-        .shadow(color: .black.opacity(0.07), radius: 10, y: 4)
-        .contentShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-        .accessibilityElement(children: .combine)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isButton)
     }
 }
@@ -260,7 +296,7 @@ struct PlaceDetailSheet: View {
                             .font(.headline)
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, minHeight: 52)
-                            .background(Theme.sunsetGradient, in: Capsule())
+                            .background(Theme.ink, in: Capsule())
                     }
                 }
                 .padding()

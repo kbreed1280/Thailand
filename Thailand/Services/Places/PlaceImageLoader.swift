@@ -34,9 +34,9 @@ enum PlaceImageLoader {
 
     private static func mapImage(at coordinate: CLLocationCoordinate2D, size: CGSize) async -> UIImage? {
         let options = MKMapSnapshotter.Options()
-        options.region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 500, longitudinalMeters: 500)
+        options.region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 700, longitudinalMeters: 700)
         options.size = size
-        options.pointOfInterestFilter = .includingAll
+        options.pointOfInterestFilter = .excludingAll // a clean map with just this place's pin
         guard let snapshot = try? await MKMapSnapshotter(options: options).start() else { return nil }
 
         // Draw a pin in the middle.
@@ -46,7 +46,7 @@ enum PlaceImageLoader {
             let point = snapshot.point(for: coordinate)
             let pin = UIImage(systemName: "mappin.circle.fill")?
                 .withConfiguration(UIImage.SymbolConfiguration(pointSize: 34, weight: .bold))
-                .withTintColor(UIColor(hex: "#F4821C"), renderingMode: .alwaysOriginal)
+                .withTintColor(UIColor(hex: "#15627A"), renderingMode: .alwaysOriginal)
             pin?.draw(at: CGPoint(x: point.x - 17, y: point.y - 17))
         }
     }

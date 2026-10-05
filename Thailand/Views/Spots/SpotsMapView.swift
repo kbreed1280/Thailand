@@ -220,6 +220,7 @@ struct ClusteredSpotMap: UIViewRepresentable {
             map.addGestureRecognizer(press)
         }
         map.register(SpotMarkerView.self, forAnnotationViewWithReuseIdentifier: SpotMarkerView.id)
+        map.register(SpotPhotoAnnotationView.self, forAnnotationViewWithReuseIdentifier: SpotPhotoAnnotationView.id)
         map.register(SpotClusterView.self, forAnnotationViewWithReuseIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier)
         return map
     }
@@ -269,7 +270,7 @@ struct ClusteredSpotMap: UIViewRepresentable {
 
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             guard annotation is SpotAnnotation else { return nil } // user dot + clusters use defaults/registered
-            return mapView.dequeueReusableAnnotationView(withIdentifier: SpotMarkerView.id, for: annotation)
+            return mapView.dequeueReusableAnnotationView(withIdentifier: SpotPhotoAnnotationView.id, for: annotation)
         }
 
         @objc func longPressed(_ gesture: UILongPressGestureRecognizer) {
@@ -331,14 +332,87 @@ final class SpotMarkerView: MKMarkerAnnotationView {
     }
 }
 
-/// Cluster bubble showing how many spots it holds.
-final class SpotClusterView: MKMarkerAnnotationView {
+/// Cluster: a photo from one of its spots with a count badge (zoom in to split it).
+final class SpotClusterView: MKAnnotationView {
+    private static let size: CGFloat = 54
+    private let photo = UIImageView()
+    private let ring = UIView()
+    private let count = UILabel()
+    private var loadTask: Task<Void, Never>?
+
     override var annotation: MKAnnotation? {
-        didSet {
-            guard let cluster = annotation as? MKClusterAnnotation else { return }
-            glyphText = cluster.memberAnnotations.count > 99 ? "99+" : "\(cluster.memberAnnotations.count)"
-            markerTintColor = UIColor(Theme.mango)
-            displayPriority = .required
+        didSet { configure() }
+    }
+
+    override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
+        super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
+        let s = Self.size
+        frame = CGRect(x: 0, y: 0, width: s + 10, height: s + 10)
+        displayPriority = .required
+        collisionMode = .circle
+
+        ring.frame = CGRect(x: 5, y: 5, width: s, height: s)
+        ring.layer.cornerRadius = s / 2
+        ring.backgroundColor = .white
+        ring.layer.shadowColor = UIColor.black.cgColor
+        ring.layer.shadowOpacity = 0.28
+        ring.layer.shadowRadius = 5
+        ring.layer.shadowOffset = CGSize(width: 0, height: 2)
+        addSubview(ring)
+
+        photo.frame = ring.frame.insetBy(dx: 3, dy: 3)
+        photo.layer.cornerRadius = photo.frame.width / 2
+        photo.clipsToBounds = true
+        photo.contentMode = .scaleAspectFill
+        photo.backgroundColor = UIColor(Theme.ink).withAlphaComponent(0.2)
+        addSubview(photo)
+
+        count.font = .systemFont(ofSize: 12, weight: .heavy)
+        count.textColor = .white
+        count.textAlignment = .center
+        count.backgroundColor = UIColor(Theme.ink)
+        count.layer.cornerRadius = 11
+        count.layer.borderColor = UIColor.white.cgColor
+        count.layer.borderWidth = 2
+        count.clipsToBounds = true
+        addSubview(count)
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        loadTask?.cancel()
+        photo.image = nil
+    }
+
+    private func configure() {
+        guard let cluster = annotation as? MKClusterAnnotation else { return }
+        let n = cluster.memberAnnotations.count
+        count.text = n > 99 ? "99+" : "\(n)"
+        let width = max(22, CGFloat(count.text!.count) * 8 + 12)
+        count.frame = CGRect(x: Self.size + 6 - width, y: 0, width: width, height: 22)
+        accessibilityLabel = "\(n) spots"
+
+        let spots = cluster.memberAnnotations.compactMap { ($0 as? SpotAnnotation)?.spot }
+        photo.image = UIImage(systemName: "mappin.and.ellipse")?
+            .withConfiguration(UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold))
+            .withTintColor(UIColor(Theme.ink), renderingMode: .alwaysOriginal)
+        photo.contentMode = .center
+        loadTask?.cancel()
+        loadTask = Task { @MainActor [weak self] in
+            // First spot with a photo (favorites first) represents the cluster.
+            for spot in spots.sorted(by: { $0.isFavorite && !$1.isFavorite }).prefix(6) {
+                guard !Task.isCancelled else { return }
+                if let url = await SpotPhoto.url(for: spot), let image = await ImageCache.image(at: url) {
+                    guard let self, self.annotation === cluster else { return }
+                    UIView.transition(with: self.photo, duration: 0.25, options: .transitionCrossDissolve) {
+                        self.photo.contentMode = .scaleAspectFill
+                        self.photo.image = image
+                    }
+                    return
+                }
+            }
         }
     }
 }

@@ -96,7 +96,7 @@ enum LinkReader {
         return response.url
     }
 
-    private static func fetchHTML(_ url: URL) async -> String? {
+    static func fetchHTML(_ url: URL) async -> String? {
         var request = URLRequest(url: url, timeoutInterval: 15)
         request.setValue("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15", forHTTPHeaderField: "User-Agent")
         request.setValue("en-US,en;q=0.9", forHTTPHeaderField: "Accept-Language")

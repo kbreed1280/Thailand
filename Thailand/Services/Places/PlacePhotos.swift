@@ -1,8 +1,9 @@
 import CoreLocation
 import Foundation
 
-/// Photos of well-known places (temples, markets, landmarks) from Wikipedia's free API:
-/// articles within 400 m of the spot whose title matches its name. Cached on disk.
+/// Photos of places: Wikipedia (articles within 400 m whose title matches the name) for
+/// landmarks, then the place's own website preview image (og:image), which most hotels,
+/// restaurants and bars have. Cached on disk.
 actor PlacePhotos {
     static let shared = PlacePhotos()
 
@@ -10,8 +11,8 @@ actor PlacePhotos {
     private var inFlight: [String: Task<URL?, Never>] = [:]
     private let defaultsKey = "placePhotoCache"
 
-    func photo(name: String, coordinate: CLLocationCoordinate2D) async -> URL? {
-        let key = String(format: "%@|%.4f,%.4f", name.lowercased(), coordinate.latitude, coordinate.longitude)
+    func photo(name: String, coordinate: CLLocationCoordinate2D, website: URL? = nil) async -> URL? {
+        let key = String(format: "v2|%@|%.4f,%.4f|%@", name.lowercased(), coordinate.latitude, coordinate.longitude, website?.host() ?? "")
         if let hit = memory[key] { return hit }
         if let stored = (UserDefaults.standard.dictionary(forKey: defaultsKey) as? [String: String])?[key] {
             let url = stored.isEmpty ? nil : URL(string: stored)
@@ -19,7 +20,11 @@ actor PlacePhotos {
             return url
         }
         if let running = inFlight[key] { return await running.value }
-        let task = Task { await Self.lookup(name: name, coordinate: coordinate) }
+        let task = Task<URL?, Never> {
+            if let wiki = await Self.lookup(name: name, coordinate: coordinate) { return wiki }
+            if let website { return await Self.websitePhoto(website) }
+            return nil
+        }
         inFlight[key] = task
         let url = await task.value
         inFlight[key] = nil
@@ -45,6 +50,17 @@ actor PlacePhotos {
         request.setValue("WanderHub/1.0 (iOS travel app)", forHTTPHeaderField: "User-Agent")
         guard let (data, _) = try? await URLSession.shared.data(for: request) else { return nil }
         return bestPhoto(in: data, for: name)
+    }
+
+    /// The preview image a website shares (og:image / twitter:image), e.g. a hotel's hero photo.
+    private static func websitePhoto(_ site: URL) async -> URL? {
+        guard let html = await LinkReader.fetchHTML(site) else { return nil }
+        let og = LinkReader.parseOpenGraph(html)
+        guard let raw = og["og:image"] ?? og["og:image:url"] ?? og["twitter:image"], !raw.isEmpty else { return nil }
+        let url = URL(string: raw, relativeTo: site)?.absoluteURL
+        // Skip logos and icons; we want a photo.
+        if let path = url?.path.lowercased(), ["logo", "icon", "favicon", ".svg"].contains(where: path.contains) { return nil }
+        return url
     }
 
     /// Pure: the thumbnail of the nearby article whose title best matches the spot (tested).

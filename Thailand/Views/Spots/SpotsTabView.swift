@@ -93,7 +93,17 @@ struct SpotsHomeView: View {
             .navigationDestination(for: Spot.self) { SpotDetailView(spot: $0) }
             .fontDesign(.rounded)
         }
-        .onAppear { if focus == nil { focus = .init(coordinates: trip.confirmedSpots.compactMap(\.coordinate)) } }
+        .onAppear {
+            guard focus == nil else { return }
+            #if DEBUG
+            // Debug-only: `-debugFocusBangkok YES` opens the map zoomed into central Bangkok.
+            if UserDefaults.standard.bool(forKey: "debugFocusBangkok") {
+                focus = .init(coordinates: [.init(latitude: 13.70, longitude: 100.47), .init(latitude: 13.77, longitude: 100.56)])
+                return
+            }
+            #endif
+            focus = .init(coordinates: trip.confirmedSpots.compactMap(\.coordinate))
+        }
         .task {
             location.requestPermission()
             await pipeline.processInbox(into: trip, context: context)
@@ -458,27 +468,19 @@ struct SpotCard: View {
 /// Wikipedia photo for landmarks, or a small map of the spot.
 struct SpotThumbnail: View {
     let spot: Spot
-    @State private var wikiPhoto: URL?
-
-    private var postPhoto: URL? {
-        spot.sources.first { ($0.thumbnailURL ?? "").isEmpty == false && $0.spots.count == 1 }?
-            .thumbnailURL.flatMap(URL.init(string:))
-    }
+    @State private var photo: URL?
 
     var body: some View {
         Group {
-            if let url = postPhoto ?? wikiPhoto {
-                AsyncImage(url: url) { phase in
+            if let photo {
+                AsyncImage(url: photo) { phase in
                     if let image = phase.image { image.resizable().scaledToFill() } else { MapThumbnail(spot: spot) }
                 }
             } else {
                 MapThumbnail(spot: spot)
             }
         }
-        .task(id: spot.objectID) {
-            guard postPhoto == nil, let c = spot.coordinate else { return }
-            wikiPhoto = await PlacePhotos.shared.photo(name: spot.displayName, coordinate: c)
-        }
+        .task(id: spot.objectID) { photo = await SpotPhoto.url(for: spot) }
     }
 }
 

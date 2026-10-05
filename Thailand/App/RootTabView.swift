@@ -26,19 +26,20 @@ struct RootTabView: View {
             Tab("Trip", systemImage: "suitcase.fill", value: 0) {
                 TripTabView()
             }
+            Tab("Spots", systemImage: "map.fill", value: 5) {
+                SpotsTabView()
+            }
             Tab("Nearby", systemImage: "location.circle.fill", value: 1) {
                 NearbyTabView()
             }
             Tab("Explore", systemImage: "fork.knife.circle.fill", value: 2) {
                 ExploreTabView()
             }
-            Tab("Convert", systemImage: "bahtsign.circle.fill", value: 3) {
-                ConvertTabView()
-            }
             Tab("Translate", systemImage: "character.bubble.fill", value: 4) {
                 TranslateTabView()
             }
         }
+        .onAppear { if selectedTab == 3 { selectedTab = 0 } } // Convert moved to the Trip screen
         .onOpenURL { url in
             guard url.isFileURL else { return }
             if let file = IncomingCollection.load(from: url) { incoming = file } else { badFile = true }

@@ -2,6 +2,9 @@ import SwiftUI
 
 /// THB ⇄ USD converter, quick amounts, rate details, tip calculator and the trip's spending.
 struct ConvertTabView: View {
+    /// Shown as a sheet from the Trip screen: adds a Done button.
+    var showsDone = false
+    @Environment(\.dismiss) private var dismiss
     @StateObject private var rates = ExchangeRateStore.shared
     @ObservedObject private var network = NetworkMonitor.shared
 
@@ -36,6 +39,9 @@ struct ConvertTabView: View {
             .background(Theme.background)
             .navigationTitle("Convert")
             .toolbar {
+                if showsDone {
+                    ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+                }
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
                     Button("Done") { focus = nil }

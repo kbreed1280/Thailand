@@ -65,3 +65,18 @@ final class ImportQuotaTests: XCTestCase {
         XCTAssertEqual(q.remaining(limit: 5, now: tomorrow), 4)
     }
 }
+
+final class PlacePhotosTests: XCTestCase {
+    func testPicksMatchingNearbyArticle() {
+        let json = """
+        {"query":{"pages":{
+          "1":{"title":"Wat Phra Kaew","thumbnail":{"source":"https://upload.wikimedia.org/a.jpg"}},
+          "2":{"title":"Sanam Luang","thumbnail":{"source":"https://upload.wikimedia.org/b.jpg"}},
+          "3":{"title":"Grand Palace"}
+        }}}
+        """.data(using: .utf8)!
+        XCTAssertEqual(PlacePhotos.bestPhoto(in: json, for: "Wat Phra Kaew")?.lastPathComponent, "a.jpg")
+        XCTAssertNil(PlacePhotos.bestPhoto(in: json, for: "Grand Palace"), "no thumbnail")
+        XCTAssertNil(PlacePhotos.bestPhoto(in: json, for: "Jay Fai"), "no matching article")
+    }
+}

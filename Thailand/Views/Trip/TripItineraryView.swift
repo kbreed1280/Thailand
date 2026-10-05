@@ -35,7 +35,7 @@ struct TripItineraryView: View {
     @State private var showingFlights = false
     @State private var showingWeather = false
     @State private var showingTDAC = false
-    @State private var showingTikTok = false
+    @State private var showingConverter = false
     @State private var showingTransit = false
     @State private var showingOffline = false
     @State private var sharingError: String?
@@ -63,7 +63,7 @@ struct TripItineraryView: View {
                     case .flights: showingFlights = true
                     case .weather: showingWeather = true
                     case .tdac: showingTDAC = true
-                    case .tiktok: showingTikTok = true
+                    case .converter: showingConverter = true
                     case .transit: showingTransit = true
                     case .offline: showingOffline = true
                     }
@@ -182,8 +182,8 @@ struct TripItineraryView: View {
         .sheet(isPresented: $showingTDAC) {
             TDACView(trip: trip)
         }
-        .sheet(isPresented: $showingTikTok) {
-            SpotsView(trip: trip)
+        .sheet(isPresented: $showingConverter) {
+            ConvertTabView(showsDone: true)
         }
         .sheet(isPresented: $showingTransit) {
             NavigationStack {
@@ -429,7 +429,7 @@ struct TripItineraryView: View {
             Button("Flights", systemImage: "airplane") { showingFlights = true }
             Button("Weather", systemImage: "sun.max.fill") { showingWeather = true }
             Button("Arrival Card (TDAC)", systemImage: "person.text.rectangle") { showingTDAC = true }
-            Button("Spots (save from TikTok, Maps…)", systemImage: "mappin.and.ellipse") { showingTikTok = true }
+            Button("Baht Converter", systemImage: "bahtsign.circle") { showingConverter = true }
             Button("Offline Maps", systemImage: "arrow.down.circle") { showingOffline = true }
             Button("BTS & MRT", systemImage: "tram.fill") { showingTransit = true }
         }
@@ -594,7 +594,7 @@ private struct TripHeaderCard: View {
     var canEdit = true
     let onAction: (HeaderAction) -> Void
 
-    enum HeaderAction { case packing, ideas, documents, flights, weather, tdac, tiktok, transit, offline }
+    enum HeaderAction { case packing, ideas, documents, flights, weather, tdac, converter, transit, offline }
 
     @ObservedObject private var flights = FlightStore.shared
 
@@ -665,10 +665,7 @@ private struct TripHeaderCard: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    Button { onAction(.tiktok) } label: {
-                        let waiting = SharedInbox.load().count + trip.draftSpots.count
-                        Label(waiting > 0 ? "Spots (\(waiting) new)" : "Spots", systemImage: "mappin.and.ellipse")
-                    }
+                    Button { onAction(.converter) } label: { Label("Baht Converter", systemImage: "bahtsign.circle.fill") }
                     Button { onAction(.tdac) } label: { Label("TDAC", systemImage: "person.text.rectangle") }
                     Button { onAction(.documents) } label: { Label("Documents", systemImage: "lock.doc.fill") }
                     Button { onAction(.weather) } label: { Label("Weather", systemImage: "sun.max.fill") }

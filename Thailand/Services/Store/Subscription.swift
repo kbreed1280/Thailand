@@ -1,11 +1,13 @@
 import Foundation
 import StoreKit
 
-/// Free plan: a few imports a day. WanderHub Pro (monthly / yearly, StoreKit 2): unlimited.
-/// Everything is unlocked in Xcode and TestFlight builds so testers never hit the paywall.
+/// Free plan: a few imports a day. WanderHub Pro (StoreKit 2): $4.99/month with a 3-day free
+/// trial, or $49.99/year. Unlocked only in Xcode (debug) builds. TestFlight and App Review use
+/// the sandbox, where purchases are free, so reviewers can test buying.
 ///
-/// App Store Connect setup: create an auto-renewable subscription group "WanderHub Pro" with
-/// products `com.kbreed.thailandtrip.pro.monthly` and `com.kbreed.thailandtrip.pro.yearly`.
+/// App Store Connect setup: subscription group "WanderHub Pro" with
+/// `com.kbreed.thailandtrip.pro.monthly` ($4.99, introductory offer: free for 3 days) and
+/// `com.kbreed.thailandtrip.pro.yearly` ($49.99).
 @MainActor
 final class Subscription: ObservableObject {
     static let shared = Subscription()
@@ -18,6 +20,28 @@ final class Subscription: ObservableObject {
     @Published private(set) var isTestBuild = false
     @Published private(set) var purchasing = false
     @Published var message: String?
+    /// Whether this Apple Account can still get each plan's free trial.
+    @Published private(set) var trialEligible: [String: Bool] = [:]
+
+    var monthly: Product? { products.first { $0.id == Self.productIDs[0] } }
+    var yearly: Product? { products.first { $0.id == Self.productIDs[1] } }
+
+    /// "3-day free trial" if this plan has one and you haven't used it.
+    func trialText(for product: Product) -> String? {
+        guard trialEligible[product.id] == true, let offer = product.subscription?.introductoryOffer,
+              offer.paymentMode == .freeTrial else { return nil }
+        let p = offer.period
+        let unit = switch p.unit { case .day: "day"; case .week: "week"; case .month: "month"; case .year: "year"; @unknown default: "day" }
+        return "\(p.value)-\(unit) free trial"
+    }
+
+    /// Yearly saving vs. paying monthly, e.g. 17.
+    var yearlySavingsPercent: Int? {
+        guard let m = monthly, let y = yearly, m.price > 0 else { return nil }
+        let twelve = m.price * 12
+        let pct = NSDecimalNumber(decimal: (twelve - y.price) / twelve * 100).doubleValue
+        return pct >= 1 ? Int(pct.rounded()) : nil
+    }
 
     var isUnlocked: Bool { isPro || isTestBuild }
 
@@ -37,12 +61,11 @@ final class Subscription: ObservableObject {
                 await self?.refreshEntitlements()
             }
         }
-        if let app = try? await AppTransaction.shared, case .verified(let info) = app {
-            // TestFlight and Xcode builds run in the sandbox / xcode environments.
-            if info.environment == .sandbox || info.environment == .xcode { isTestBuild = true }
-        }
         await refreshEntitlements()
         products = ((try? await Product.products(for: Self.productIDs)) ?? []).sorted { $0.price < $1.price }
+        for product in products {
+            trialEligible[product.id] = await product.subscription?.isEligibleForIntroOffer ?? false
+        }
     }
 
     func refreshEntitlements() async {

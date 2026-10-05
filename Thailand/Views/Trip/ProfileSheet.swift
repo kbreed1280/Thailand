@@ -87,6 +87,13 @@ struct ProfileSheet: View {
                     Text("Off by default. When on, places you confirm are shared anonymously with other travelers: the place, the inside scoop and a link to the original post. Your notes, photos, trips and lists stay private. Turning it off removes what you shared.")
                 }
                 Section {
+                    Link(destination: URL(string: "https://kbreed1280.github.io/Thailand/support.html")!) {
+                        Label("Help & Support", systemImage: "questionmark.circle")
+                    }
+                    Link(destination: PaywallView.privacyURL) { Label("Privacy Policy", systemImage: "hand.raised") }
+                    Link(destination: PaywallView.termsURL) { Label("Terms of Use", systemImage: "doc.text") }
+                }
+                Section {
                     Toggle("Evening reminder for tomorrow's plan", isOn: $dayReminders)
                 } footer: {
                     Text("At 8 PM the night before each planned day: how many stops, the first one, and the weather and heat.")

@@ -165,7 +165,8 @@ struct SpotsView: View {
                     SourceDraftCard(source: source, isWorking: pipeline.working.contains(source.objectID),
                                     onRetry: { Task { await pipeline.retry(source, context: context) } },
                                     onFile: { filing = source; newFolderName = ""; newFolderPrompt = true },
-                                    folders: folders)
+                                    folders: folders,
+                                    onResearch: { Task { await pipeline.research(source, context: context) } })
                 }
             }
         }
@@ -225,6 +226,7 @@ private struct SourceDraftCard: View {
     let onRetry: () -> Void
     let onFile: () -> Void
     let folders: [String]
+    var onResearch: () -> Void = {}
 
     @Environment(\.managedObjectContext) private var context
     @State private var editing: Spot?
@@ -242,6 +244,9 @@ private struct SourceDraftCard: View {
                     .font(.caption).foregroundStyle(Theme.coral)
                 HStack {
                     Button("Try again", systemImage: "arrow.clockwise", action: onRetry)
+                    if source.errorMessage != Subscription.limitMessage, source.url != nil {
+                        Button("Research", systemImage: "sparkle.magnifyingglass", action: onResearch)
+                    }
                     if source.errorMessage == Subscription.limitMessage {
                         Spacer()
                         Button("Upgrade", systemImage: "sparkles") { showingPaywall = true }
@@ -257,7 +262,9 @@ private struct SourceDraftCard: View {
                         Button("New folder…", action: onFile)
                     } label: { Label("File in folder", systemImage: "folder") }
                     Spacer()
-                    Button("Remove", role: .destructive) { context.delete(source); save() }
+                    Button("Research", systemImage: "sparkle.magnifyingglass", action: onResearch)
+                    Spacer()
+                    Button("Remove", role: .destructive) { ImportPipeline.deleteSource(source, context: context); save() }
                 }
                 .font(.caption.weight(.semibold))
                 .buttonStyle(.borderless)
@@ -284,8 +291,11 @@ private struct SourceDraftCard: View {
             }
             let unplotted = drafts.filter(\.isUnplotted).count
             if unplotted > 0 {
-                Label("\(unplotted) spot\(unplotted == 1 ? "" : "s") couldn't be found on the map. Tap Fix to search.", systemImage: "mappin.slash")
+                Label("\(unplotted) spot\(unplotted == 1 ? "" : "s") couldn't be found on the map. Tap Fix to search, or Research.", systemImage: "mappin.slash")
                     .font(.caption).foregroundStyle(.orange)
+                Button("Research missing places", systemImage: "sparkle.magnifyingglass", action: onResearch)
+                    .font(.caption.weight(.semibold))
+                    .buttonStyle(.borderless)
             }
         }
         .padding(.vertical, 4)

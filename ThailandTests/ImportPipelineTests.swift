@@ -6,6 +6,22 @@ import XCTest
 // MARK: - Link parsing
 
 final class LinkReaderTests: XCTestCase {
+    func testReadsTikTokLocationTag() {
+        let html = #"…"itemStruct":{"desc":"best bar","poi":{"name":"Secret Mountain Bar","address":"Ko Pha-ngan District, Surat Thani 84280, Thailand","city":"Ko Pha-ngan","note":"a {brace} in text","ttTypeNameTiny":"Bar","ttTypeNameMedium":"Nightlife"},"other":1}…"#
+        let poi = LinkReader.parseTikTokPOI(html)
+        XCTAssertEqual(poi?.name, "Secret Mountain Bar")
+        XCTAssertEqual(poi?.city, "Ko Pha-ngan")
+        XCTAssertEqual(poi?.isArea, false)
+        let island = LinkReader.parseTikTokPOI(#""poi":{"name":"Ko Pha Ngan Island","address":"Ko Pha-ngan District","city":"Ko Pha-ngan","ttTypeNameTiny":"Island"}"#)
+        XCTAssertEqual(island?.isArea, true, "an island narrows the search, it isn't a spot")
+        XCTAssertNil(LinkReader.parseTikTokPOI("no tag here"))
+    }
+
+    func testHashtagsBecomeSearchPhrases() {
+        let caption = "This is 1000% the best bar I’ve been to so far #Thailand #KohPhaNgan #SoloTravel #Secretbar #Travelvlog #rooftopbar #nightmarket"
+        XCTAssertEqual(ImportPipeline.searchKeywords(from: caption), ["secret bar", "rooftop bar", "night market"])
+    }
+
     func testTikTokShareLinksAreShortLinks() {
         XCTAssertTrue(LinkReader.isShortLink(URL(string: "https://www.tiktok.com/t/ZPLRKLpWT/")!))
         XCTAssertTrue(LinkReader.isShortLink(URL(string: "https://tiktok.com/t/ZPLRKLpWT/")!))

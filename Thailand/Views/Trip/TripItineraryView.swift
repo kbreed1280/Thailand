@@ -22,6 +22,7 @@ struct TripItineraryView: View {
     @State private var showingSidequest = false
     @State private var confirmingDelete = false
     @State private var mapDay: Day?
+    @State private var spotPickerDay: Day?
     @State private var isPreparingShare = false
     @State private var showingEmergency = false
     @State private var showingSavedPlaces = false
@@ -138,6 +139,9 @@ struct TripItineraryView: View {
         }
         .sheet(isPresented: $showingProfile) {
             ProfileSheet()
+        }
+        .sheet(item: $spotPickerDay) { day in
+            SpotPickerSheet(trip: trip, day: day)
         }
         .sheet(isPresented: $showingAutoPlan) {
             AutoPlanView(trip: trip)
@@ -307,10 +311,12 @@ struct TripItineraryView: View {
                 }
             }
         } header: {
-            DayHeader(day: day) {
+            DayHeader(day: day, canAddSpots: canEdit && !trip.confirmedSpots.isEmpty) {
                 mapDay = day
             } onAdd: {
                 editingNewItemFor = NewItemTarget(day: day)
+            } onSpots: {
+                spotPickerDay = day
             }
             .dropDestination(for: String.self) { ids, _ in
                 drop(ids, onto: day, before: nil)
@@ -520,8 +526,10 @@ private struct DropPlaceholder: View {
 
 private struct DayHeader: View {
     @ObservedObject var day: Day
+    var canAddSpots = false
     let onMap: () -> Void
     let onAdd: () -> Void
+    var onSpots: () -> Void = {}
     @State private var walked: WalkStats?
     @ObservedObject private var forecast = TripForecast.shared
 
@@ -570,6 +578,14 @@ private struct DayHeader: View {
             }
             .accessibilityLabel("Map of day \(day.number)")
             .disabled(!day.sortedItems.contains { $0.hasCoordinate })
+            if canAddSpots {
+                Button(action: onSpots) {
+                    Image(systemName: "mappin.and.ellipse.circle")
+                        .font(.title3)
+                        .frame(minWidth: 40, minHeight: 36)
+                }
+                .accessibilityLabel("Add saved spots to day \(day.number)")
+            }
             Button(action: onAdd) {
                 Image(systemName: "plus.circle")
                     .font(.title3)

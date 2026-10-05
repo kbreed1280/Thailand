@@ -54,7 +54,14 @@ struct RootTabView: View {
         .sheet(isPresented: $showWeather) { WeatherSheet() }
         .fullScreenCover(isPresented: $showSevenEleven) { SevenElevenMapView() }
         .fullScreenCover(isPresented: $showRailMap) { RailNetworkMapView() }
-        .sheet(item: $debugSpotsTrip) { trip in SpotsView(trip: trip) }
+        .sheet(item: $debugSpotsTrip) { trip in
+            // Debug-only: `-showSpotPicker YES` opens "Add to Day 1" from saved spots.
+            if UserDefaults.standard.bool(forKey: "showSpotPicker"), let day = trip.sortedDays.first {
+                SpotPickerSheet(trip: trip, day: day)
+            } else {
+                SpotsView(trip: trip)
+            }
+        }
         .sheet(item: $debugPlanTrip) { trip in
             if UserDefaults.standard.bool(forKey: "showSidequest") { SidequestView(trip: trip) } else { AutoPlanView(trip: trip) }
         }
@@ -63,7 +70,12 @@ struct RootTabView: View {
             try? await Task.sleep(for: .seconds(2))
             let trips = (try? debugContext.fetch(NSFetchRequest<Trip>(entityName: "Trip"))) ?? []
             let trip = trips.first ?? ItineraryStore(context: debugContext).createTrip(name: "Debug Trip", start: .now, end: .now.addingTimeInterval(7 * 86_400))
-            ImportPipeline.shared.addSource(url: url, text: nil, to: trip, context: debugContext)
+            let debugSource = ImportPipeline.shared.addSource(url: url, text: nil, to: trip, context: debugContext)
+            if UserDefaults.standard.bool(forKey: "debugResearch") {
+                // Debug-only: `-debugResearch YES` imports, then runs Research on the post.
+                await ImportPipeline.shared.importPending(in: trip, context: debugContext)
+                if let debugSource { await ImportPipeline.shared.research(debugSource, context: debugContext) }
+            }
             if UserDefaults.standard.bool(forKey: "debugConfirmAll") {
                 // Debug-only: `-debugConfirmAll YES` imports, confirms every pinned draft, then opens Spots (Map).
                 await ImportPipeline.shared.importPending(in: trip, context: debugContext)

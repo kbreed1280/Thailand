@@ -1,6 +1,7 @@
 import CoreData
 import CoreLocation
 import MapKit
+import UIKit
 
 /// Save-from-anywhere: shared link/screenshot → read post → extract places → pin on Apple Maps →
 /// draft spots (grouped by source) for you to confirm. Runs on the iPhone; nothing is re-hosted.
@@ -13,6 +14,13 @@ final class ImportPipeline: ObservableObject {
     var locator: PlaceLocating = AppleMapsLocator()
     var reader: (URL, String?) async -> LinkContent = { await LinkReader.read($0, extraText: $1) }
     var extractor: () -> PlaceExtracting = { PlaceExtractor.current }
+    /// Reads text in a post's cover image (deep research only).
+    var coverText: (URL) async -> String = { url in
+        guard let (data, _) = try? await URLSession.shared.data(from: url), let image = UIImage(data: data) else { return "" }
+        return await ScreenshotText.recognize(image)
+    }
+    /// Sources being researched (deeper, looser second pass).
+    private var deep: Set<NSManagedObjectID> = []
 
     /// Turns links waiting in the Share-extension inbox into sources on this trip, then imports them.
     func processInbox(into trip: Trip, context: NSManagedObjectContext) async {
@@ -61,6 +69,15 @@ final class ImportPipeline: ObservableObject {
         await run(source, in: trip, context: context)
     }
 
+    /// Digs deeper into a post whose places weren't found or pinned: reads the cover image's
+    /// on-screen text, uses the location tag, searches more loosely, and if the exact place still
+    /// isn't found, suggests up to 3 likely places from the hashtags (marked "possible match").
+    func research(_ source: SpotSource, context: NSManagedObjectContext) async {
+        deep.insert(source.objectID)
+        defer { deep.remove(source.objectID) }
+        await retry(source, context: context)
+    }
+
     // MARK: Pipeline
 
     private func run(_ source: SpotSource, in trip: Trip, context: NSManagedObjectContext) async {
@@ -75,7 +92,7 @@ final class ImportPipeline: ObservableObject {
         // 1. Read the post (caption, description, page facts).
         set(source, .fetching, context)
         let sharedText = source.extractedText ?? ""
-        let content: LinkContent
+        var content: LinkContent
         if let url = source.url {
             content = await reader(url, sharedText.isEmpty ? nil : sharedText)
         } else {
@@ -96,6 +113,11 @@ final class ImportPipeline: ObservableObject {
 
         // 2. Extract every place mentioned.
         set(source, .extracting, context)
+        let isDeep = deep.contains(source.objectID)
+        if isDeep, let cover = content.thumbnailURL {
+            let onScreen = await coverText(cover)
+            if !onScreen.isEmpty { content.text += "\n" + onScreen }
+        }
         let (places, used) = await PlaceExtractor.extract(from: content, using: extractor())
         source.extractor = used
         let area = TravelArea.detect(in: content.text)
@@ -105,12 +127,36 @@ final class ImportPipeline: ObservableObject {
         var added = 0
         for place in places {
             let declared = content.declaredPlaces.first { $0.name == place.name }?.coordinate
-            let match = await locator.locate(place, near: area, declared: declared)
+            var match = await locator.locate(place, near: area, declared: declared)
+            if match == nil, isDeep {
+                // Looser second try: the name plus the area, best result if the names are close.
+                let query = [place.name, area?.name ?? place.cityHint].filter { !$0.isEmpty }.joined(separator: " ")
+                match = await locator.search(query, near: area).first { item in
+                    NameMatch.similarity(item.name ?? "", place.name) >= 0.4 || NameMatch.similarity(place.name, item.name ?? "") >= 0.4
+                }
+            }
             if place.isGuess && match == nil { continue } // don't create junk "unplotted" spots from guesses
             attach(place, match: match, declared: declared, from: source, in: trip, context: context)
             added += 1
         }
-        source.errorMessage = added == 0 ? "No specific places found. File it in a folder or add the place yourself." : ""
+        if added == 0, isDeep, let area {
+            // Still nothing: suggest likely places from the hashtags, clearly marked for checking.
+            var seen = Set<String>()
+            for keyword in Self.searchKeywords(from: content.text) {
+                for item in await locator.search(keyword, near: area).prefix(2) {
+                    guard added < 3, let name = item.name, seen.insert(name.lowercased()).inserted else { continue }
+                    let place = ExtractedPlace(name: name, cityHint: area.name, category: SpotCategory(word: keyword),
+                                               recommendation: "Possible match for \"\(keyword)\" in \(area.name). Check it's the place from the post before saving.")
+                    attach(place, match: item, declared: nil, from: source, in: trip, context: context)
+                    added += 1
+                }
+            }
+            source.errorMessage = added == 0
+                ? "Researched this post but couldn't find a specific place. File it in a folder or add the place yourself."
+                : "Couldn't find the exact place, so these are possible matches. Check each one before saving."
+        } else {
+            source.errorMessage = added == 0 ? "No specific places found. Tap Research to dig deeper, file it in a folder, or add the place yourself." : ""
+        }
         set(source, .ready, context)
     }
 
@@ -146,6 +192,31 @@ final class ImportPipeline: ObservableObject {
         scoop.spot = spot
         scoop.source = source
         spot.touch()
+    }
+
+    /// Search phrases from a caption's hashtags: "#Secretbar" → "secret bar"; generic tags skipped (tested).
+    nonisolated static func searchKeywords(from text: String) -> [String] {
+        let generic: Set<String> = ["thailand", "travel", "fyp", "foryou", "foryoupage", "viral", "solotravel", "travelvlog", "traveltok",
+                                    "trip", "vacation", "holiday", "backpacking", "explore", "asia", "southeastasia", "fy", "xyzbca"]
+        let vocab = ["rooftop bar", "rooftop", "bar", "cafe", "coffee", "beach club", "beach", "restaurant", "market", "temple", "waterfall",
+                     "viewpoint", "club", "spa", "street food", "food", "hostel", "hotel", "resort", "island", "night market"]
+        let areaWords = TravelArea.all.flatMap { [$0.name.lowercased()] + $0.aliases.map { $0.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "#", with: "") } }
+            .map { $0.replacingOccurrences(of: " ", with: "") }
+        var out: [String] = []
+        let regex = /#([\p{L}\p{N}_]+)/
+        for match in text.matches(of: regex) {
+            let tag = String(match.1).lowercased()
+            guard tag.count > 2, !generic.contains(tag), !areaWords.contains(where: { tag.contains($0) || $0.contains(tag) }) else { continue }
+            var phrase = tag
+            if let word = vocab.map({ $0.replacingOccurrences(of: " ", with: "") }).first(where: { tag.hasSuffix($0) && tag != $0 }) {
+                let original = vocab.first { $0.replacingOccurrences(of: " ", with: "") == word }!
+                phrase = String(tag.dropLast(word.count)) + " " + original
+            } else if let original = vocab.first(where: { $0.replacingOccurrences(of: " ", with: "") == tag }) {
+                phrase = original
+            }
+            if !out.contains(phrase) { out.append(phrase) }
+        }
+        return Array(out.prefix(3))
     }
 
     /// Same place if Apple Maps IDs match, or names match closely within ~75 m.

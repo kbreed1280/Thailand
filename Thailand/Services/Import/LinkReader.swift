@@ -49,6 +49,14 @@ enum LinkReader {
                 content.thumbnailURL = o.thumbnail
                 content.text = o.title
             }
+            // The creator's location tag (TikTok "poi"): a specific place becomes a declared place;
+            // an island / city only narrows where we search.
+            if platform == .tiktok, let page = await fetchHTML(target), let poi = parseTikTokPOI(page) {
+                content.text = [content.text, "Location: \(poi.name), \(poi.address)"].filter { !$0.isEmpty }.joined(separator: "\n")
+                if !poi.isArea {
+                    content.declaredPlaces.append(.init(name: poi.name, address: poi.address, coordinate: nil))
+                }
+            }
             if platform == .youtube, let page = await fetchHTML(target) {
                 // YouTube's description holds the place list; it's in the page's meta description.
                 content.text = [content.text, parseOpenGraph(page)["og:description"] ?? ""].joined(separator: "\n")
@@ -111,6 +119,44 @@ enum LinkReader {
     }
 
     // MARK: Parsing (pure, tested)
+
+    struct TikTokPOI: Equatable {
+        var name: String
+        var address: String
+        var city: String
+        var kind: String
+        /// Islands, cities, districts…: where the post is, not a place to pin.
+        var isArea: Bool {
+            let areaKinds = ["island", "city", "town", "province", "district", "region", "country", "state", "neighborhood",
+                             "neighbourhood", "village", "administrative"]
+            return areaKinds.contains { kind.lowercased().contains($0) }
+                || NameMatch.similarity(name, city) >= 0.8
+        }
+    }
+
+    /// The `"poi":{…}` object in a TikTok page's embedded JSON.
+    static func parseTikTokPOI(_ html: String) -> TikTokPOI? {
+        guard let start = html.range(of: "\"poi\":{")?.upperBound else { return nil }
+        // Walk to the matching brace (strings may contain braces, so track quotes).
+        var depth = 1, inString = false, escaped = false
+        var end = start
+        var i = start
+        while i < html.endIndex, depth > 0 {
+            let ch = html[i]
+            if escaped { escaped = false }
+            else if ch == "\\" { escaped = true }
+            else if ch == "\"" { inString.toggle() }
+            else if !inString { if ch == "{" { depth += 1 } else if ch == "}" { depth -= 1 } }
+            end = i
+            i = html.index(after: i)
+        }
+        guard depth == 0 else { return nil }
+        let json = "{" + html[start..<end] + "}"
+        guard let object = try? JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any],
+              let name = object["name"] as? String, !name.isEmpty else { return nil }
+        return TikTokPOI(name: name, address: object["address"] as? String ?? "", city: object["city"] as? String ?? "",
+                         kind: [object["ttTypeNameTiny"], object["ttTypeNameMedium"]].compactMap { $0 as? String }.joined(separator: " "))
+    }
 
     /// https://www.tiktok.com/@user/photo/123?x → https://www.tiktok.com/@user/video/123
     static func tiktokVideoURL(forPhoto url: URL) -> URL? {

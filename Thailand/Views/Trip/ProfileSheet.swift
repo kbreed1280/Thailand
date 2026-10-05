@@ -1,3 +1,4 @@
+import StoreKit
 import PhotosUI
 import SwiftUI
 
@@ -14,6 +15,7 @@ struct ProfileSheet: View {
     @Environment(\.managedObjectContext) private var context
     @State private var photoItem: PhotosPickerItem?
     @State private var showingPaywall = false
+    @State private var redeeming = false
     @ObservedObject private var store = Subscription.shared
     @State private var photoVersion = 0
 
@@ -70,6 +72,7 @@ struct ProfileSheet: View {
                     Button { showingPaywall = true } label: {
                         LabeledContent("WanderHub Pro", value: store.isPro ? "Active" : store.isTestBuild ? "Unlocked (test build)" : "Free plan")
                     }
+                    Button("Redeem a promo code", systemImage: "giftcard") { redeeming = true }
                 }
                 Section {
                     Toggle("Share my spots with the community", isOn: $community)
@@ -105,6 +108,7 @@ struct ProfileSheet: View {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
             }
             .sheet(isPresented: $showingPaywall) { PaywallView() }
+            .offerCodeRedemption(isPresented: $redeeming) { _ in Task { await store.refreshEntitlements() } }
             .onChange(of: photoItem) { _, item in
                 Task {
                     guard let data = try? await item?.loadTransferable(type: Data.self),

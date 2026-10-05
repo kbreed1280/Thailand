@@ -7,6 +7,7 @@ struct PaywallView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var store = Subscription.shared
     @State private var selectedID = Subscription.productIDs[1]
+    @State private var redeeming = false
 
     static let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
     static let privacyURL = URL(string: "https://kbreed1280.github.io/Thailand/privacy.html")!
@@ -57,6 +58,10 @@ struct PaywallView: View {
             .background(PlotStyle.paper)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
             .task { await store.start() }
+            // Apple's offer-code sheet (codes from App Store Connect → Subscriptions → Offer Codes).
+            .offerCodeRedemption(isPresented: $redeeming) { _ in
+                Task { await store.refreshEntitlements() }
+            }
         }
         .fontDesign(.rounded)
     }
@@ -128,6 +133,7 @@ struct PaywallView: View {
                 .font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
             HStack(spacing: 18) {
                 Button("Restore purchases") { Task { await store.restore() } }
+                Button("Redeem code") { redeeming = true }
                 Link("Terms of Use", destination: Self.termsURL)
                 Link("Privacy Policy", destination: Self.privacyURL)
             }

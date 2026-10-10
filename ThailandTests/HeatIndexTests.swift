@@ -80,3 +80,12 @@ final class HeatIndexTests: XCTestCase {
         XCTAssertEqual(WMOCode.symbol(0, isDay: false), "moon.stars.fill")
     }
 }
+
+final class TemperatureFormatTests: XCTestCase {
+    func testShowsFahrenheit() {
+        XCTAssertEqual(Temperature.f(0), 32)
+        XCTAssertEqual(Temperature.f(33), 91)
+        XCTAssertEqual(Temperature.deg(35), "95°")
+        XCTAssertEqual(Temperature.both(39.4), "103°F")
+    }
+}

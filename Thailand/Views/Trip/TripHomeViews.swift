@@ -51,8 +51,8 @@ struct TripHero: View {
                         HStack(spacing: 6) {
                             Image(systemName: w.symbolName).symbolRenderingMode(.multicolor)
                             VStack(alignment: .leading, spacing: 0) {
-                                Text("\(Int(w.highC.rounded()))°").font(.headline)
-                                Text("Feels \(Int(w.maxHeatIndexC.rounded()))°").font(.caption2.weight(.semibold)).opacity(0.85)
+                                Text("\(Temperature.deg(w.highC))").font(.headline)
+                                Text("Feels \(Temperature.deg(w.maxHeatIndexC))").font(.caption2.weight(.semibold)).opacity(0.85)
                             }
                         }
                         .foregroundStyle(.white)
@@ -60,7 +60,7 @@ struct TripHero: View {
                         .background(.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Weather: high \(Int(w.highC.rounded())) degrees")
+                    .accessibilityLabel("Weather: high \(Temperature.f(w.highC)) degrees")
                 }
             }
 

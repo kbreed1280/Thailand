@@ -53,7 +53,7 @@ enum DayReminders {
         let forecast = TripForecast.shared
         let list = reminders(for: days, weather: { date in
             guard let d = forecast.day(date, in: trip) else { return nil }
-            return "High \(Int(d.highC.rounded()))°C, \(d.conditionText.lowercased()). Heat: \(d.heatLevel.title.lowercased())."
+            return "High \(Temperature.both(d.highC)), \(d.conditionText.lowercased()). Heat: \(d.heatLevel.title.lowercased())."
         })
         guard !list.isEmpty else { return }
         let settings = await center.notificationSettings()

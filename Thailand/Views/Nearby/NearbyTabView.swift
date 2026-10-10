@@ -185,8 +185,8 @@ struct NearbyTabView: View {
                 if let weather {
                     HStack(spacing: 5) {
                         WeatherSymbol(name: weather.symbolName)
-                        Text("\(Int(weather.temperatureC.rounded()))°").font(.headline)
-                        Text("feels \(Int(weather.feelsLikeC.rounded()))°").font(.caption.weight(.semibold)).opacity(0.85)
+                        Text("\(Temperature.deg(weather.temperatureC))").font(.headline)
+                        Text("feels \(Temperature.deg(weather.feelsLikeC))").font(.caption.weight(.semibold)).opacity(0.85)
                     }
                     .foregroundStyle(.white)
                     .padding(.horizontal, 10).padding(.vertical, 6)
@@ -419,13 +419,13 @@ struct WeatherCard: View {
                     .font(.system(size: 40))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(Temperature.both(weather.temperatureC)).font(.title3.bold())
-                    Text("\(weather.conditionText) · feels like \(Int(weather.feelsLikeC.rounded()))°C")
+                    Text("\(weather.conditionText) · feels like \(Temperature.both(weather.feelsLikeC))")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("H \(Int(weather.highC.rounded()))° L \(Int(weather.lowC.rounded()))°").font(.caption.weight(.semibold))
+                    Text("H \(Temperature.deg(weather.highC)) L \(Temperature.deg(weather.lowC))").font(.caption.weight(.semibold))
                     Text("UV \(weather.uvIndex)").font(.caption).foregroundStyle(weather.uvIndex >= 8 ? Theme.coral : .secondary)
                 }
             }
@@ -445,7 +445,7 @@ struct WeatherCard: View {
                         VStack(spacing: 4) {
                             Text(hour.date.formatted(.dateTime.hour())).font(.caption2)
                             WeatherSymbol(name: hour.symbolName)
-                            Text("\(Int(hour.temperatureC.rounded()))°").font(.caption.weight(.semibold))
+                            Text("\(Temperature.deg(hour.temperatureC))").font(.caption.weight(.semibold))
                             Circle().fill(hour.heatLevel.color).frame(width: 6, height: 6)
                             if hour.precipitationChance >= 0.3 {
                                 Text("\(Int(hour.precipitationChance * 100))%").font(.caption2).foregroundStyle(.blue)

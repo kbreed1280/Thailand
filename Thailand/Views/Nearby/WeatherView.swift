@@ -175,7 +175,7 @@ struct WeatherView: View {
                         .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
                         .interpolationMethod(.monotone)
                 }
-                // 32 °C = start of "extreme caution", 39.4 °C = "danger"
+                // Plotted in °C, labeled in °F: 32.2 °C (90 °F) = start of "extreme caution", 39.4 °C (103 °F) = "danger"
                 RuleMark(y: .value("Extreme caution", 32.2))
                     .foregroundStyle(HeatIndex.Level.extremeCaution.color.opacity(0.6))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 3]))
@@ -195,7 +195,7 @@ struct WeatherView: View {
             .chartYAxis {
                 AxisMarks { value in
                     AxisGridLine()
-                    AxisValueLabel { if let c = value.as(Double.self) { Text("\(Int(c))°") } }
+                    AxisValueLabel { if let c = value.as(Double.self) { Text(Temperature.deg(c)) } }
                 }
             }
             .chartYScale(domain: yDomain(hours))
@@ -212,8 +212,8 @@ struct WeatherView: View {
                         VStack(spacing: 4) {
                             Text(h.date.formatted(hourStyle)).font(.caption2)
                             WeatherSymbol(name: h.symbolName)
-                            Text("\(Int(h.temperatureC.rounded()))°").font(.caption.weight(.semibold))
-                            Text("\(Int(h.heatIndexC.rounded()))°")
+                            Text("\(Temperature.deg(h.temperatureC))").font(.caption.weight(.semibold))
+                            Text("\(Temperature.deg(h.heatIndexC))")
                                 .font(.caption2.weight(.bold))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 4)
@@ -261,24 +261,24 @@ struct WeatherView: View {
                     }
                     .frame(width: 34)
 
-                    Text("\(Int(day.lowC.rounded()))°").font(.subheadline).foregroundStyle(.secondary).frame(width: 30, alignment: .trailing)
+                    Text("\(Temperature.deg(day.lowC))").font(.subheadline).foregroundStyle(.secondary).frame(width: 30, alignment: .trailing)
                     TempRangeBar(low: day.lowC, high: day.highC, minimum: lowest, maximum: highest)
-                    Text("\(Int(day.highC.rounded()))°").font(.subheadline.weight(.semibold)).frame(width: 30, alignment: .leading)
+                    Text("\(Temperature.deg(day.highC))").font(.subheadline.weight(.semibold)).frame(width: 30, alignment: .leading)
 
-                    Text("\(Int(day.maxHeatIndexC.rounded()))°")
+                    Text("\(Temperature.deg(day.maxHeatIndexC))")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(.white)
                         .frame(width: 38)
                         .padding(.vertical, 3)
                         .background(day.heatLevel.color, in: RoundedRectangle(cornerRadius: 6))
-                        .accessibilityLabel("Heat index up to \(Int(day.maxHeatIndexC.rounded())) degrees, \(day.heatLevel.title)")
+                        .accessibilityLabel("Heat index up to \(Temperature.f(day.maxHeatIndexC)) degrees, \(day.heatLevel.title)")
                 }
                 if index < w.days.count - 1 { Divider() }
             }
             HStack(spacing: 6) {
                 Text("Last column: peak heat index.").font(.caption2).foregroundStyle(.secondary)
                 Spacer()
-                Text("°C").font(.caption2).foregroundStyle(.secondary)
+                Text("°F").font(.caption2).foregroundStyle(.secondary)
             }
         }
         .card()
@@ -304,7 +304,7 @@ struct WeatherView: View {
     }
 }
 
-/// "Heat index 41°C · 106°F  DANGER"
+/// "Heat index 106°F  DANGER"
 struct HeatIndexBadge: View {
     let heatIndexC: Double
     var label = "Heat index"

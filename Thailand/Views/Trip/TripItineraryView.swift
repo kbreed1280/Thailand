@@ -594,12 +594,12 @@ private struct DayHeader: View {
             if let date = day.date, let trip = day.trip, let w = forecast.day(date, in: trip) {
                 HStack(spacing: 5) {
                     Image(systemName: w.symbolName).symbolRenderingMode(.multicolor)
-                    Text("\(Int(w.highC.rounded()))°").font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
+                    Text("\(Temperature.deg(w.highC))").font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
                 }
                 .padding(.horizontal, 9).padding(.vertical, 5)
                 .background(w.heatLevel.color.opacity(0.14), in: Capsule())
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("High \(Int(w.highC.rounded())) degrees, feels like \(Int(w.maxHeatIndexC.rounded())), \(w.heatLevel.title)")
+                .accessibilityLabel("High \(Temperature.f(w.highC)) degrees, feels like \(Temperature.f(w.maxHeatIndexC)), \(w.heatLevel.title)")
             }
             Menu {
                 Button("Add a stop", systemImage: "plus", action: onAdd)

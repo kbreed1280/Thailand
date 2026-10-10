@@ -357,16 +357,17 @@ enum WMOCode {
 }
 
 enum Temperature {
-    /// "34°C · 93°F"
-    static func both(_ celsius: Double) -> String {
-        let fahrenheit = celsius * 9 / 5 + 32
-        return "\(Int(celsius.rounded()))°C · \(Int(fahrenheit.rounded()))°F"
-    }
+    /// Whole degrees Fahrenheit (weather is fetched in °C and shown in °F).
+    static func f(_ celsius: Double) -> Int { Int((celsius * 9 / 5 + 32).rounded()) }
 
-    /// "34° / 93°F"
-    static func short(_ celsius: Double) -> String {
-        "\(Int(celsius.rounded()))° / \(Int((celsius * 9 / 5 + 32).rounded()))°F"
-    }
+    /// "93°"
+    static func deg(_ celsius: Double) -> String { "\(f(celsius))°" }
+
+    /// "93°F"
+    static func both(_ celsius: Double) -> String { "\(f(celsius))°F" }
+
+    /// "93°F"
+    static func short(_ celsius: Double) -> String { "\(f(celsius))°F" }
 }
 
 /// Cities you can check weather for before you get there (all on Thailand time).

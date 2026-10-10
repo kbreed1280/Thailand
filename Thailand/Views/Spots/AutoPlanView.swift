@@ -147,7 +147,7 @@ struct AutoPlanView: View {
                     Text(day.date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))
                     Spacer()
                     if let w = forecast.day(day.date, in: trip) {
-                        Label("\(Int(w.highC.rounded()))°", systemImage: w.symbolName)
+                        Label("\(Temperature.deg(w.highC))", systemImage: w.symbolName)
                             .foregroundStyle(w.heatLevel.color)
                     }
                 }

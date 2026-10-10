@@ -9,8 +9,12 @@ import Foundation
 /// post, never your notes, photos or trip). Others see "trending nearby" places that several
 /// people saved, and a tip only when several independent sources agree on it.
 ///
-/// CloudKit setup (Console → Schema): record type `CommunityTip`; add Queryable indexes on
-/// `cell`, `installID` and `recordName`, then Deploy Schema Changes to Production before a TestFlight build.
+/// Moderation (App Store guideline 1.2): text is filtered for objectionable words, anyone can
+/// report a place (hidden for everyone after `reportThreshold` independent reports, and at once for
+/// the reporter) or block the people behind it.
+///
+/// CloudKit setup (Console → Schema): record types `CommunityTip` and `CommunityReport`; add Queryable
+/// indexes on `cell`, `installID` and `recordName`, then Deploy Schema Changes to Production before a TestFlight build.
 struct CommunityTip: Equatable {
     var placeKey: String
     var name: String
@@ -44,6 +48,8 @@ struct CommunityPlace: Identifiable, Equatable {
     /// Creators and contributors to credit.
     let credits: [String]
     let sourceURLs: [String]
+    /// Who contributed (anonymous per-install ids), for blocking.
+    var installIDs: [String] = []
     var id: String { placeKey }
 
     static func == (a: CommunityPlace, b: CommunityPlace) -> Bool { a.placeKey == b.placeKey && a.sourceCount == b.sourceCount }
@@ -101,7 +107,8 @@ enum CommunityAggregator {
             return CommunityPlace(placeKey: key, name: first.name, coordinate: first.coordinate,
                                   category: SpotCategory(rawValue: first.category) ?? .explore, city: first.city,
                                   sourceCount: bySource.count, agreedOrders: agreed, agreedTip: tip, credits: credits,
-                                  sourceURLs: Array(Set(group.map(\.sourceURL).filter { !$0.isEmpty })).sorted())
+                                  sourceURLs: Array(Set(group.map(\.sourceURL).filter { !$0.isEmpty })).sorted(),
+                                  installIDs: Array(Set(group.map(\.installID).filter { !$0.isEmpty })).sorted())
         }
     }
 
@@ -109,6 +116,55 @@ enum CommunityAggregator {
         aggregate(tips)
             .filter { $0.sourceCount >= agreement && AutoPlanner.distance($0.coordinate, center) <= radius }
             .sorted { $0.sourceCount != $1.sourceCount ? $0.sourceCount > $1.sourceCount : $0.name < $1.name }
+    }
+}
+
+/// Keeps objectionable words out of shared tips (checked when sharing and when showing).
+enum ContentFilter {
+    private static let blocked: [String] = [
+        "fuck", "shit", "bitch", "cunt", "dick", "pussy", "cock", "whore", "slut", "bastard", "asshole",
+        "nigger", "nigga", "faggot", "fag", "retard", "chink", "spic", "kike", "tranny",
+        "porn", "nude", "nudes", "escort", "hooker", "rape", "kill yourself", "kys",
+    ]
+
+    /// True when the text has none of the blocked words (whole words, any case).
+    static func isClean(_ text: String) -> Bool {
+        let lower = text.lowercased()
+        guard !lower.isEmpty else { return true }
+        let words = Set(lower.split { !$0.isLetter && $0 != "'" }.map(String.init))
+        return !blocked.contains { term in term.contains(" ") ? lower.contains(term) : words.contains(term) }
+    }
+
+    static func isClean(_ tip: CommunityTip) -> Bool {
+        [tip.name, tip.recommendation, tip.whatToOrder, tip.contributor].allSatisfy(isClean)
+    }
+}
+
+/// Places you hid and people you blocked (kept on this phone).
+enum CommunityModeration {
+    static let blockedKey = "communityBlockedInstalls"
+    static let hiddenKey = "communityHiddenPlaces"
+    static let termsKey = "communityTermsAccepted"
+
+    static var blocked: Set<String> {
+        get { Set(UserDefaults.standard.stringArray(forKey: blockedKey) ?? []) }
+        set { UserDefaults.standard.set(Array(newValue), forKey: blockedKey) }
+    }
+
+    static var hidden: Set<String> {
+        get { Set(UserDefaults.standard.stringArray(forKey: hiddenKey) ?? []) }
+        set { UserDefaults.standard.set(Array(newValue), forKey: hiddenKey) }
+    }
+
+    /// Drops tips from blocked people, hidden or widely reported places, and objectionable text.
+    static func visible(_ tips: [CommunityTip], reported: Set<String> = []) -> [CommunityTip] {
+        let blocked = blocked, hidden = hidden
+        return tips.filter { !blocked.contains($0.installID) && !hidden.contains($0.placeKey) && !reported.contains($0.placeKey) && ContentFilter.isClean($0) }
+    }
+
+    /// Places reported by at least `threshold` different people.
+    static func widelyReported(_ reports: [(placeKey: String, reporter: String)], threshold: Int) -> Set<String> {
+        Set(Dictionary(grouping: reports, by: \.placeKey).filter { Set($0.value.map(\.reporter)).count >= threshold }.keys)
     }
 }
 
@@ -120,6 +176,16 @@ final class CommunityService: ObservableObject {
     static let showUsernameKey = "communityShowUsername"
     private static let installIDKey = "communityInstallID"
     static let recordType = "CommunityTip"
+    static let reportRecordType = "CommunityReport"
+    /// Independent reports that hide a place for everyone until it's reviewed.
+    static let reportThreshold = 3
+
+    enum ReportReason: String, CaseIterable, Identifiable {
+        case offensive = "Offensive or inappropriate"
+        case spam = "Spam or misleading"
+        case wrongPlace = "Wrong or closed place"
+        var id: String { rawValue }
+    }
 
     static var isEnabled: Bool { UserDefaults.standard.bool(forKey: enabledKey) }
 
@@ -172,13 +238,15 @@ final class CommunityService: ObservableObject {
         let showName = UserDefaults.standard.bool(forKey: showUsernameKey)
         let username = UserDefaults.standard.string(forKey: AppSettings.usernameKey) ?? ""
         let contributor = showName && !username.isEmpty ? "@\(username)" : ""
+        func clean(_ text: String?) -> String { ContentFilter.isClean(text ?? "") ? text ?? "" : "" }
         func tip(_ scoop: SpotScoop?) -> CommunityTip {
             CommunityTip(placeKey: key, name: spot.displayName, latitude: c.latitude, longitude: c.longitude,
                          category: spot.category.rawValue, city: spot.city ?? "",
-                         recommendation: scoop?.recommendation ?? "", whatToOrder: scoop?.whatToOrder ?? "",
+                         recommendation: clean(scoop?.recommendation), whatToOrder: clean(scoop?.whatToOrder),
                          sourceURL: scoop?.source?.urlString ?? "", creator: scoop?.source?.creator ?? "",
                          contributor: contributor, installID: installID)
         }
+        guard ContentFilter.isClean(spot.displayName) else { return [] }
         let scoops = spot.sortedScoops
         return scoops.isEmpty ? [tip(nil)] : scoops.map(tip)
     }
@@ -222,12 +290,75 @@ final class CommunityService: ObservableObject {
         do {
             let (results, _) = try await database.records(matching: CKQuery(recordType: Self.recordType, predicate: predicate), resultsLimit: 400)
             lastError = nil
-            return results.compactMap { try? $0.1.get() }.compactMap(Self.tip)
+            let tips = results.compactMap { try? $0.1.get() }.compactMap(Self.tip)
+            return CommunityModeration.visible(tips, reported: await widelyReported(near: center))
         } catch {
             lastError = error.localizedDescription
             return []
         }
     }
+
+    private func widelyReported(near center: CLLocationCoordinate2D) async -> Set<String> {
+        let predicate = NSPredicate(format: "cell IN %@", CommunityAggregator.cells(around: center))
+        guard let (results, _) = try? await database.records(matching: CKQuery(recordType: Self.reportRecordType, predicate: predicate), resultsLimit: 400) else { return [] }
+        let reports = results.compactMap { try? $0.1.get() }.compactMap { r -> (placeKey: String, reporter: String)? in
+            guard let key = r["placeKey"] as? String, let who = r["reporterID"] as? String else { return nil }
+            return (key, who)
+        }
+        return CommunityModeration.widelyReported(reports, threshold: Self.reportThreshold)
+    }
+
+    // MARK: Moderation
+
+    /// Reports a place for review and hides it for you right away.
+    func report(_ place: CommunityPlace, reason: ReportReason) async {
+        CommunityModeration.hidden.insert(place.placeKey)
+        let digest = SHA256.hash(data: Data("\(place.placeKey)|\(Self.installID)".utf8))
+        let name = "report-" + digest.prefix(16).map { String(format: "%02x", $0) }.joined()
+        let r = CKRecord(recordType: Self.reportRecordType, recordID: CKRecord.ID(recordName: name))
+        r["placeKey"] = place.placeKey
+        r["name"] = place.name
+        r["cell"] = CommunityAggregator.cell(place.coordinate)
+        r["reason"] = reason.rawValue
+        r["reporterID"] = Self.installID
+        r["reportedInstallIDs"] = place.installIDs.joined(separator: ",")
+        do {
+            _ = try await database.modifyRecords(saving: [r], deleting: [], savePolicy: .allKeys)
+            lastError = nil
+        } catch {
+            lastError = error.localizedDescription
+        }
+    }
+
+    /// Hides everything from the people who shared this place.
+    func block(contributorsOf place: CommunityPlace) {
+        CommunityModeration.blocked.formUnion(place.installIDs.filter { $0 != Self.installID })
+        CommunityModeration.hidden.insert(place.placeKey)
+    }
+
+    func hide(_ place: CommunityPlace) {
+        CommunityModeration.hidden.insert(place.placeKey)
+    }
+
+    #if DEBUG
+    /// Debug-only (with `-initCloudKitSchema YES`): saves and deletes one tip and one report so both
+    /// record types exist in the Development schema.
+    func seedSchema() async {
+        let tip = record(CommunityTip(placeKey: "schema", name: "Schema", latitude: 0, longitude: 0, category: "", city: "",
+                                      recommendation: "", whatToOrder: "", sourceURL: "", creator: "", contributor: "", installID: "schema"))
+        let report = CKRecord(recordType: Self.reportRecordType, recordID: CKRecord.ID(recordName: "report-schema"))
+        for (k, v) in ["placeKey": "schema", "name": "Schema", "cell": "0:0", "reason": "schema", "reporterID": "schema", "reportedInstallIDs": ""] {
+            report[k] = v
+        }
+        do {
+            _ = try await database.modifyRecords(saving: [tip, report], deleting: [], savePolicy: .allKeys)
+            _ = try await database.modifyRecords(saving: [], deleting: [tip.recordID, report.recordID])
+            NSLog("CLOUDKIT community schema seeded")
+        } catch {
+            NSLog("CLOUDKIT community schema failed: %@", String(describing: error))
+        }
+    }
+    #endif
 
     private func record(_ t: CommunityTip) -> CKRecord {
         let digest = SHA256.hash(data: Data("\(t.placeKey)|\(t.sourceURL)|\(t.installID)".utf8))

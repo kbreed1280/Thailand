@@ -12,6 +12,9 @@ struct ProfileSheet: View {
     @AppStorage(DayReminders.enabledKey) private var dayReminders = true
     @AppStorage(CommunityService.enabledKey) private var community = false
     @AppStorage(CommunityService.showUsernameKey) private var showUsername = false
+    @AppStorage(CommunityModeration.termsKey) private var acceptedTerms = false
+    @State private var showingGuidelines = false
+    @State private var blockedCount = CommunityModeration.blocked.count + CommunityModeration.hidden.count
     @Environment(\.managedObjectContext) private var context
     @State private var photoItem: PhotosPickerItem?
     @State private var showingPaywall = false
@@ -77,6 +80,12 @@ struct ProfileSheet: View {
                 Section {
                     Toggle("Share my spots with the community", isOn: $community)
                         .onChange(of: community) { _, on in
+                            // Sharing starts only after you agree to the community guidelines.
+                            if on && !acceptedTerms {
+                                community = false
+                                showingGuidelines = true
+                                return
+                            }
                             Task {
                                 if on { await CommunityService.shared.shareAll(in: context) }
                                 else { await CommunityService.shared.withdrawAll() }
@@ -84,10 +93,26 @@ struct ProfileSheet: View {
                         }
                     Toggle("Show my @username on tips", isOn: $showUsername)
                         .disabled(!community || username.isEmpty)
+                    if blockedCount > 0 {
+                        Button("Unblock people and unhide places (\(blockedCount))", systemImage: "arrow.uturn.backward") {
+                            CommunityModeration.blocked = []
+                            CommunityModeration.hidden = []
+                            blockedCount = 0
+                        }
+                    }
                 } header: {
                     Text("Privacy")
                 } footer: {
-                    Text("Off by default. When on, places you confirm are shared anonymously with other travelers: the place, the inside scoop and a link to the original post. Your notes, photos, trips and lists stay private. Turning it off removes what you shared.")
+                    Text("Off by default. When on, places you confirm are shared anonymously with other travelers: the place, the inside scoop and a link to the original post. Your notes, photos, trips and lists stay private. Turning it off removes what you shared. Use ⋯ on any community tip to report it or block who shared it.")
+                }
+                .alert("Community Guidelines", isPresented: $showingGuidelines) {
+                    Button("I Agree") {
+                        acceptedTerms = true
+                        community = true
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("Share only real places and honest tips. No offensive, hateful, sexual or harassing content, spam or ads. There's no tolerance for abusive content: tips can be reported, objectionable ones are removed within 24 hours, and people who post them are blocked.")
                 }
                 Section {
                     Link(destination: URL(string: "https://kbreed1280.github.io/Thailand/support.html")!) {

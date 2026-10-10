@@ -14,6 +14,11 @@ struct ThailandApp: App {
                     if let trip = SpotSaver.currentTrip(in: persistence.viewContext) { ExchangeRateStore.shared.useTrip(trip) }
                     CalendarSyncService.shared.startObserving(persistence.viewContext)
                     CommunityService.shared.startObserving(persistence.viewContext)
+                    #if DEBUG
+                    if persistence.isCloudEnabled, UserDefaults.standard.bool(forKey: "initCloudKitSchema") {
+                        Task { await CommunityService.shared.seedSchema() }
+                    }
+                    #endif
                     await Subscription.shared.start()
                     await IdentityService.refreshDisplayName()
                 }

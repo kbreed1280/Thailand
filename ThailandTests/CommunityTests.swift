@@ -49,6 +49,43 @@ final class CommunityTests: XCTestCase {
         XCTAssertTrue(CommunityAggregator.cells(around: c).contains(CommunityAggregator.cell(.init(latitude: 13.79, longitude: 100.54))))
         XCTAssertEqual(CommunityAggregator.cells(around: c).count, 9)
     }
+
+    // MARK: Moderation
+
+    func testContentFilterBlocksWholeWordsOnly() {
+        XCTAssertTrue(ContentFilter.isClean("Order the crab omelette"))
+        XCTAssertTrue(ContentFilter.isClean("Great cocktails in Scunthorpe"))
+        XCTAssertFalse(ContentFilter.isClean("this place is SHIT"))
+        XCTAssertFalse(ContentFilter.isClean("kill yourself"))
+    }
+
+    func testBlockedHiddenAndObjectionableTipsAreDropped() {
+        let saved = (CommunityModeration.blocked, CommunityModeration.hidden)
+        defer { CommunityModeration.blocked = saved.0; CommunityModeration.hidden = saved.1 }
+        CommunityModeration.blocked = ["troll"]
+        CommunityModeration.hidden = ["apple:hidden"]
+        let tips = [
+            tip(source: "a", install: "friend"),
+            tip(source: "b", install: "troll"),
+            tip("apple:hidden", source: "c"),
+            tip(source: "d", rec: "fuck this"),
+            tip("apple:reported", source: "e"),
+        ]
+        let visible = CommunityModeration.visible(tips, reported: ["apple:reported"])
+        XCTAssertEqual(visible.map(\.sourceURL), ["a"])
+    }
+
+    func testPlaceHiddenOnlyAfterEnoughDifferentReporters() {
+        let reports = [("a", "p1"), ("a", "p1"), ("a", "p2"), ("b", "p1"), ("b", "p2"), ("b", "p3")]
+            .map { (placeKey: $0.0, reporter: $0.1) }
+        XCTAssertEqual(CommunityModeration.widelyReported(reports, threshold: 3), ["b"])
+    }
+
+    func testAggregateKeepsContributorsForBlocking() {
+        let place = CommunityAggregator.aggregate([tip(source: "a", install: "x"), tip(source: "b", install: "y")]).first
+        XCTAssertEqual(place?.installIDs, ["x", "y"])
+    }
+
 }
 
 final class ImportQuotaTests: XCTestCase {

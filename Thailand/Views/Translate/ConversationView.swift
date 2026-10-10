@@ -2,15 +2,15 @@ import SwiftUI
 import Translation
 
 /// Split-screen conversation. The top half is upside-down so the person across from you reads
-/// Thai and talks in Thai; you read English and talk in English on the bottom half.
+/// the trip's language and talks in it; you read English and talk in English on the bottom half.
 struct ConversationView: View {
     @StateObject private var transcriber = SpeechTranscriber()
     @StateObject private var speaker = Speaker.shared
     @State private var translator = TranslatorModel()
 
     /// Last thing each side should read (already in their language).
-    @State private var thaiSideText = "กดปุ่มไมค์ค้างไว้แล้วพูดภาษาไทย"
-    @State private var englishSideText = "Hold the mic and speak English. Your partner holds theirs to reply in Thai."
+    @State private var thaiSideText = LocalLanguage.isThai ? "กดปุ่มไมค์ค้างไว้แล้วพูดภาษาไทย" : "🎤 Hold the mic to speak \(LocalLanguage.name)"
+    @State private var englishSideText = "Hold the mic and speak English. Your partner holds theirs to reply in \(LocalLanguage.name)."
     @State private var speakingSide: TranslationDirection?
     @State private var deniedPermission: PermissionKind?
     @State private var voiceError: String?
@@ -21,7 +21,7 @@ struct ConversationView: View {
                 text: thaiSideText,
                 caption: speakingSide == .thaiToEnglish && transcriber.isListening ? transcriber.transcript : nil,
                 isListening: transcriber.isListening && speakingSide == .thaiToEnglish,
-                micLabel: "กดค้างเพื่อพูด",
+                micLabel: LocalLanguage.isThai ? "กดค้างเพื่อพูด" : "🎤 \(LocalLanguage.name)",
                 direction: .thaiToEnglish,
                 tint: Theme.lagoon
             )
@@ -45,7 +45,7 @@ struct ConversationView: View {
             guard !output.isEmpty, let side = speakingSide else { return }
             if side == .englishToThai {
                 thaiSideText = output
-                speaker.speak(output, languageCode: "th")
+                speaker.speak(output, languageCode: LocalLanguage.code)
             } else {
                 englishSideText = output
                 speaker.speak(output, languageCode: "en")

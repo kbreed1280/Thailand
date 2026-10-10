@@ -16,7 +16,7 @@ enum TextExtractor {
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = true
             let supported = (try? request.supportedRecognitionLanguages()) ?? []
-            request.recognitionLanguages = ["en-US", "th-TH"].filter { supported.contains($0) }
+            request.recognitionLanguages = Array(Set(["en-US", "th-TH", LocalLanguage.speechLocale(LocalLanguage.code)])).filter { supported.contains($0) }
             let handler = VNImageRequestHandler(cgImage: cgImage, orientation: cgOrientation(image.imageOrientation))
             do {
                 try handler.perform([request])

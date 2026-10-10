@@ -122,7 +122,7 @@ struct SpotDetailView: View {
         .mapItemDetailSheet(item: $placeCard, displaysMap: false)
         .sheet(isPresented: $editing) { NavigationStack { SpotEditor(spot: spot) } }
         .sheet(isPresented: $fixing) {
-            SpotPlaceSearchSheet(title: "Find the right place", initialQuery: spot.displayName, cityHint: spot.city) { item in
+            SpotPlaceSearchSheet(title: "Find the right place", initialQuery: spot.displayName, cityHint: spot.city, trip: spot.trip) { item in
                 spot.apply(item)
                 save()
             }
@@ -217,7 +217,7 @@ struct SpotEditor: View {
         }
         .onAppear { name = spot.name ?? ""; category = spot.category }
         .sheet(isPresented: $searching) {
-            SpotPlaceSearchSheet(title: "Find on map", initialQuery: name, cityHint: spot.city) { item in
+            SpotPlaceSearchSheet(title: "Find on map", initialQuery: name, cityHint: spot.city, trip: spot.trip) { item in
                 spot.apply(item)
                 name = spot.name ?? name
                 category = spot.category
@@ -231,6 +231,7 @@ struct SpotPlaceSearchSheet: View {
     let title: String
     var initialQuery: String = ""
     let cityHint: String?
+    var trip: Trip? = nil
     let onPick: (MKMapItem) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -242,10 +243,12 @@ struct SpotPlaceSearchSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                Section {
-                    Picker("Near", selection: $area) {
-                        Text("All of Thailand").tag(TravelArea?.none)
-                        ForEach(TravelArea.all) { Text($0.name).tag(Optional($0)) }
+                if trip?.isThailand ?? true {
+                    Section {
+                        Picker("Near", selection: $area) {
+                            Text("All of Thailand").tag(TravelArea?.none)
+                            ForEach(TravelArea.all) { Text($0.name).tag(Optional($0)) }
+                        }
                     }
                 }
                 Section {
@@ -273,7 +276,7 @@ struct SpotPlaceSearchSheet: View {
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
             .task {
                 query = initialQuery
-                area = cityHint.flatMap { TravelArea.detect(in: $0) }
+                area = (trip?.isThailand ?? true) ? cityHint.flatMap { TravelArea.detect(in: $0) } : nil
                 if !query.isEmpty { await search() }
             }
             .onChange(of: area) { _, _ in Task { await search() } }
@@ -284,6 +287,6 @@ struct SpotPlaceSearchSheet: View {
         guard !query.trimmingCharacters(in: .whitespaces).isEmpty else { return }
         searching = true
         defer { searching = false }
-        results = await AppleMapsLocator().search(query, near: area)
+        results = await (trip.map(AppleMapsLocator.init(trip:)) ?? AppleMapsLocator()).search(query, near: area)
     }
 }

@@ -11,6 +11,7 @@ struct ThailandApp: App {
             RootTabView()
                 .environment(\.managedObjectContext, persistence.viewContext)
                 .task {
+                    if let trip = SpotSaver.currentTrip(in: persistence.viewContext) { ExchangeRateStore.shared.useTrip(trip) }
                     CalendarSyncService.shared.startObserving(persistence.viewContext)
                     CommunityService.shared.startObserving(persistence.viewContext)
                     await Subscription.shared.start()

@@ -9,14 +9,15 @@ enum TranslationDirection: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     static let english = Locale.Language(identifier: "en")
-    static let thai = Locale.Language(identifier: "th")
+    /// The trip's language (the cases say "Thai" but it follows the trip: Japanese for Japan…).
+    static var thai: Locale.Language { Locale.Language(identifier: LocalLanguage.code) }
 
     var source: Locale.Language { self == .englishToThai ? Self.english : Self.thai }
     var target: Locale.Language { self == .englishToThai ? Self.thai : Self.english }
-    var sourceCode: String { self == .englishToThai ? "en" : "th" }
-    var targetCode: String { self == .englishToThai ? "th" : "en" }
-    var sourceName: String { self == .englishToThai ? "English" : "Thai" }
-    var targetName: String { self == .englishToThai ? "Thai" : "English" }
+    var sourceCode: String { self == .englishToThai ? "en" : LocalLanguage.code }
+    var targetCode: String { self == .englishToThai ? LocalLanguage.code : "en" }
+    var sourceName: String { self == .englishToThai ? "English" : LocalLanguage.name }
+    var targetName: String { self == .englishToThai ? LocalLanguage.name : "English" }
     var reversed: TranslationDirection { self == .englishToThai ? .thaiToEnglish : .englishToThai }
     var isFromThai: Bool { self == .thaiToEnglish }
 }
@@ -74,13 +75,13 @@ final class TranslatorModel {
             output = response.targetText
             onTranslated?(text, response.targetText, direction)
         } catch {
-            errorMessage = "Couldn't translate. If you're offline, download Thai first (banner at the top of this screen)."
+            errorMessage = "Couldn't translate. If you're offline, download \(LocalLanguage.name) first (banner at the top of this screen)."
         }
         isTranslating = false
     }
 }
 
-/// Checks whether English ⇄ Thai is downloaded for offline use, and downloads it.
+/// Checks whether English ⇄ the trip's language is downloaded for offline use, and downloads it.
 @MainActor
 @Observable
 final class LanguagePackModel {

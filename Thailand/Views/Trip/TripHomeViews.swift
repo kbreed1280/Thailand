@@ -256,12 +256,15 @@ struct TravelToolsGrid: View {
 
     private var tools: [(TripTool, String, String, Color)] {
         let packing = trip.sortedPackingItems
+        let money = trip.localCurrency
+        // Bangkok's train map and Thailand's arrival card only make sense on Thailand trips.
+        let thailand = trip.isThailand
         return [
-            (.converter, "Baht", "bahtsign.circle.fill", Theme.lagoon),
+            (.converter, CurrencyContext.shortName(money), Destinations.symbolName(forCurrency: money), Theme.lagoon),
             (.weather, "Weather", "sun.max.fill", Theme.mango),
-            (.transit, "BTS & MRT", "tram.fill", Color(hex: "#4C7BD9")),
+        ] + (thailand ? [(.transit, "BTS & MRT", "tram.fill", Color(hex: "#4C7BD9"))] : []) + [
             (.flights, "Flights", "airplane", Theme.ink),
-            (.tdac, "TDAC", "person.text.rectangle.fill", Theme.coral),
+        ] + (thailand ? [(.tdac, "TDAC", "person.text.rectangle.fill", Theme.coral)] : []) + [
             (.packing, packing.isEmpty ? "Packing" : "Packing \(packing.filter(\.isDone).count)/\(packing.count)", "suitcase.rolling.fill", Color(hex: "#8E6BD8")),
             (.documents, "Documents", "lock.doc.fill", Color(hex: "#5F6B7A")),
             (.offline, "Offline", "arrow.down.circle.fill", Color(hex: "#2F9E5B")),

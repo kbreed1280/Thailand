@@ -64,7 +64,7 @@ struct PackingListView: View {
                         Button {
                             addSuggestions()
                         } label: {
-                            Label(items.isEmpty ? "Add Thailand essentials (\(missing) items)" : "Add the \(missing) missing Thailand essentials",
+                            Label(items.isEmpty ? "Add travel essentials (\(missing) items)" : "Add the \(missing) missing travel essentials",
                                   systemImage: "sparkles")
                         }
                     }

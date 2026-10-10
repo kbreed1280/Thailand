@@ -6,22 +6,22 @@ final class CurrencyMathTests: XCTestCase {
     // MARK: Conversion
 
     func testTHBToUSD() {
-        XCTAssertEqual(CurrencyMath.convert(350, from: .thb, thbPerUSD: 35), 10, accuracy: 0.0001)
+        XCTAssertEqual(CurrencyMath.convert(350, from: .local, localPerHome: 35), 10, accuracy: 0.0001)
     }
 
     func testUSDToTHB() {
-        XCTAssertEqual(CurrencyMath.convert(12.5, from: .usd, thbPerUSD: 33.2), 415, accuracy: 0.0001)
+        XCTAssertEqual(CurrencyMath.convert(12.5, from: .home, localPerHome: 33.2), 415, accuracy: 0.0001)
     }
 
     func testRoundTripIsStable() {
         let rate = 32.87
-        let usd = CurrencyMath.convert(1_000, from: .thb, thbPerUSD: rate)
-        XCTAssertEqual(CurrencyMath.convert(usd, from: .usd, thbPerUSD: rate), 1_000, accuracy: 0.0001)
+        let usd = CurrencyMath.convert(1_000, from: .local, localPerHome: rate)
+        XCTAssertEqual(CurrencyMath.convert(usd, from: .home, localPerHome: rate), 1_000, accuracy: 0.0001)
     }
 
     func testZeroOrNegativeRateReturnsZero() {
-        XCTAssertEqual(CurrencyMath.convert(100, from: .thb, thbPerUSD: 0), 0)
-        XCTAssertEqual(CurrencyMath.convert(100, from: .usd, thbPerUSD: -3), 0)
+        XCTAssertEqual(CurrencyMath.convert(100, from: .local, localPerHome: 0), 0)
+        XCTAssertEqual(CurrencyMath.convert(100, from: .home, localPerHome: -3), 0)
     }
 
     // MARK: Parsing
@@ -53,9 +53,9 @@ final class CurrencyMathTests: XCTestCase {
     // MARK: Formatting
 
     func testFormatting() {
-        XCTAssertTrue(CurrencyMath.format(1_000, .thb).hasPrefix("฿"))
-        XCTAssertFalse(CurrencyMath.format(1_000, .thb).contains("."))
-        XCTAssertTrue(CurrencyMath.format(3.4, .usd).hasSuffix("40"))
+        XCTAssertTrue(CurrencyMath.format(1_000, .local).hasPrefix("฿"))
+        XCTAssertFalse(CurrencyMath.format(1_000, .local).contains("."))
+        XCTAssertTrue(CurrencyMath.format(3.4, .home).hasSuffix("40"))
         XCTAssertEqual(CurrencyMath.roundedToCents(1.005 + 0.0001), 1.01)
     }
 

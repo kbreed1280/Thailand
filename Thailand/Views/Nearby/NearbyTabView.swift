@@ -25,6 +25,7 @@ struct NearbyTabView: View {
     @State private var savedMessage: String?
     @State private var showingEmergency = false
     @State private var showingSevenEleven = false
+    @State private var showingExchange = false
     @State private var essential: Essential?
 
     /// Apple Weather, falling back to Open-Meteo if WeatherKit isn't available.
@@ -52,10 +53,12 @@ struct NearbyTabView: View {
                 }
                 ToolbarItem(placement: .primaryAction) {
                     CurrentTripReader { trip in
-                        NavigationLink {
-                            BangkokTransitView(trip: trip)
-                        } label: {
-                            Label("BTS & MRT", systemImage: "tram.fill")
+                        if trip?.isThailand ?? true {
+                            NavigationLink {
+                                BangkokTransitView(trip: trip)
+                            } label: {
+                                Label("BTS & MRT", systemImage: "tram.fill")
+                            }
                         }
                     }
                 }
@@ -72,6 +75,7 @@ struct NearbyTabView: View {
                 }
             }
             .fullScreenCover(isPresented: $showingSevenEleven) { SevenElevenMapView() }
+            .sheet(isPresented: $showingExchange) { MoneyExchangeView() }
             .sheet(item: $selectedLandmark) { landmark in
                 LandmarkDetailSheet(landmark: landmark, userLocation: location.lastLocation) { target in
                     selectedLandmark = nil
@@ -117,7 +121,11 @@ struct NearbyTabView: View {
 
                 if let here = lastLoadedAt {
                     EssentialsRow { picked in
-                        if picked == .sevenEleven { showingSevenEleven = true } else { essential = picked }
+                        switch picked {
+                        case .sevenEleven where CurrentDestination.isThailand: showingSevenEleven = true
+                        case .exchange: showingExchange = true
+                        default: essential = picked
+                        }
                     }
                     .sheet(item: $essential) { e in
                         EssentialsSheet(essential: e, here: here) { walkTarget = $0 }

@@ -120,7 +120,9 @@ final class ImportPipeline: ObservableObject {
         }
         let (places, used) = await PlaceExtractor.extract(from: content, using: extractor())
         source.extractor = used
-        let area = TravelArea.detect(in: content.text)
+        let area = trip.isThailand ? TravelArea.detect(in: content.text) : nil
+        // Search around this trip's destination (tests inject their own locator).
+        let locator = locator is AppleMapsLocator ? AppleMapsLocator(trip: trip) : locator
 
         // 3. Pin each on Apple Maps and save as a draft (or attach to a spot you already have).
         set(source, .locating, context)

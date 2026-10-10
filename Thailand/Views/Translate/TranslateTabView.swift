@@ -23,7 +23,8 @@ struct TranslateTabView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 Picker("Mode", selection: $mode) {
-                    ForEach(Mode.allCases) { Text($0.rawValue).tag($0) }
+                    // The phrasebook is Thai; other destinations get Translate and Talk.
+                    ForEach(Mode.allCases.filter { LocalLanguage.isThai || $0 != .phrasebook }) { Text($0.rawValue).tag($0) }
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
@@ -66,12 +67,14 @@ struct TranslateTabView: View {
                     } label: {
                         Label("History & Favorites", systemImage: "clock.arrow.circlepath")
                     }
+                    if LocalLanguage.isThai {
                     Menu {
                         Picker("Polite ending", selection: $particle) {
                             ForEach(PoliteParticle.allCases) { Text($0.label).tag($0) }
                         }
                     } label: {
                         Label("Polite Ending", systemImage: "person.crop.circle")
+                    }
                     }
                 }
             }
@@ -84,7 +87,7 @@ struct TranslateTabView: View {
                     showingPackPrompt = true
                 }
             }
-            .alert("Download Thai for Offline Use?", isPresented: $showingPackPrompt) {
+            .alert("Download \(LocalLanguage.name) for Offline Use?", isPresented: $showingPackPrompt) {
                 Button("Download") { languagePack.download() }
                 Button("Later", role: .cancel) {}
             } message: {
@@ -106,7 +109,7 @@ private struct LanguagePackBanner: View {
                 .font(.title2)
                 .foregroundStyle(Theme.lagoon)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Thai isn't downloaded yet").font(.subheadline.weight(.semibold))
+                Text("\(LocalLanguage.name) isn't downloaded yet").font(.subheadline.weight(.semibold))
                 Text("Download it to translate without internet.").font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
@@ -126,9 +129,10 @@ enum ThaiText {
         text.unicodeScalars.contains { (0x0E00...0x0E7F).contains($0.value) }
     }
 
-    /// Rough Latin-letter pronunciation of Thai text (system transliteration; tones not marked).
+    /// Rough Latin-letter pronunciation of non-Latin text (Thai, Japanese, Greek…; system
+    /// transliteration, tones not marked).
     static func romanize(_ text: String) -> String? {
-        guard containsThai(text) else { return nil }
+        guard text.unicodeScalars.contains(where: { $0.properties.isAlphabetic && $0.value > 0x24F }) else { return nil }
         return text.applyingTransform(.toLatin, reverse: false)
     }
 }

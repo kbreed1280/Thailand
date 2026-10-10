@@ -124,18 +124,18 @@ struct TodaysPlanIntent: AppIntent {
 }
 
 struct ConvertBahtIntent: AppIntent {
-    static let title: LocalizedStringResource = "Convert Baht to Dollars"
-    static let description = IntentDescription("Converts Thai baht to US dollars with the last saved rate.")
+    static let title: LocalizedStringResource = "Convert Trip Money"
+    static let description = IntentDescription("Converts your trip's local money to your home currency with the last saved rate.")
 
-    @Parameter(title: "Baht", requestValueDialog: "How many baht?")
+    @Parameter(title: "Amount", requestValueDialog: "How much in local money?")
     var amount: Double
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let rates = ExchangeRateStore.shared
         await rates.refreshIfNeeded()
-        let dollars = CurrencyMath.convert(amount, from: .thb, thbPerUSD: rates.thbPerUSD)
-        return .result(dialog: "\(CurrencyMath.format(amount, .thb)) is about \(CurrencyMath.format(dollars, .usd)).")
+        let dollars = CurrencyMath.convert(amount, from: .local, localPerHome: rates.localPerHome)
+        return .result(dialog: "\(CurrencyMath.format(amount, .local)) is about \(CurrencyMath.format(dollars, .home)).")
     }
 }
 
@@ -188,11 +188,11 @@ struct ThailandShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: ConvertBahtIntent(),
             phrases: [
-                "Convert baht in \(.applicationName)",
+                "Convert money in \(.applicationName)",
                 "How much is it in dollars in \(.applicationName)"
             ],
-            shortTitle: "Convert Baht",
-            systemImageName: "bahtsign.circle"
+            shortTitle: "Convert Money",
+            systemImageName: "banknote"
         )
         AppShortcut(
             intent: StartWalkingRouteIntent(),

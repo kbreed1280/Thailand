@@ -23,12 +23,18 @@ enum PlaceLookup {
         span: MKCoordinateSpan(latitudeDelta: 16, longitudeDelta: 12)
     )
 
+    /// Where searches lean when nothing closer is known: the selected trip's destination, or Thailand.
+    static var defaultRegion: MKCoordinateRegion {
+        guard !CurrentDestination.isThailand, let center = CurrentDestination.coordinate else { return thailandRegion }
+        return MKCoordinateRegion(center: center, latitudinalMeters: 300_000, longitudinalMeters: 300_000)
+    }
+
     static func search(_ query: String, near region: MKCoordinateRegion? = nil) async -> [PlaceResult] {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return [] }
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = trimmed
-        request.region = region ?? thailandRegion
+        request.region = region ?? defaultRegion
         request.resultTypes = [.pointOfInterest, .address]
         guard let response = try? await MKLocalSearch(request: request).start() else { return [] }
         return response.mapItems.map(result(from:))

@@ -313,9 +313,9 @@ struct DocumentRow: View {
         expense.placeInSameStore(as: trip)
         expense.uuid = UUID()
         expense.title = document.displayTitle
-        expense.amountTHB = amount.currency == .thb
+        expense.amountTHB = amount.currency == .local
             ? amount.value
-            : CurrencyMath.convert(amount.value, from: .usd, thbPerUSD: ExchangeRateStore.shared.thbPerUSD)
+            : CurrencyMath.convert(amount.value, from: .home, localPerHome: ExchangeRateStore.shared.localPerHome)
         expense.paidBy = AppSettings.displayName
         expense.split = .equal
         expense.category = { () -> ExpenseCategory in

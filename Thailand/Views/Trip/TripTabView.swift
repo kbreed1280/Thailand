@@ -24,7 +24,7 @@ struct TripTabView: View {
                 } else {
                     EmptyStateView(
                         systemImage: "sun.horizon.fill",
-                        title: "Plan Your Thailand Trip",
+                        title: "Plan Your Next Trip",
                         message: "Create a trip with your travel dates. Every day gets its own plan, and the wish list holds places you haven't scheduled yet."
                     ) {
                         Button {

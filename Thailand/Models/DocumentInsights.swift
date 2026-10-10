@@ -82,15 +82,36 @@ struct DocumentInsights: Equatable {
         return .place
     }
 
-    /// "฿1,200", "THB 450.50", "1,200 baht", "1200 บาท", "$35.99", "USD 20".
+    /// Amounts in the trip's money and your home money: "฿1,200", "THB 450.50", "1,200 baht", "¥3,000",
+    /// "JPY 3000", "€12.50", "$35.99", "USD 20".
     static func amounts(in text: String) -> [Amount] {
         let number = #"([0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]{1,2})?|[0-9]+(?:\.[0-9]{1,2})?)"#
-        let patterns: [(String, Currency)] = [
-            (#"(?:฿|THB)\s?"# + number, .thb),
-            (number + #"\s?(?:THB|baht|Baht|BAHT|บาท)"#, .thb),
-            (#"(?:US\$|\$|USD)\s?"# + number, .usd),
-            (number + #"\s?USD"#, .usd)
+        func prefixes(_ code: String) -> [String] {
+            var p = [NSRegularExpression.escapedPattern(for: code)]
+            let symbol = CurrencyContext.symbol(code).trimmingCharacters(in: .whitespaces)
+            if symbol != code { p.append(NSRegularExpression.escapedPattern(for: symbol)) }
+            if code == "USD" { p.insert(#"US\$"#, at: 0) }
+            if code == "THB" { p.append("฿") }
+            return p
+        }
+        func suffixes(_ code: String) -> [String] {
+            var s = [NSRegularExpression.escapedPattern(for: code)]
+            if code == "THB" { s += ["baht", "Baht", "BAHT", "บาท"] }
+            if code == "JPY" { s += ["yen", "円"] }
+            if code == "EUR" { s += ["euro", "euros", "EUR"] }
+            return s
+        }
+        let local = CurrencyContext.localCode, home = CurrencyContext.homeCode
+        var patterns: [(String, Currency)] = [
+            ("(?:" + prefixes(local).joined(separator: "|") + #")\s?"# + number, .local),
+            (number + #"\s?(?:"# + suffixes(local).joined(separator: "|") + ")", .local),
         ]
+        if home != local {
+            patterns += [
+                ("(?:" + prefixes(home).joined(separator: "|") + #")\s?"# + number, .home),
+                (number + #"\s?(?:"# + suffixes(home).joined(separator: "|") + ")", .home),
+            ]
+        }
         var found: [Amount] = []
         for (pattern, currency) in patterns {
             guard let regex = try? NSRegularExpression(pattern: pattern) else { continue }

@@ -76,7 +76,7 @@ struct SpotsView: View {
             .fullScreenCover(isPresented: $showingSidequest) { SidequestView(trip: trip) }
             .sheet(isPresented: $showingTrending) { TrendingNearbyView(trip: trip) }
             .sheet(isPresented: $showingManualAdd) {
-                SpotPlaceSearchSheet(title: "Add a spot", cityHint: nil) { item in addManual(item) }
+                SpotPlaceSearchSheet(title: "Add a spot", cityHint: nil, trip: trip) { item in addManual(item) }
             }
             .alert("New Folder", isPresented: $newFolderPrompt) {
                 TextField("e.g. Tips, Scams to avoid", text: $newFolderName)

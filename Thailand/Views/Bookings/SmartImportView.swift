@@ -325,9 +325,9 @@ struct SmartImportView: View {
                 expense.placeInSameStore(as: trip)
                 expense.uuid = UUID()
                 expense.title = trimmedTitle
-                expense.amountTHB = entry.amount.currency == .thb
+                expense.amountTHB = entry.amount.currency == .local
                     ? entry.amount.value
-                    : CurrencyMath.convert(entry.amount.value, from: .usd, thbPerUSD: ExchangeRateStore.shared.thbPerUSD)
+                    : CurrencyMath.convert(entry.amount.value, from: .home, localPerHome: ExchangeRateStore.shared.localPerHome)
                 expense.paidBy = AppSettings.displayName
                 expense.split = .equal
                 expense.category = category == .hotel ? .lodging : (category == .transport ? .transport : .activities)

@@ -60,7 +60,7 @@ enum PlaceSearchService {
         if let center {
             request.region = MKCoordinateRegion(center: center, latitudinalMeters: 20_000, longitudinalMeters: 20_000)
         } else {
-            request.region = PlaceLookup.thailandRegion
+            request.region = PlaceLookup.defaultRegion
         }
         guard let response = try? await MKLocalSearch(request: request).start() else { return [] }
         return response.mapItems.map(PlaceLookup.result(from:))
@@ -71,7 +71,7 @@ enum PlaceSearchService {
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = placeName
         request.resultTypes = .address
-        request.region = PlaceLookup.thailandRegion
+        request.region = PlaceLookup.defaultRegion
         guard let item = try? await MKLocalSearch(request: request).start().mapItems.first else { return nil }
         return (item.name ?? placeName, item.placemark.coordinate)
     }

@@ -11,7 +11,7 @@ enum TripModel {
 
     /// Model versions shipped so far, rebuilt by the migration tests.
     enum Version: Int, Comparable {
-        case step12 = 12, step13 = 13, current = 14
+        case step12 = 12, step13 = 13, step14 = 14, current = 15
         static func < (a: Version, b: Version) -> Bool { a.rawValue < b.rawValue }
     }
 
@@ -29,10 +29,17 @@ enum TripModel {
             attribute("createdAt", .dateAttributeType),
             attribute("colorHex", .stringAttributeType, default: ""),
             attribute("coverPhotoID", .UUIDAttributeType)
-        ] + (version >= .current ? [
+        ] + (version >= .step14 ? [
             // Step 14: trip planner.
             attribute("destination", .stringAttributeType, default: ""),
             attribute("vibe", .stringAttributeType, default: "")
+        ] : []) + (version >= .current ? [
+            // Step 15: any destination. ISO 4217 code of the trip's local money ("" = Thai baht, for trips made before).
+            attribute("currencyCode", .stringAttributeType, default: ""),
+            // Where the trip is ("" = Thailand, for trips made before): ISO country code + destination point.
+            attribute("countryCode", .stringAttributeType, default: ""),
+            attribute("destinationLatitude", .doubleAttributeType, default: 0),
+            attribute("destinationLongitude", .doubleAttributeType, default: 0)
         ] : []))
 
         let day = entity("Day", [
@@ -190,7 +197,7 @@ enum TripModel {
             attribute("sortIndex", .integer64AttributeType, default: 0),
             attribute("createdAt", .dateAttributeType)
         ])
-        if version >= .current {
+        if version >= .step14 {
             relate(trip, "collections", toMany: collection, inverse: "trip", deleteRule: .cascadeDeleteRule)
             relate(collection, "entries", toMany: entry, inverse: "collection", deleteRule: .cascadeDeleteRule)
             relate(spot, "collectionEntries", toMany: entry, inverse: "spot", deleteRule: .cascadeDeleteRule)
@@ -214,7 +221,7 @@ enum TripModel {
         let model = NSManagedObjectModel()
         model.entities = [trip, day, item, photo, visit, expense, packing, savedPlace, document]
             + (includeSpots ? [spot, spotSource, spotScoop] : [])
-            + (version >= .current ? [collection, entry] : [])
+            + (version >= .step14 ? [collection, entry] : [])
         return model
     }
 

@@ -255,7 +255,7 @@ struct DocumentVaultView: View {
     static func warningText(_ warning: VaultDocument.ExpiryWarning) -> String {
         switch warning {
         case .expired: "Expired"
-        case .passportUnderSixMonths(let date): "Expires \(date.formatted(date: .abbreviated, time: .omitted)). Thailand requires 6 months' validity on arrival."
+        case .passportUnderSixMonths(let date): "Expires \(date.formatted(date: .abbreviated, time: .omitted)). Many countries require 6 months' validity on arrival."
         case .soon(let date): "Expires soon (\(date.formatted(date: .abbreviated, time: .omitted)))"
         }
     }
@@ -310,7 +310,7 @@ private struct DocumentDetailsForm: View {
                     }
                 } footer: {
                     if category == .passport {
-                        Text("Thailand requires your passport to be valid for at least 6 months after you arrive. The app warns you if it isn't.")
+                        Text("Many countries (Thailand included) require your passport to be valid for at least 6 months after you arrive. The app warns you if it isn't.")
                     }
                 }
             }

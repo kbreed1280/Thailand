@@ -8,20 +8,32 @@ protocol PlaceLocating {
 }
 
 struct AppleMapsLocator: PlaceLocating {
-    /// Thailand, for searches with no known area.
-    static let thailand = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 13.0, longitude: 101.0),
-                                             span: MKCoordinateSpan(latitudeDelta: 13, longitudeDelta: 8))
+    /// Where the trip is: searches start around here and stay in this country.
+    var center: CLLocationCoordinate2D = Destinations.bangkok
+    var country: String = "TH"
 
-    /// Businesses/landmarks only, in a tight region: Apple Maps' Thailand results are excellent
-    /// city-scoped but poor (roads, districts abroad) when searching the whole country with addresses.
+    init() {}
+
+    init(trip: Trip) {
+        center = trip.destinationCoordinate ?? Destinations.bangkok
+        country = trip.country
+    }
+
+    /// The destination's whole country, roughly (filtered to the country code afterwards).
+    private var countryRegion: MKCoordinateRegion {
+        MKCoordinateRegion(center: center, latitudinalMeters: 1_400_000, longitudinalMeters: 1_400_000)
+    }
+
+    /// Businesses/landmarks only, in a tight region: Apple Maps results are excellent city-scoped
+    /// but poor (roads, districts abroad) when searching a whole country.
     func search(_ query: String, near area: TravelArea?) async -> [MKMapItem] {
         if let area {
             return await search(query, in: MKCoordinateRegion(center: area.coordinate, latitudinalMeters: 40_000, longitudinalMeters: 40_000))
         }
-        // No area: try Bangkok (most posts), then the whole country.
-        let bangkok = await search(query, in: MKCoordinateRegion(center: TravelArea.all[0].coordinate, latitudinalMeters: 50_000, longitudinalMeters: 50_000))
-        if !bangkok.isEmpty { return bangkok }
-        return await search(query, in: Self.thailand)
+        // No area named: around the trip's destination first, then the whole country.
+        let nearby = await search(query, in: MKCoordinateRegion(center: center, latitudinalMeters: 50_000, longitudinalMeters: 50_000))
+        if !nearby.isEmpty { return nearby }
+        return await search(query, in: countryRegion)
     }
 
     func search(_ query: String, in region: MKCoordinateRegion, types: MKLocalSearch.ResultType = .pointOfInterest) async -> [MKMapItem] {
@@ -30,8 +42,11 @@ struct AppleMapsLocator: PlaceLocating {
         request.resultTypes = types
         request.region = region
         let items = (try? await MKLocalSearch(request: request).start().mapItems) ?? []
-        // Stay in/near Thailand (a whole-country search can drift abroad).
-        return items.filter { Self.thailand.contains($0.placemark.coordinate) }
+        // Stay in the trip's country (a wide search can drift abroad).
+        return items.filter { item in
+            guard let code = item.placemark.isoCountryCode else { return countryRegion.contains(item.placemark.coordinate) }
+            return code.uppercased() == country
+        }
     }
 
     func locate(_ place: ExtractedPlace, near area: TravelArea?, declared: CLLocationCoordinate2D?) async -> MKMapItem? {
@@ -40,8 +55,9 @@ struct AppleMapsLocator: PlaceLocating {
             let nearby = await search(place.name, in: MKCoordinateRegion(center: declared, latitudinalMeters: 3_000, longitudinalMeters: 3_000))
             if let hit = Self.bestMatch(for: place.name, in: nearby, near: declared, strict: place.isGuess) { return hit }
         }
-        // 2. The city the post or the place mentions, then Bangkok / all of Thailand.
-        let region = TravelArea.detect(in: place.cityHint) ?? area
+        // 2. The city the post or the place mentions (Thai cities are known by name), then the trip's
+        //    destination / the whole country.
+        let region = (country == "TH" ? TravelArea.detect(in: place.cityHint) : nil) ?? area
         var results = await search(place.name, near: region)
         if Self.bestMatch(for: place.name, in: results, near: declared ?? region?.coordinate, strict: place.isGuess) == nil, region != nil {
             results += await search(place.name, near: nil)

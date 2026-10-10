@@ -1,27 +1,27 @@
 import Foundation
 
+/// The two currencies the app converts between: the selected trip's local money and your own.
 enum Currency: String, CaseIterable, Identifiable {
-    case thb = "THB"
-    case usd = "USD"
+    case local
+    case home
 
     var id: String { rawValue }
-    var symbol: String { self == .thb ? "฿" : "$" }
-    var name: String { self == .thb ? "Thai baht" : "US dollar" }
-    var flag: String { self == .thb ? "🇹🇭" : "🇺🇸" }
-    var other: Currency { self == .thb ? .usd : .thb }
+    /// ISO code right now ("JPY", "USD").
+    var code: String { self == .local ? CurrencyContext.localCode : CurrencyContext.homeCode }
+    var symbol: String { CurrencyContext.symbol(code) }
+    var name: String { CurrencyContext.name(code) }
+    var flag: String { CurrencyContext.flag(code) }
+    var other: Currency { self == .local ? .home : .local }
 }
 
 /// Pure money math, unit-tested in `CurrencyMathTests`.
 enum CurrencyMath {
-    /// Fallback when no rate has ever been downloaded (roughly the 2025–26 range).
-    static let fallbackTHBPerUSD = 33.0
-
-    /// Converts between THB and USD given how many baht one dollar buys.
-    static func convert(_ amount: Double, from source: Currency, thbPerUSD rate: Double) -> Double {
+    /// Converts between local and home money given how much local money one unit of home money buys.
+    static func convert(_ amount: Double, from source: Currency, localPerHome rate: Double) -> Double {
         guard rate > 0, amount.isFinite else { return 0 }
         switch source {
-        case .thb: return amount / rate
-        case .usd: return amount * rate
+        case .local: return amount / rate
+        case .home: return amount * rate
         }
     }
 
@@ -30,6 +30,8 @@ enum CurrencyMath {
         var cleaned = text
             .replacingOccurrences(of: "฿", with: "")
             .replacingOccurrences(of: "$", with: "")
+            .replacingOccurrences(of: CurrencyContext.symbol(CurrencyContext.localCode).trimmingCharacters(in: .whitespaces), with: "")
+            .replacingOccurrences(of: CurrencyContext.symbol(CurrencyContext.homeCode).trimmingCharacters(in: .whitespaces), with: "")
             .replacingOccurrences(of: " ", with: "")
             .replacingOccurrences(of: "\u{00A0}", with: "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -58,9 +60,11 @@ enum CurrencyMath {
         return value
     }
 
-    /// "฿1,234" / "฿12.50" / "$3.41". Baht shows decimals only when there are satang.
+    /// "฿1,234" / "¥1,500" / "€12.50" / "$3.41". Local money shows decimals only when there are some
+    /// (and never for currencies without them, like yen).
     static func format(_ amount: Double, _ currency: Currency) -> String {
-        let fraction = currency == .usd ? 2...2 : (amount.rounded() == amount ? 0...0 : 2...2)
+        let digits = CurrencyContext.fractionDigits(currency.code)
+        let fraction: ClosedRange<Int> = digits == 0 ? 0...0 : currency == .home ? digits...digits : (amount.rounded() == amount ? 0...0 : digits...digits)
         let number = amount.formatted(.number.precision(.fractionLength(fraction)).grouping(.automatic))
         return "\(currency.symbol)\(number)"
     }

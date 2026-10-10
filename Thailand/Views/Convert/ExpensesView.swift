@@ -49,7 +49,7 @@ struct ExpensesView: View {
                             Text("\(transfer.from) owes \(transfer.to)")
                             Spacer()
                             VStack(alignment: .trailing) {
-                                Text(CurrencyMath.format(transfer.amount, .thb)).bold().monospacedDigit()
+                                Text(CurrencyMath.format(transfer.amount, .local)).bold().monospacedDigit()
                                 Text(usd(transfer.amount)).font(.caption).foregroundStyle(.secondary)
                             }
                         }
@@ -108,7 +108,7 @@ struct ExpensesView: View {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Total spent").font(.caption).foregroundStyle(.secondary)
-                    Text(CurrencyMath.format(total, .thb)).font(.largeTitle.bold().monospacedDigit())
+                    Text(CurrencyMath.format(total, .local)).font(.largeTitle.bold().monospacedDigit())
                 }
                 Spacer()
                 Text(usd(total))
@@ -120,7 +120,7 @@ struct ExpensesView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
                         ForEach(byCategory, id: \.key) { entry in
-                            StatPill(systemImage: entry.key.systemImage, text: CurrencyMath.format(entry.value, .thb), tint: Theme.mango)
+                            StatPill(systemImage: entry.key.systemImage, text: CurrencyMath.format(entry.value, .local), tint: Theme.mango)
                         }
                     }
                 }
@@ -132,7 +132,7 @@ struct ExpensesView: View {
                     HStack {
                         Text(name)
                         Spacer()
-                        Text(value >= 0 ? "gets back \(CurrencyMath.format(value, .thb))" : "owes \(CurrencyMath.format(-value, .thb))")
+                        Text(value >= 0 ? "gets back \(CurrencyMath.format(value, .local))" : "owes \(CurrencyMath.format(-value, .local))")
                             .foregroundStyle(value >= 0 ? .green : .orange)
                             .monospacedDigit()
                     }
@@ -148,7 +148,7 @@ struct ExpensesView: View {
     }
 
     private func usd(_ thb: Double) -> String {
-        CurrencyMath.format(CurrencyMath.convert(thb, from: .thb, thbPerUSD: rates.thbPerUSD), .usd)
+        CurrencyMath.format(CurrencyMath.convert(thb, from: .local, localPerHome: rates.localPerHome), .home)
     }
 }
 
@@ -176,7 +176,7 @@ private struct ExpenseRow: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                Text(CurrencyMath.format(expense.amountTHB, .thb)).font(.body.weight(.semibold).monospacedDigit())
+                Text(CurrencyMath.format(expense.amountTHB, .local)).font(.body.weight(.semibold).monospacedDigit())
                 Text(usd).font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -212,12 +212,12 @@ struct ExpenseEditorView: View {
                 Section {
                     TextField("What for? (e.g. Dinner at night market)", text: $title)
                     HStack {
-                        Text("฿").font(.title2.bold()).foregroundStyle(.secondary)
+                        Text(Currency.local.symbol).font(.title2.bold()).foregroundStyle(.secondary)
                         TextField("Amount", text: $amountText)
                             .keyboardType(.decimalPad)
                             .font(.title2.bold().monospacedDigit())
                         if let amount {
-                            Text("≈ " + CurrencyMath.format(CurrencyMath.convert(amount, from: .thb, thbPerUSD: rates.thbPerUSD), .usd))
+                            Text("≈ " + CurrencyMath.format(CurrencyMath.convert(amount, from: .local, localPerHome: rates.localPerHome), .home))
                                 .foregroundStyle(.secondary)
                                 .monospacedDigit()
                         }
@@ -296,7 +296,7 @@ struct ExpenseEditorView: View {
             return
         }
         title = expense.title ?? ""
-        amountText = String(CurrencyMath.format(expense.amountTHB, .thb).dropFirst())
+        amountText = String(CurrencyMath.format(expense.amountTHB, .local).dropFirst())
         paidBy = expense.paidBy ?? ""
         split = expense.split
         payerShare = expense.payerShare

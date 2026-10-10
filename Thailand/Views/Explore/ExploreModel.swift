@@ -44,7 +44,7 @@ final class ExploreModel {
         } else if knownPlaces.contains(where: { $0.localizedCaseInsensitiveCompare(trimmed) == .orderedSame }) {
             found = await searchAround(placeNamed: trimmed)
         } else {
-            originName = location == nil ? "Thailand" : "you"
+            originName = location == nil ? (Locale.current.localizedString(forRegionCode: CurrentDestination.country) ?? "your destination") : "you"
             found = await PlaceSearchService.search(trimmed, segment: segment, around: location?.coordinate)
             if found.isEmpty {
                 found = await searchAround(placeNamed: trimmed)

@@ -16,6 +16,12 @@ struct TripFormView: View {
     @State private var colorHex = ""
     @State private var coverPhotoID: UUID?
     @State private var didLoad = false
+    @State private var destination = ""
+    @State private var found: Destinations.Found?
+    @State private var currency = ""
+    /// The currency the form last filled in by itself; a different value means you picked it.
+    @State private var autoCurrency = ""
+    @State private var looking = false
 
     static let colors = ["#F4821C", "#E8505B", "#1BA39C", "#2D88D9", "#6C5CE7", "#D63384", "#2F9E44", "#8D6E63"]
 
@@ -27,8 +33,31 @@ struct TripFormView: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Trip name (e.g. Thailand 2026)", text: $name)
+                    TextField("Trip name (e.g. Japan 2027)", text: $name)
                         .font(.headline)
+                }
+                Section {
+                    HStack {
+                        TextField("Where to? (e.g. Tokyo, Lisbon, Bali)", text: $destination)
+                            .textInputAutocapitalization(.words)
+                            .autocorrectionDisabled()
+                        if looking { ProgressView() }
+                    }
+                    if let found {
+                        LabeledContent("Country") {
+                            Text("\(CurrencyContext.flag(found.country)) \(Locale.current.localizedString(forRegionCode: found.country) ?? found.country)")
+                        }
+                    }
+                    Picker("Local currency", selection: $currency) {
+                        if currency.isEmpty { Text("Choose…").tag("") }
+                        ForEach(CurrencyContext.allCodes, id: \.self) { code in
+                            Text("\(code) · \(CurrencyContext.name(code))").tag(code)
+                        }
+                    }
+                } header: {
+                    Text("Destination")
+                } footer: {
+                    Text("Sets the money converter, weather, place search and translator for this trip. The currency fills in automatically.")
                 }
                 Section {
                     DatePicker("Arrive", selection: $start, displayedComponents: .date)
@@ -103,6 +132,21 @@ struct TripFormView: View {
                         .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
+            .task(id: destination) {
+                // Look the destination up a moment after typing stops.
+                guard didLoad else { return }
+                try? await Task.sleep(for: .milliseconds(700))
+                guard !Task.isCancelled, destination.trimmingCharacters(in: .whitespaces).count >= 2 else { return }
+                looking = true
+                defer { looking = false }
+                if let hit = await Destinations.find(destination) {
+                    found = hit
+                    if currency.isEmpty || currency == autoCurrency, let code = Destinations.currency(forCountry: hit.country) {
+                        currency = code
+                        autoCurrency = code
+                    }
+                }
+            }
             .onChange(of: start) { _, newStart in
                 if end < newStart { end = newStart }
             }
@@ -116,6 +160,12 @@ struct TripFormView: View {
                     notes = trip.notes ?? ""
                     colorHex = trip.colorHex ?? ""
                     coverPhotoID = trip.coverPhotoID
+                    destination = trip.destination ?? ""
+                    currency = trip.localCurrency
+                    if (trip.currencyCode ?? "").isEmpty { autoCurrency = currency }
+                    if let c = trip.destinationCoordinate {
+                        found = Destinations.Found(name: trip.destination ?? "", country: trip.country, latitude: c.latitude, longitude: c.longitude)
+                    }
                 }
             }
         }
@@ -129,14 +179,28 @@ struct TripFormView: View {
             trip.notes = notes
             trip.colorHex = colorHex
             trip.coverPhotoID = coverPhotoID
+            applyDestination(to: trip)
             store.setDates(of: trip, start: start, end: end)
             store.save()
+            ExchangeRateStore.shared.useTrip(trip)
         } else {
             let newTrip = store.createTrip(name: trimmed, start: start, end: end, notes: notes)
             newTrip.colorHex = colorHex
+            applyDestination(to: newTrip)
             store.save()
+            ExchangeRateStore.shared.useTrip(newTrip)
             onCreate?(newTrip)
         }
         dismiss()
+    }
+
+    private func applyDestination(to trip: Trip) {
+        trip.destination = destination.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let found {
+            trip.countryCode = found.country
+            trip.destinationLatitude = found.latitude
+            trip.destinationLongitude = found.longitude
+        }
+        if !currency.isEmpty { trip.currencyCode = currency }
     }
 }

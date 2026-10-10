@@ -107,7 +107,7 @@ struct SpotsHomeView: View {
                          discoverKinds: visibleKinds,
                          onPickLandmark: { landmark = $0 },
                          applePlaces: applePlaces,
-                         topPicks: topPicks)
+                         topPicks: trip.isThailand ? topPicks : [])
     }
 
     private var core: some View {
@@ -176,7 +176,7 @@ struct SpotsHomeView: View {
         view
         .sheet(isPresented: $showingInbox) { SpotsView(trip: trip) }
         .sheet(item: $landmark) { landmarkSheet($0) }
-        .task { topPicks = await TopPicks.bangkokLocated() }
+        .task { if trip.isThailand { topPicks = await TopPicks.bangkokLocated() } }
         .fullScreenCover(item: $walkTarget) { target in
             WalkingRouteView(destinationName: target.name, coordinate: target.coordinate)
         }
@@ -190,7 +190,7 @@ struct SpotsHomeView: View {
         }
         .sheet(isPresented: $showingCollections) { SpotCollectionsHome(trip: trip) }
         .sheet(isPresented: $showingSearchPlace) {
-            SpotPlaceSearchSheet(title: "Add a spot", cityHint: nil) { addManual($0) }
+            SpotPlaceSearchSheet(title: "Add a spot", cityHint: nil, trip: trip) { addManual($0) }
         }
         .sheet(isPresented: $showingAutoPlan) { AutoPlanView(trip: trip) }
         .sheet(isPresented: $showingTrending) { TrendingNearbyView(trip: trip) }
@@ -310,13 +310,15 @@ struct SpotsHomeView: View {
             Button("Auto-plan days", systemImage: "wand.and.sparkles") { showingAutoPlan = true }
             Button("Sidequest", systemImage: "dice") { showingSidequest = true }
             Button("Trending nearby", systemImage: "flame") { showingTrending = true }
-            Divider()
-            Button("Add Bangkok Top Picks (\(TopPicks.bangkok.count))", systemImage: "star.circle") {
-                Task {
-                    let picks = await TopPicks.bangkokLocated()
-                    topPicks = picks
-                    let list = TopPicks.saveAll(picks, to: trip, context: context)
-                    addedTopPicks = list.spots.count
+            if trip.isThailand {
+                Divider()
+                Button("Add Bangkok Top Picks (\(TopPicks.bangkok.count))", systemImage: "star.circle") {
+                    Task {
+                        let picks = await TopPicks.bangkokLocated()
+                        topPicks = picks
+                        let list = TopPicks.saveAll(picks, to: trip, context: context)
+                        addedTopPicks = list.spots.count
+                    }
                 }
             }
         } label: {
@@ -549,7 +551,7 @@ struct SpotCard: View {
                     .frame(width: 84, height: 84)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("🇹🇭 \(spot.city?.isEmpty == false ? spot.city! : "Thailand")")
+                    Text("\(CurrencyContext.flag(spot.trip?.country ?? "TH")) \(spot.city?.isEmpty == false ? spot.city! : spot.trip?.countryName ?? "Thailand")")
                         .font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
                     Text(spot.displayName)
                         .font(.title3.weight(.medium)).foregroundStyle(.primary).lineLimit(2)

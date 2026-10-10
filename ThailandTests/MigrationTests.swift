@@ -10,6 +10,9 @@ final class MigrationTests: XCTestCase {
     /// Your phone has the step-13 store (spots) already.
     func testStep13StoreMigratesToCollections() throws { try migrate(from: .step13) }
 
+    /// Step 14 (lists, planner) → 15 (trip currency).
+    func testStep14StoreMigratesToTripCurrency() throws { try migrate(from: .step14) }
+
     private func migrate(from version: TripModel.Version) throws {
         let url = FileManager.default.temporaryDirectory.appending(path: "migration-\(UUID().uuidString).sqlite")
         defer { try? FileManager.default.removeItem(at: url) }
@@ -53,6 +56,8 @@ final class MigrationTests: XCTestCase {
         collection.setValue("Bangkok eats", forKey: "name")
         collection.setValue(trips.first, forKey: "trip")
         trips.first?.setValue("chill", forKey: "vibe")
+        XCTAssertEqual(trips.first?.value(forKey: "currencyCode") as? String, "", "old trips start unset (= Thai baht)")
+        trips.first?.setValue("JPY", forKey: "currencyCode")
         XCTAssertNoThrow(try container.viewContext.save())
     }
 }

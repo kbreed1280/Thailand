@@ -40,7 +40,7 @@ final class SpeechTranscriber: NSObject, ObservableObject {
 
     func start(languageCode: String) throws {
         stopEngine()
-        let locale = Locale(identifier: languageCode == "th" ? "th-TH" : "en-US")
+        let locale = Locale(identifier: LocalLanguage.speechLocale(languageCode))
         guard let recognizer = SFSpeechRecognizer(locale: locale), recognizer.isAvailable else {
             throw TranscriberError.unavailable
         }

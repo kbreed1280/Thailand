@@ -32,7 +32,7 @@ final class Speaker: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
         try? AVAudioSession.sharedInstance().setActive(true)
 
         let utterance = AVSpeechUtterance(string: trimmed)
-        utterance.voice = AVSpeechSynthesisVoice(language: languageCode == "th" ? "th-TH" : "en-US")
+        utterance.voice = AVSpeechSynthesisVoice(language: LocalLanguage.speechLocale(languageCode))
         utterance.rate = slow ? AVSpeechUtteranceDefaultSpeechRate * 0.75 : AVSpeechUtteranceDefaultSpeechRate * 0.92
         speakingText = trimmed
         synthesizer.speak(utterance)

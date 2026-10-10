@@ -13,7 +13,8 @@ enum ScreenshotText {
                 continuation.resume(returning: lines.joined(separator: "\n"))
             }
             request.recognitionLevel = .accurate
-            request.recognitionLanguages = ["en-US", "th-TH"]
+            let supported = (try? request.supportedRecognitionLanguages()) ?? []
+            request.recognitionLanguages = Array(Set(["en-US", "th-TH", LocalLanguage.speechLocale(LocalLanguage.code)])).filter { supported.contains($0) }
             request.usesLanguageCorrection = true
             do {
                 try VNImageRequestHandler(cgImage: cg, orientation: .up).perform([request])

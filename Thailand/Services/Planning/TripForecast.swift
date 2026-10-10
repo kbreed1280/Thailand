@@ -12,9 +12,12 @@ final class TripForecast: ObservableObject {
     private var inFlight: Set<String> = []
     private let provider: WeatherProvider = AutomaticWeatherProvider()
 
-    /// Where the trip is: its destination if it names a known city, else the middle of your
-    /// planned and saved places, else Bangkok.
+    /// Where the trip is: the destination you picked, else a known Thai city it names, else the
+    /// middle of your planned and saved places, else Bangkok.
     static func location(for trip: Trip) -> CLLocation {
+        if trip.destinationLatitude != 0 || trip.destinationLongitude != 0 {
+            return CLLocation(latitude: trip.destinationLatitude, longitude: trip.destinationLongitude)
+        }
         let destination = (trip.destination ?? "").lowercased()
         if !destination.isEmpty, let city = WeatherPlace.cities.first(where: {
             destination.contains($0.name.lowercased().components(separatedBy: " /").first ?? $0.name.lowercased())

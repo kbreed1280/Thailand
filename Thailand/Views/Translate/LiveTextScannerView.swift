@@ -102,7 +102,7 @@ struct LiveTextScannerView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Button {
-                    let direction: TranslationDirection = ThaiText.containsThai(transcript) ? .thaiToEnglish : .englishToThai
+                    let direction: TranslationDirection = LocalLanguage.looksLocal(transcript) ? .thaiToEnglish : .englishToThai
                     translator.translate(transcript, direction: direction)
                     showingResult = true
                 } label: {

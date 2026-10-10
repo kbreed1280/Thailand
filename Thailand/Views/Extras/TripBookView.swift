@@ -18,7 +18,7 @@ struct TripBookView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    TripBookContent(stats: stats, walked: walked, walkedDays: walkedDays, thbPerUSD: rates.thbPerUSD)
+                    TripBookContent(stats: stats, walked: walked, walkedDays: walkedDays, localPerHome: rates.localPerHome)
                 }
                 .padding()
             }
@@ -57,7 +57,7 @@ struct TripBookView: View {
     }
 
     private func renderShareImage() {
-        let card = TripBookContent(stats: stats, walked: walked, walkedDays: walkedDays, thbPerUSD: rates.thbPerUSD)
+        let card = TripBookContent(stats: stats, walked: walked, walkedDays: walkedDays, localPerHome: rates.localPerHome)
             .padding(20)
             .frame(width: 400)
             .background(Color(.systemGroupedBackground))
@@ -122,7 +122,7 @@ struct TripBookContent: View {
     let stats: TripBookStats
     let walked: WalkStats
     let walkedDays: Int
-    let thbPerUSD: Double
+    let localPerHome: Double
 
     private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
@@ -156,7 +156,7 @@ struct TripBookContent: View {
                 tile(walked.steps > 0 ? walked.kilometersText : "—", walkedDays > 0 ? "walked (\(walkedDays) days)" : "walked", "figure.walk", Theme.lagoon)
                 tile(walked.steps > 0 ? walked.steps.formatted() : "—", "steps", "shoeprints.fill", Theme.lagoon)
                 tile("\(stats.photoCount)", "photos", "photo.fill", .purple)
-                tile(CurrencyMath.format(stats.spentTHB, .thb), CurrencyMath.format(CurrencyMath.convert(stats.spentTHB, from: .thb, thbPerUSD: thbPerUSD), .usd) + " spent", "bahtsign.circle.fill", Theme.coral)
+                tile(CurrencyMath.format(stats.spentTHB, .local), CurrencyMath.format(CurrencyMath.convert(stats.spentTHB, from: .local, localPerHome: localPerHome), .home) + " spent", "bahtsign.circle.fill", Theme.coral)
             }
 
             if !stats.perDay.isEmpty {

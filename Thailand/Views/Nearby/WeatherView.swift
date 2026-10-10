@@ -3,9 +3,10 @@ import CoreLocation
 import SwiftUI
 
 /// Full weather: current conditions with heat index, best walking times, a 24-hour heat
-/// chart and the 10-day forecast, for your location or any Thai city.
+/// chart and the 10-day forecast, for your location, your trip's destination or any Thai city.
 struct WeatherView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.managedObjectContext) private var context
     @ObservedObject private var location = LocationService.shared
     @ObservedObject private var network = NetworkMonitor.shared
     /// "" = my location, otherwise a WeatherPlace name.
@@ -17,6 +18,16 @@ struct WeatherView: View {
 
     private let provider: WeatherProvider = AutomaticWeatherProvider()
     private var place: WeatherPlace? { WeatherPlace.cities.first { $0.name == placeName } }
+
+    private var trip: Trip? { SpotSaver.currentTrip(in: context) }
+    /// The selected trip's destination, when it isn't Thailand (Thai trips pick from the city list).
+    private var tripPlace: (name: String, location: CLLocation)? {
+        guard let trip, !trip.isThailand, trip.destinationLatitude != 0 || trip.destinationLongitude != 0 else { return nil }
+        let name = (trip.destination ?? "").isEmpty ? trip.countryName : trip.destination!
+        return (name, CLLocation(latitude: trip.destinationLatitude, longitude: trip.destinationLongitude))
+    }
+    private var showsThaiCities: Bool { trip?.isThailand ?? true }
+    private var usingTrip: Bool { placeName == "trip" && tripPlace != nil }
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -60,13 +71,19 @@ struct WeatherView: View {
         loading = true
         defer { loading = false }
         let target: (CLLocation, TimeZone)?
-        if let place {
+        if usingTrip, let tripPlace {
+            target = (tripPlace.location, await LocalTimeZone.at(tripPlace.location))
+        } else if let place {
             target = (place.location, WeatherPlace.thailandTimeZone)
         } else if let here = await location.currentLocation() {
             target = (here, await LocalTimeZone.at(here))
         } else {
-            // No location permission: show Bangkok instead of nothing.
-            target = (WeatherPlace.cities[0].location, WeatherPlace.thailandTimeZone)
+            // No location permission: show the trip's destination (or Bangkok) instead of nothing.
+            if let tripPlace {
+                target = (tripPlace.location, await LocalTimeZone.at(tripPlace.location))
+            } else {
+                target = (WeatherPlace.cities[0].location, WeatherPlace.thailandTimeZone)
+            }
         }
         guard let (loc, tz) = target else { return }
         do {
@@ -82,17 +99,24 @@ struct WeatherView: View {
     private var placePicker: some View {
         Menu {
             Button("My location", systemImage: "location.fill") { placeName = "" }
-            Divider()
-            ForEach(WeatherPlace.cities) { city in
-                Button(city.name) { placeName = city.name }
+            if let tripPlace {
+                Button(tripPlace.name, systemImage: "airplane") { placeName = "trip" }
+            }
+            if showsThaiCities {
+                Divider()
+                ForEach(WeatherPlace.cities) { city in
+                    Button(city.name) { placeName = city.name }
+                }
             }
         } label: {
             HStack {
-                Image(systemName: place == nil ? "location.fill" : "mappin.circle.fill")
-                Text(place?.name ?? "My location").font(.headline)
+                Image(systemName: usingTrip ? "airplane" : place == nil ? "location.fill" : "mappin.circle.fill")
+                Text(usingTrip ? tripPlace!.name : place?.name ?? "My location").font(.headline)
                 Image(systemName: "chevron.down").font(.caption.weight(.bold))
                 Spacer()
-                if place != nil {
+                if usingTrip {
+                    Text("Local time").font(.caption).foregroundStyle(.secondary)
+                } else if place != nil {
                     Text("Thailand time").font(.caption).foregroundStyle(.secondary)
                 }
             }

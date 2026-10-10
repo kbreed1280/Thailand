@@ -44,8 +44,8 @@ struct ItemDetailView: View {
                 }
 
                 if item.costTHB > 0 {
-                    infoCard(title: "Cost", systemImage: "bahtsign.circle") {
-                        Text("฿\(item.costTHB.formatted(.number.precision(.fractionLength(0...2))))")
+                    infoCard(title: "Cost", systemImage: Destinations.symbolName(forCurrency: Currency.local.code)) {
+                        Text(CurrencyMath.format(item.costTHB, .local))
                             .font(.title3.weight(.semibold))
                     }
                 }

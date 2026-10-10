@@ -83,14 +83,19 @@ struct SaveToSpotsButton: View {
 // MARK: - Essentials nearby
 
 enum Essential: String, CaseIterable, Identifiable {
-    case pharmacy, atm, sevenEleven, coffee, massage, toilet
+    case pharmacy, atm, exchange, sevenEleven, coffee, massage, toilet
     var id: String { rawValue }
+
+    /// In Thailand the convenience-store button is 7-Eleven (with its own map); elsewhere it's any
+    /// convenience store.
+    private var thailand: Bool { CurrentDestination.isThailand }
 
     var title: String {
         switch self {
         case .pharmacy: "Pharmacy"
         case .atm: "ATM"
-        case .sevenEleven: "7-Eleven"
+        case .exchange: "Exchange"
+        case .sevenEleven: thailand ? "7-Eleven" : "Convenience"
         case .coffee: "Coffee"
         case .massage: "Massage"
         case .toilet: "Toilets"
@@ -101,6 +106,7 @@ enum Essential: String, CaseIterable, Identifiable {
         switch self {
         case .pharmacy: "cross.case.fill"
         case .atm: "banknote.fill"
+        case .exchange: "dollarsign.arrow.circlepath"
         case .sevenEleven: "storefront.fill"
         case .coffee: "cup.and.saucer.fill"
         case .massage: "hands.and.sparkles.fill"
@@ -112,6 +118,7 @@ enum Essential: String, CaseIterable, Identifiable {
         switch self {
         case .pharmacy: Theme.coral
         case .atm: Color(hex: "#2F9E5B")
+        case .exchange: Color(hex: "#1F8A70")
         case .sevenEleven: Theme.mango
         case .coffee: Color(hex: "#8B5A3C")
         case .massage: Color(hex: "#E0559A")
@@ -123,9 +130,10 @@ enum Essential: String, CaseIterable, Identifiable {
         switch self {
         case .pharmacy: "pharmacy"
         case .atm: "ATM"
-        case .sevenEleven: "7-Eleven"
+        case .exchange: "currency exchange"
+        case .sevenEleven: thailand ? "7-Eleven" : "convenience store"
         case .coffee: "coffee"
-        case .massage: "Thai massage"
+        case .massage: thailand ? "Thai massage" : "massage"
         case .toilet: "public toilet"
         }
     }
@@ -136,7 +144,7 @@ enum Essential: String, CaseIterable, Identifiable {
         case .atm: MKPointOfInterestFilter(including: [.atm, .bank])
         case .coffee: MKPointOfInterestFilter(including: [.cafe, .bakery])
         case .toilet: MKPointOfInterestFilter(including: [.restroom])
-        case .sevenEleven, .massage: nil
+        case .exchange, .sevenEleven, .massage: nil
         }
     }
 

@@ -62,7 +62,7 @@ struct HistoryView: View {
                 showContent = ShowModeContent(thai: record.thaiText, english: record.englishText, romanized: ThaiText.romanize(record.thaiText))
             }
             Button {
-                speaker.speak(record.thaiText, languageCode: "th")
+                speaker.speak(record.thaiText, languageCode: ThaiText.containsThai(record.thaiText) ? "th" : LocalLanguage.code)
             } label: {
                 Image(systemName: "speaker.wave.2.circle.fill")
                     .font(.title)
@@ -70,7 +70,7 @@ struct HistoryView: View {
                     .frame(minWidth: 44, minHeight: 44)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Speak in Thai")
+            .accessibilityLabel("Speak in \(LocalLanguage.name)")
         }
         .swipeActions(edge: .leading) {
             Button {

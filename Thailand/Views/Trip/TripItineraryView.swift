@@ -176,6 +176,7 @@ struct TripItineraryView: View {
             SidequestView(trip: trip)
         }
         .task(id: trip.objectID) {
+            ExchangeRateStore.shared.useTrip(trip)
             await TripForecast.shared.refresh(trip)
             await DayReminders.reschedule(for: trip)
         }
@@ -451,7 +452,9 @@ struct TripItineraryView: View {
                 .disabled(!canEdit)
             Button("Calendar", systemImage: "calendar") { showingCalendar = true }
             Button("Trip Book", systemImage: "book.pages.fill") { showingBook = true }
-            Button("Starter Ideas", systemImage: "lightbulb") { showingStarterIdeas = true }
+            if trip.isThailand {
+                Button("Starter Ideas", systemImage: "lightbulb") { showingStarterIdeas = true }
+            }
             Button("Auto-plan Days", systemImage: "wand.and.sparkles") { showingAutoPlan = true }
                 .disabled(!canEdit)
             Button("Sidequest", systemImage: "dice") { showingSidequest = true }
@@ -462,10 +465,14 @@ struct TripItineraryView: View {
             Button("Travel Documents", systemImage: "lock.doc.fill") { showingVault = true }
             Button("Flights", systemImage: "airplane") { showingFlights = true }
             Button("Weather", systemImage: "sun.max.fill") { showingWeather = true }
-            Button("Arrival Card (TDAC)", systemImage: "person.text.rectangle") { showingTDAC = true }
-            Button("Baht Converter", systemImage: "bahtsign.circle") { showingConverter = true }
+            if trip.isThailand {
+                Button("Arrival Card (TDAC)", systemImage: "person.text.rectangle") { showingTDAC = true }
+            }
+            Button("\(CurrencyContext.shortName(trip.localCurrency)) Converter", systemImage: Destinations.symbolName(forCurrency: trip.localCurrency)) { showingConverter = true }
             Button("Offline Maps", systemImage: "arrow.down.circle") { showingOffline = true }
-            Button("BTS & MRT", systemImage: "tram.fill") { showingTransit = true }
+            if trip.isThailand {
+                Button("BTS & MRT", systemImage: "tram.fill") { showingTransit = true }
+            }
         }
         Section {
             Button("New Trip", systemImage: "plus") { showingNewTrip = true }

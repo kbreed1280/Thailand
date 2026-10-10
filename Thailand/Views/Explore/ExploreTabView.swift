@@ -91,8 +91,14 @@ struct ExploreTabView: View {
         }
     }
 
+    /// The built-in guides are about Thailand; other destinations just get search results.
     @ViewBuilder
     private var guideCard: some View {
+        if CurrentDestination.isThailand { thaiGuideCard }
+    }
+
+    @ViewBuilder
+    private var thaiGuideCard: some View {
         switch model.segment {
         case .eat:
             GuideLinkCard(title: "Must-Try Thai Food", subtitle: "30 dishes with Thai script, spice level and allergens — works offline", systemImage: "fork.knife.circle.fill") {

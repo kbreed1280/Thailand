@@ -112,9 +112,9 @@ struct ItemEditorView: View {
 
                 Section("Details") {
                     HStack {
-                        Text("฿")
+                        Text(Currency.local.symbol)
                             .foregroundStyle(.secondary)
-                        TextField("Cost in baht (optional)", value: $cost, format: .number)
+                        TextField("Cost in \(Currency.local.name.lowercased()) (optional)", value: $cost, format: .number)
                             .keyboardType(.decimalPad)
                     }
                     TextField("Link (booking, website, menu…)", text: $link)

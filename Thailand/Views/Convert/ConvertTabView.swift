@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// THB ⇄ USD converter, quick amounts, rate details, tip calculator and the trip's spending.
+/// Converter between the trip's local money and your home money, quick amounts, rate details,
+/// tip calculator and the trip's spending.
 struct ConvertTabView: View {
     /// Shown as a sheet from the Trip screen: adds a Done button.
     var showsDone = false
@@ -10,12 +11,13 @@ struct ConvertTabView: View {
 
     private enum Field { case top, bottom }
 
-    @State private var topCurrency: Currency = .thb
+    @State private var topCurrency: Currency = .local
     @State private var topText = ""
     @State private var bottomText = ""
     @FocusState private var focus: Field?
     @State private var showingManualRate = false
     @State private var manualRateText = ""
+    @State private var showingExchange = false
 
     private var bottomCurrency: Currency { topCurrency.other }
 
@@ -26,10 +28,18 @@ struct ConvertTabView: View {
                     converterCard
                     quickAmounts
                     rateCard
-                    TipCard(thbPerUSD: rates.thbPerUSD)
+                    Button { showingExchange = true } label: {
+                        Label("Find money exchange near me", systemImage: "mappin.and.ellipse")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity).padding(.vertical, 14)
+                            .foregroundStyle(.white)
+                            .background(Theme.ink, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    TipCard(localPerHome: rates.localPerHome)
                     CurrentTripReader { trip in
                         if let trip {
-                            TripSpendingCard(trip: trip, thbPerUSD: rates.thbPerUSD)
+                            TripSpendingCard(trip: trip, localPerHome: rates.localPerHome)
                         }
                     }
                 }
@@ -48,12 +58,14 @@ struct ConvertTabView: View {
                 }
             }
             .task { await rates.refreshIfNeeded() }
+            .sheet(isPresented: $showingExchange) { MoneyExchangeView() }
             .refreshable { await rates.refresh() }
             .onChange(of: topText) { _, _ in if focus == .top { recalculate(from: .top) } }
             .onChange(of: bottomText) { _, _ in if focus == .bottom { recalculate(from: .bottom) } }
             .onChange(of: rates.rate) { _, _ in recalculate(from: .top) }
+            .onChange(of: rates.localCode) { _, _ in recalculate(from: .top) }
             .alert("Set Exchange Rate", isPresented: $showingManualRate) {
-                TextField("Baht per 1 US dollar", text: $manualRateText)
+                TextField("\(rates.localCode) per 1 \(rates.homeCode)", text: $manualRateText)
                     .keyboardType(.decimalPad)
                 Button("Save") {
                     if let value = CurrencyMath.parseAmount(manualRateText), value > 0 {
@@ -96,18 +108,18 @@ struct ConvertTabView: View {
 
     private var quickAmounts: some View {
         HStack(spacing: 8) {
-            ForEach([20, 50, 100, 500, 1000], id: \.self) { amount in
+            ForEach(quickAmountValues, id: \.self) { amount in
                 Button {
-                    setAmount(Double(amount), in: .thb)
+                    setAmount(Double(amount), in: .local)
                 } label: {
-                    Text("฿\(amount)")
+                    Text("\(Currency.local.symbol)\(amount.formatted())")
                         .font(.subheadline.weight(.semibold).monospacedDigit())
                         .frame(maxWidth: .infinity, minHeight: 44)
                         .background(Theme.cardBackground, in: Capsule())
                         .overlay(Capsule().strokeBorder(Theme.mango.opacity(0.35)))
                 }
                 .buttonStyle(PressableStyle())
-                .accessibilityLabel("\(amount) baht")
+                .accessibilityLabel("\(amount) \(Currency.local.name)")
             }
         }
     }
@@ -115,12 +127,12 @@ struct ConvertTabView: View {
     private var rateCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("1 USD = \(CurrencyMath.format(rates.thbPerUSD, .thb).dropFirst()) THB")
+                Text("1 \(rates.homeCode) = \(CurrencyMath.format(rates.localPerHome, .local).dropFirst(Currency.local.symbol.count)) \(rates.localCode)")
                     .font(.title3.bold().monospacedDigit())
                 Spacer()
                 if !network.isOnline { OfflineBadge() }
             }
-            Text("1 THB = $\(String(format: "%.4f", 1 / rates.thbPerUSD))")
+            Text("1 \(rates.localCode) = \(Currency.home.symbol)\(String(format: rates.localPerHome > 100 ? "%.5f" : "%.4f", 1 / rates.localPerHome))")
                 .font(.subheadline.monospacedDigit())
                 .foregroundStyle(.secondary)
 
@@ -151,7 +163,7 @@ struct ConvertTabView: View {
                 .disabled(!network.isOnline || rates.isRefreshing || rates.rate?.isManual == true)
 
                 Button {
-                    manualRateText = String(format: "%.2f", rates.thbPerUSD)
+                    manualRateText = String(format: "%.2f", rates.localPerHome)
                     showingManualRate = true
                 } label: {
                     Label("Set Rate", systemImage: "pencil")
@@ -171,6 +183,21 @@ struct ConvertTabView: View {
             .font(.subheadline.weight(.semibold))
         }
         .card()
+    }
+
+    /// Round local amounts worth roughly 1, 3, 10, 30 and 100 in home money (฿50…, ¥200…, €1…).
+    private var quickAmountValues: [Int] {
+        let rate = rates.localPerHome
+        let targets: [Double] = [1, 3, 10, 30, 100]
+        return Array(Set(targets.map { nice($0 * rate) })).filter { $0 > 0 }.sorted().prefix(5).map { $0 }
+    }
+
+    private func nice(_ value: Double) -> Int {
+        guard value >= 1 else { return 1 }
+        let magnitude = pow(10, floor(log10(value)))
+        let steps: [Double] = [1, 2, 5, 10]
+        let step = steps.min { abs($0 * magnitude - value) < abs($1 * magnitude - value) } ?? 1
+        return Int(step * magnitude)
     }
 
     // MARK: Logic
@@ -196,26 +223,26 @@ struct ConvertTabView: View {
     }
 
     private func recalculate(from field: Field) {
-        let rate = rates.thbPerUSD
+        let rate = rates.localPerHome
         switch field {
         case .top:
             guard let value = CurrencyMath.parseAmount(topText) else {
                 bottomText = ""
                 return
             }
-            bottomText = plain(CurrencyMath.convert(value, from: topCurrency, thbPerUSD: rate), bottomCurrency)
+            bottomText = plain(CurrencyMath.convert(value, from: topCurrency, localPerHome: rate), bottomCurrency)
         case .bottom:
             guard let value = CurrencyMath.parseAmount(bottomText) else {
                 topText = ""
                 return
             }
-            topText = plain(CurrencyMath.convert(value, from: bottomCurrency, thbPerUSD: rate), topCurrency)
+            topText = plain(CurrencyMath.convert(value, from: bottomCurrency, localPerHome: rate), topCurrency)
         }
     }
 
     /// Formatted number without the currency symbol (the field shows the symbol separately).
     private func plain(_ value: Double, _ currency: Currency) -> String {
-        String(CurrencyMath.format(value, currency).dropFirst())
+        String(CurrencyMath.format(value, currency).dropFirst(currency.symbol.count))
     }
 }
 
@@ -230,7 +257,7 @@ private struct CurrencyField: View {
                 .font(.largeTitle)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 0) {
-                Text(currency.rawValue)
+                Text(currency.code)
                     .font(.headline)
                 Text(currency.name)
                     .font(.caption)
@@ -260,7 +287,7 @@ private struct CurrencyField: View {
 
 /// Bill + tip % → tip and total in both currencies.
 private struct TipCard: View {
-    let thbPerUSD: Double
+    let localPerHome: Double
 
     @State private var billText = ""
     @State private var tipPercent = 10.0
@@ -273,7 +300,7 @@ private struct TipCard: View {
                 .font(.headline)
 
             HStack {
-                Text("Bill ฿")
+                Text("Bill \(Currency.local.symbol)")
                     .foregroundStyle(.secondary)
                 TextField("0", text: $billText)
                     .keyboardType(.decimalPad)
@@ -296,22 +323,24 @@ private struct TipCard: View {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Total with tip").font(.caption).foregroundStyle(.secondary)
-                        Text(CurrencyMath.format(total, .thb))
+                        Text(CurrencyMath.format(total, .local))
                             .font(.title.bold().monospacedDigit())
                     }
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
-                        Text(CurrencyMath.format(CurrencyMath.convert(total, from: .thb, thbPerUSD: thbPerUSD), .usd))
+                        Text(CurrencyMath.format(CurrencyMath.convert(total, from: .local, localPerHome: localPerHome), .home))
                             .font(.title3.weight(.semibold).monospacedDigit())
                             .foregroundStyle(Theme.lagoon)
-                        Text("Tip \(CurrencyMath.format(tip, .thb))")
+                        Text("Tip \(CurrencyMath.format(tip, .local))")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                 }
             }
 
-            Text("Tipping isn't required in Thailand. Rounding up, or about 10% at sit-down restaurants without a service charge, is appreciated.")
+            Text(CurrentDestination.isThailand
+                 ? "Tipping isn't required in Thailand. Rounding up, or about 10% at sit-down restaurants without a service charge, is appreciated."
+                 : "Tipping customs vary by country. Check whether a service charge is already on the bill.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -322,7 +351,7 @@ private struct TipCard: View {
 /// Planned costs (from itinerary items) and logged expenses, in both currencies.
 private struct TripSpendingCard: View {
     @ObservedObject var trip: Trip
-    let thbPerUSD: Double
+    let localPerHome: Double
 
     var body: some View {
         let planned = trip.allItems.reduce(0) { $0 + $1.costTHB }
@@ -358,10 +387,10 @@ private struct TripSpendingCard: View {
     private func amountBlock(title: String, thb: Double, tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title).font(.caption).foregroundStyle(.secondary)
-            Text(CurrencyMath.format(thb, .thb))
+            Text(CurrencyMath.format(thb, .local))
                 .font(.title2.bold().monospacedDigit())
                 .foregroundStyle(tint)
-            Text(CurrencyMath.format(CurrencyMath.convert(thb, from: .thb, thbPerUSD: thbPerUSD), .usd))
+            Text(CurrencyMath.format(CurrencyMath.convert(thb, from: .local, localPerHome: localPerHome), .home))
                 .font(.subheadline.monospacedDigit())
                 .foregroundStyle(.secondary)
         }

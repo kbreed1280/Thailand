@@ -1,7 +1,7 @@
 import SwiftUI
 import Translation
 
-/// Type or hold-to-talk, translate English ⇄ Thai, then speak, copy, favorite or "Show".
+/// Type or hold-to-talk, translate English ⇄ the trip's language, then speak, copy, favorite or "Show".
 struct TextTranslatorView: View {
     @StateObject private var transcriber = SpeechTranscriber()
     @StateObject private var speaker = Speaker.shared
@@ -42,7 +42,7 @@ struct TextTranslatorView: View {
                 }
 
                 if !network.isOnline {
-                    OfflineBadge(text: "Offline — works if Thai is downloaded")
+                    OfflineBadge(text: "Offline — works if \(LocalLanguage.name) is downloaded")
                 }
             }
             .padding()
@@ -100,7 +100,7 @@ struct TextTranslatorView: View {
         VStack(alignment: .leading, spacing: 10) {
             ZStack(alignment: .topLeading) {
                 if input.isEmpty && !transcriber.isListening {
-                    Text(direction == .englishToThai ? "Type in English…" : "พิมพ์ภาษาไทย…")
+                    Text(direction == .englishToThai ? "Type in English…" : LocalLanguage.isThai ? "พิมพ์ภาษาไทย…" : "Type in \(LocalLanguage.name)…")
                         .foregroundStyle(.tertiary)
                         .padding(.top, 8)
                         .padding(.leading, 5)
@@ -138,7 +138,7 @@ struct TextTranslatorView: View {
 
     private var outputCard: some View {
         let output = translator.output
-        let romanized = direction.targetCode == "th" ? ThaiText.romanize(output) : nil
+        let romanized = direction.targetCode != "en" ? ThaiText.romanize(output) : nil
         let record = history.records.first { $0.result == output }
 
         return VStack(alignment: .leading, spacing: 10) {
@@ -146,7 +146,7 @@ struct TextTranslatorView: View {
                 .font(.caption.weight(.bold))
                 .foregroundStyle(Theme.mango)
             Text(output)
-                .font(direction.targetCode == "th" ? .system(size: 30, weight: .semibold) : .title2.weight(.semibold))
+                .font(direction.targetCode != "en" ? .system(size: 30, weight: .semibold) : .title2.weight(.semibold))
                 .textSelection(.enabled)
             if let romanized {
                 Text(romanized)
@@ -179,7 +179,7 @@ struct TextTranslatorView: View {
             .foregroundStyle(Theme.lagoon)
 
             Button {
-                showText = direction.targetCode == "th"
+                showText = direction.targetCode != "en"
                     ? ShowModeContent(thai: output, english: input, romanized: romanized)
                     : ShowModeContent(thai: input, english: output, romanized: ThaiText.romanize(input))
             } label: {

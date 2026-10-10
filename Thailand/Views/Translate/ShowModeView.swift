@@ -7,7 +7,7 @@ struct ShowModeContent: Identifiable {
     var romanized: String?
 }
 
-/// Full-screen, huge Thai text to hand the phone to a taxi driver or vendor.
+/// Full-screen, huge local-language text to hand the phone to a taxi driver or vendor.
 /// The screen stays awake while it's open; "Flip" turns it upside-down for someone across a table.
 struct ShowModeView: View {
     @Environment(\.dismiss) private var dismiss
@@ -26,7 +26,7 @@ struct ShowModeView: View {
                     .minimumScaleFactor(0.2)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.black)
-                    .accessibilityLabel("Thai: \(content.thai)")
+                    .accessibilityLabel("\(LocalLanguage.name): \(content.thai)")
                 if let romanized = content.romanized, !romanized.isEmpty {
                     Text(romanized)
                         .font(.title3)
@@ -66,9 +66,9 @@ struct ShowModeView: View {
                         Label("Flip", systemImage: "rotate.right")
                     }
                     Button {
-                        speaker.speak(content.thai, languageCode: "th", slow: true)
+                        speaker.speak(content.thai, languageCode: ThaiText.containsThai(content.thai) ? "th" : LocalLanguage.code, slow: true)
                     } label: {
-                        Label("Speak Thai", systemImage: "speaker.wave.2.fill")
+                        Label("Speak \(ThaiText.containsThai(content.thai) ? "Thai" : LocalLanguage.name)", systemImage: "speaker.wave.2.fill")
                     }
                 }
                 .buttonStyle(.borderedProminent)

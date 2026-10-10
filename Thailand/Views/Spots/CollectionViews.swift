@@ -35,7 +35,7 @@ struct SpotListsTab: View {
             } header: {
                 Text("Lists")
             } footer: {
-                Text("Group spots by trip, city or theme (\"Best khao soi\", \"Rooftop bars\"). Share a list with anyone as a WanderHub file.")
+                Text("Group spots by trip, city or theme (\"Best khao soi\", \"Rooftop bars\"). Share a list with anyone as a Trip Butler file.")
             }
 
             ForEach(folders, id: \.self) { folder in
@@ -64,7 +64,7 @@ struct SpotListsTab: View {
                 deletingFolder = nil
             }
         } message: {
-            Text("The posts in this folder are removed, so you can share them to WanderHub again. Spots you already confirmed are kept.")
+            Text("The posts in this folder are removed, so you can share them to Trip Butler again. Spots you already confirmed are kept.")
         }
     }
 }
@@ -206,7 +206,7 @@ struct CollectionDetailView: View {
             ToolbarItemGroup(placement: .primaryAction) {
                 if !entries.isEmpty {
                     ShareLink(item: SharedCollection(collection, sharedBy: AppSettings.displayName),
-                              preview: SharePreview("\(collection.displayName): \(entries.count) spots on WanderHub")) {
+                              preview: SharePreview("\(collection.displayName): \(entries.count) spots on Trip Butler")) {
                         Image(systemName: "square.and.arrow.up")
                     }
                 }

@@ -1,7 +1,7 @@
 import StoreKit
 import SwiftUI
 
-/// WanderHub Pro: annual or monthly (with a 3-day free trial), with the disclosures Apple requires
+/// Trip Butler Pro: annual or monthly (with a 3-day free trial), with the disclosures Apple requires
 /// (price, length, auto-renewal, how to cancel, Terms and Privacy links, Restore).
 struct PaywallView: View {
     @Environment(\.dismiss) private var dismiss
@@ -28,7 +28,7 @@ struct PaywallView: View {
                     VStack(spacing: 8) {
                         Image(systemName: "mappin.and.ellipse.circle.fill")
                             .font(.system(size: 64)).foregroundStyle(PlotStyle.ink)
-                        Text("WanderHub Pro").font(.largeTitle.weight(.bold))
+                        Text("Trip Butler Pro").font(.largeTitle.weight(.bold))
                         Text("Save every spot. Plan every day.").foregroundStyle(.secondary)
                     }
 

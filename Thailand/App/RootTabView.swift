@@ -50,7 +50,7 @@ struct RootTabView: View {
         .alert("Couldn't open that file", isPresented: $badFile) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("It isn't a WanderHub list, or it was made by a newer version of the app.")
+            Text("It isn't a Trip Butler list, or it was made by a newer version of the app.")
         }
         #if DEBUG
         .sheet(isPresented: $showWeather) { WeatherSheet() }

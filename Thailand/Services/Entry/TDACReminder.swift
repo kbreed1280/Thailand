@@ -86,7 +86,7 @@ enum TDACReminder {
                   body: "Submit it now in the THIM app or at tdac.immigration.go.th. It's free, and takes about 5 minutes per person.")
         await add(lastCallID, at: lastCall,
                   title: "Last call: Thailand arrival card",
-                  body: "You land tomorrow. If you haven't submitted your TDAC yet, do it today and save the QR code in WanderHub.")
+                  body: "You land tomorrow. If you haven't submitted your TDAC yet, do it today and save the QR code in Trip Butler.")
     }
 
     static func cancel() {

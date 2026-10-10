@@ -157,7 +157,7 @@ struct SpotsView: View {
                 }
                 .disabled(readingScreenshots)
             } footer: {
-                Text("In TikTok, Instagram, YouTube, Google Maps or Safari, tap Share → WanderHub. Places in the caption, description or on-screen text show up here as drafts to review.")
+                Text("In TikTok, Instagram, YouTube, Google Maps or Safari, tap Share → Trip Butler. Places in the caption, description or on-screen text show up here as drafts to review.")
             }
 
             ForEach(draftSources) { source in
@@ -173,7 +173,7 @@ struct SpotsView: View {
         .overlay {
             if draftSources.isEmpty {
                 ContentUnavailableView("No drafts", systemImage: "tray",
-                                       description: Text("Share a TikTok, Reel, YouTube Short, Google Maps link or any web page to WanderHub, or tap + to paste a link."))
+                                       description: Text("Share a TikTok, Reel, YouTube Short, Google Maps link or any web page to Trip Butler, or tap + to paste a link."))
             }
         }
     }

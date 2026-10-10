@@ -47,7 +47,7 @@ actor PlacePhotos {
         ]
         guard let url = components.url else { return nil }
         var request = URLRequest(url: url, timeoutInterval: 10)
-        request.setValue("WanderHub/1.0 (iOS travel app)", forHTTPHeaderField: "User-Agent")
+        request.setValue("TripButler/1.0 (iOS travel app)", forHTTPHeaderField: "User-Agent")
         guard let (data, _) = try? await URLSession.shared.data(for: request) else { return nil }
         return bestPhoto(in: data, for: name)
     }

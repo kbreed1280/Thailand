@@ -46,6 +46,16 @@ struct TripTabView: View {
                     .navigationTitle("Trip")
                 }
             }
+            #if DEBUG
+            // Debug-only: `-demoTrip YES` loads the demo trip on first launch (App Store screenshots).
+            .onAppear {
+                if trips.isEmpty, UserDefaults.standard.bool(forKey: "demoTrip") {
+                    let trip = SampleTrip.create(in: context)
+                    trip.name = "Bangkok & Chiang Mai"
+                    selectedTripID = trip.uuid?.uuidString ?? ""
+                }
+            }
+            #endif
             .navigationDestination(for: Item.self) { item in
                 ItemDetailView(item: item)
             }

@@ -2,7 +2,7 @@ import CoreData
 import MapKit
 import SwiftUI
 
-/// Places several WanderHub travelers saved near a city, with tips only where sources agree.
+/// Places several Trip Butler travelers saved near a city, with tips only where sources agree.
 struct TrendingNearbyView: View {
     @ObservedObject var trip: Trip
     @Environment(\.managedObjectContext) private var context

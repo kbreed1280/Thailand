@@ -29,6 +29,9 @@ final class FlightActivityController {
 
     func sync(with store: FlightStore) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "demoTrip") { return } // no prompts while taking screenshots
+        #endif
         guard let flight = store.nextActive else {
             if let current, let finished = store.flights.first(where: { $0.id.uuidString == current.attributes.flightID }), finished.isFinished {
                 end(flightID: finished.id)

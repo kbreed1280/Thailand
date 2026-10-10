@@ -52,7 +52,7 @@ struct SpotPickerSheet: View {
                         }
                     } footer: {
                         if trip.confirmedSpots.isEmpty {
-                            Text("No saved spots yet. Share TikToks, Reels or Google Maps links to WanderHub, then confirm the drafts in Spots.")
+                            Text("No saved spots yet. Share TikToks, Reels or Google Maps links to Trip Butler, then confirm the drafts in Spots.")
                         } else {
                             Text("Tap pins or rows to pick. They're added in walking order after what's already on Day \(day.number).")
                         }

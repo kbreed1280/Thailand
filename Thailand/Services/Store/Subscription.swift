@@ -1,11 +1,11 @@
 import Foundation
 import StoreKit
 
-/// Free plan: a few imports a day. WanderHub Pro (StoreKit 2): $4.99/month with a 3-day free
+/// Free plan: a few imports a day. Trip Butler Pro (StoreKit 2): $4.99/month with a 3-day free
 /// trial, or $49.99/year. Unlocked only in Xcode (debug) builds. TestFlight and App Review use
 /// the sandbox, where purchases are free, so reviewers can test buying.
 ///
-/// App Store Connect setup: subscription group "WanderHub Pro" with
+/// App Store Connect setup: subscription group "Trip Butler Pro" with
 /// `com.kbreed.thailandtrip.pro.monthly` ($4.99, introductory offer: free for 3 days) and
 /// `com.kbreed.thailandtrip.pro.yearly` ($49.99).
 @MainActor

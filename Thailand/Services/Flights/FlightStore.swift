@@ -205,6 +205,9 @@ final class FlightStore: ObservableObject {
     // MARK: Alerts
 
     private func requestNotificationPermission() async {
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "demoTrip") { return } // no prompt while taking screenshots
+        #endif
         _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
     }
 

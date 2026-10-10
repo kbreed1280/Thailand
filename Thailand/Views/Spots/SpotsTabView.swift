@@ -470,7 +470,7 @@ struct SpotsHomeView: View {
                         Image(systemName: "mappin.and.ellipse").font(.largeTitle).foregroundStyle(PlotStyle.ink)
                         Text(trip.confirmedSpots.isEmpty ? "No spots yet" : "No spots match").font(.headline)
                         Text(trip.confirmedSpots.isEmpty
-                             ? "Tap any hotel, restaurant or sight on the map to add it, or long-press to drop a pin. You can also share posts from TikTok, Instagram, YouTube or Google Maps to WanderHub."
+                             ? "Tap any hotel, restaurant or sight on the map to add it, or long-press to drop a pin. You can also share posts from TikTok, Instagram, YouTube or Google Maps to Trip Butler."
                              : "Try another category or filter.")
                             .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
                     }

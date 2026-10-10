@@ -163,7 +163,7 @@ struct SpotsMapView: View {
 
     private var emptyHint: some View {
         Text(trip.confirmedSpots.isEmpty
-             ? "Saved spots appear here. Share a TikTok, Reel or Google Maps link to WanderHub, then confirm the drafts."
+             ? "Saved spots appear here. Share a TikTok, Reel or Google Maps link to Trip Butler, then confirm the drafts."
              : "No spots match these filters.")
             .font(.subheadline)
             .multilineTextAlignment(.center)

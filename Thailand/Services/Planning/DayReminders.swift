@@ -45,6 +45,9 @@ enum DayReminders {
         let pending = await center.pendingNotificationRequests().map(\.identifier).filter { $0.hasPrefix(prefix) }
         center.removePendingNotificationRequests(withIdentifiers: pending)
         guard isEnabled else { return }
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "demoTrip") { return } // no prompt while taking screenshots
+        #endif
 
         let days = trip.sortedDays.compactMap { day -> (date: Date, stops: [(title: String, time: Date?)])? in
             guard let date = day.date else { return nil }

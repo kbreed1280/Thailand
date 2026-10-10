@@ -109,7 +109,7 @@ enum TopPicks {
             source.urlString = pick.wikipedia ?? ""
             source.platformRaw = SourcePlatform.web.rawValue
             source.title = "Bangkok Top Picks"
-            source.creator = "WanderHub"
+            source.creator = "Trip Butler"
             source.thumbnailURL = pick.photo ?? ""
             source.status = .ready
             source.extractor = "top-picks"

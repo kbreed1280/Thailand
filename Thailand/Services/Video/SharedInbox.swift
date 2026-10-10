@@ -1,7 +1,7 @@
 import Foundation
 import Security
 
-/// Links shared into WanderHub from other apps (Share → WanderHub), waiting until the app opens.
+/// Links shared into Trip Butler from other apps (Share → Trip Butler), waiting until the app opens.
 /// Stored in a keychain group shared by the app and its Share extension.
 /// NOTE: identical copies live at Thailand/Services/Video/SharedInbox.swift and
 /// WanderHubShare/SharedInbox.swift. Keep both in sync.

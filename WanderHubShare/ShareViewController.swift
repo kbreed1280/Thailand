@@ -2,8 +2,8 @@ import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 
-/// "Share → WanderHub" from TikTok (or anywhere with a link). Saves the link to the app group
-/// inbox; WanderHub picks it up next time it opens and asks where the video is.
+/// "Share → Trip Butler" from TikTok (or anywhere with a link). Saves the link to the app group
+/// inbox; Trip Butler picks it up next time it opens and asks where the video is.
 final class ShareViewController: UIViewController {
     private let model = ShareModel()
 
@@ -95,12 +95,12 @@ private struct ShareCard: View {
                 switch model.state {
                 case .working:
                     ProgressView()
-                    Text("Saving to WanderHub…")
+                    Text("Saving to Trip Butler…")
                 case .saved(let isTikTok, let screenshots):
                     Image(systemName: "checkmark.circle.fill").font(.system(size: 44)).foregroundStyle(.green)
-                    Text(screenshots > 0 && !isTikTok ? "Screenshot\(screenshots == 1 ? "" : "s") saved to WanderHub"
-                         : isTikTok ? "TikTok saved to WanderHub" : "Saved to WanderHub").font(.headline)
-                    Text("Open WanderHub → Spots to review the places it found.")
+                    Text(screenshots > 0 && !isTikTok ? "Screenshot\(screenshots == 1 ? "" : "s") saved to Trip Butler"
+                         : isTikTok ? "TikTok saved to Trip Butler" : "Saved to Trip Butler").font(.headline)
+                    Text("Open Trip Butler → Spots to review the places it found.")
                         .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
                 case .noLink:
                     Image(systemName: "link.badge.plus").font(.system(size: 40)).foregroundStyle(.orange)

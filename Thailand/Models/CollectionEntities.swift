@@ -119,7 +119,7 @@ enum CollectionStore {
 // MARK: - Sharing a collection as a .wanderhub file (Messages, AirDrop, Mail…)
 
 extension UTType {
-    /// Declared in Info.plist (UTExportedTypeDeclarations) so WanderHub opens these files.
+    /// Declared in Info.plist (UTExportedTypeDeclarations) so Trip Butler opens these files.
     static let wanderhubCollection = UTType(exportedAs: "com.kbreed.wanderhub.collection", conformingTo: .json)
 }
 

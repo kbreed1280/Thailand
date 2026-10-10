@@ -10,7 +10,7 @@
 	<array>
 		<dict>
 			<key>CFBundleTypeName</key>
-			<string>WanderHub Collection</string>
+			<string>Trip Butler List</string>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
 			<key>LSHandlerRank</key>
@@ -49,7 +49,7 @@
 				<string>public.data</string>
 			</array>
 			<key>UTTypeDescription</key>
-			<string>WanderHub Collection</string>
+			<string>Trip Butler List</string>
 			<key>UTTypeIdentifier</key>
 			<string>com.kbreed.wanderhub.collection</string>
 			<key>UTTypeTagSpecification</key>

@@ -91,7 +91,7 @@ enum SevenElevenService {
             guard let url = URL(string: server) else { continue }
             var request = URLRequest(url: url, timeoutInterval: 25)
             request.httpMethod = "POST"
-            request.setValue("WanderHub/1.0 (iOS travel app)", forHTTPHeaderField: "User-Agent")
+            request.setValue("TripButler/1.0 (iOS travel app)", forHTTPHeaderField: "User-Agent")
             request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
             var body = URLComponents()
             body.queryItems = [URLQueryItem(name: "data", value: query)]

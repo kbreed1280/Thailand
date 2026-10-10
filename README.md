@@ -1,6 +1,6 @@
-# WanderHub 🇹🇭
+# Trip Butler 🇹🇭
 
-WanderHub (formerly "Thailand Trip") is an iPhone app for two people traveling Thailand together. It includes:
+Trip Butler (formerly "Thailand Trip") is an iPhone app for two people traveling Thailand together. It includes:
 
 - a **shared itinerary** that syncs between both phones
 - **walking directions** with a Google Maps hand-off
@@ -25,8 +25,8 @@ It's built with Swift and SwiftUI for iOS 18 or later, using only Apple framewor
 
 **Getting-ready tools** (buttons on the trip card at the top of the Trip tab):
 
-- **TikTok:** in TikTok tap **Share → More (…) → WanderHub** (or copy the link and tap paste in the app).
-  - WanderHub reads the caption, works out the area of Thailand, and suggests the place from Apple Maps. You confirm it, or file the video under just the area.
+- **TikTok:** in TikTok tap **Share → More (…) → Trip Butler** (or copy the link and tap paste in the app).
+  - Trip Butler reads the caption, works out the area of Thailand, and suggests the place from Apple Maps. You confirm it, or file the video under just the area.
   - Videos are grouped by area with one-tap **Watch**, and specific places are pinned on a map with **Walk There**.
   - Each video is saved to the trip's Wish List, so your partner sees it too.
 - **Arrival card (TDAC):** when the 3-day window opens (from your flight or trip dates), reminders, links to the official **THIM** app and website, and one tap to save the QR code into Documents.

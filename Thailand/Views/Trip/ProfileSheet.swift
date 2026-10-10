@@ -73,7 +73,7 @@ struct ProfileSheet: View {
                 }
                 Section {
                     Button { showingPaywall = true } label: {
-                        LabeledContent("WanderHub Pro", value: store.isPro ? "Active" : store.isTestBuild ? "Unlocked (test build)" : "Free plan")
+                        LabeledContent("Trip Butler Pro", value: store.isPro ? "Active" : store.isTestBuild ? "Unlocked (test build)" : "Free plan")
                     }
                     Button("Redeem a promo code", systemImage: "giftcard") { redeeming = true }
                 }

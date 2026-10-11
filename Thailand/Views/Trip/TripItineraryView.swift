@@ -109,7 +109,7 @@ struct TripItineraryView: View {
         .listStyle(.insetGrouped)
         .listSectionSpacing(.compact)
         .scrollContentBackground(.hidden)
-        .background(Theme.background)
+        .skyBackground()
         .navigationTitle(trip.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarTitleMenu { tripMenu }

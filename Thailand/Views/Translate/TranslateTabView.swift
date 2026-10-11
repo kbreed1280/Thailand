@@ -50,7 +50,7 @@ struct TranslateTabView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .background(Theme.background)
+            .skyBackground()
             .navigationTitle("Translate")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

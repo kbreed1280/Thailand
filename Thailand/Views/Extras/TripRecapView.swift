@@ -49,7 +49,7 @@ struct TripRecapView: View {
                     .padding(.horizontal)
                 }
             }
-            .background(Theme.background)
+            .skyBackground()
             .navigationTitle("Trip Recap")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }

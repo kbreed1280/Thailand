@@ -75,7 +75,7 @@ struct ExploreTabView: View {
                 }
                 .padding()
             }
-            .background(Theme.background)
+            .skyBackground()
             .navigationTitle("Explore")
             .searchable(text: $model.query, prompt: model.segment.searchPlaceholder)
             .onSubmit(of: .search) { Task { await model.load() } }

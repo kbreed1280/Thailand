@@ -1,29 +1,44 @@
 import SwiftUI
 import UIKit
 
-/// Calm traveler palette: deep lagoon "ink" as the primary color, warm paper backgrounds with
-/// white cards, and sunset mango kept as a small accent. Works in light and dark mode.
+/// "Sky & sunrise" palette that matches the app icon: vivid sky blue as the primary color, a
+/// sunrise orange accent, cool airy backgrounds and floating cards. Works in light and dark mode.
 enum Theme {
-    static let cornerRadius: CGFloat = 22
+    static let cornerRadius: CGFloat = 24
     static let smallCornerRadius: CGFloat = 14
 
-    /// Primary: deep lagoon blue-teal (buttons, links, selected states).
-    static let ink = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: "#86C6D6") : UIColor(hex: "#15627A") })
-    static let inkDeep = Color(hex: "#0C3F52")
+    private static func dynamic(_ light: String, _ dark: String) -> Color {
+        Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: dark) : UIColor(hex: light) })
+    }
 
-    static let mango = Color(hex: "#F4821C")
-    static let mangoLight = Color(hex: "#FFB547")
-    static let lagoon = Color(hex: "#1BA39C")
-    static let coral = Color(hex: "#E8505B")
+    /// Primary: sky blue (buttons, links, selected states).
+    static let ink = dynamic("#2563EB", "#7AA7FF")
+    /// Night sky, for deep backgrounds and shadows.
+    static let inkDeep = Color(hex: "#0B1430")
 
-    /// Hero / call-to-action gradient (deep lagoon with a hint of evening sky).
+    /// Sunrise orange accent.
+    static let mango = Color(hex: "#F97316")
+    static let mangoLight = Color(hex: "#FDBA74")
+    /// Fresh teal for "go" and positive states.
+    static let lagoon = Color(hex: "#0EA5A4")
+    static let coral = Color(hex: "#F43F5E")
+    static let violet = Color(hex: "#7C3AED")
+
+    /// Hero / call-to-action gradient: deep sky into bright blue.
     static let sunsetGradient = LinearGradient(
-        colors: [Color(hex: "#1D7A8F"), Color(hex: "#15627A"), Color(hex: "#0C3F52")],
+        colors: [Color(hex: "#1E3A8A"), Color(hex: "#1D4ED8"), Color(hex: "#3B82F6")],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
-    /// The real sunset, for small accents (weather, badges).
+    /// Blue into violet, for highlights.
+    static let auroraGradient = LinearGradient(
+        colors: [Color(hex: "#2563EB"), Color(hex: "#7C3AED")],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    /// The sunrise itself, for small accents (weather, badges).
     static let warmGradient = LinearGradient(
         colors: [mangoLight, mango, coral.opacity(0.9)],
         startPoint: .topLeading,
@@ -31,16 +46,46 @@ enum Theme {
     )
 
     static let lagoonGradient = LinearGradient(
-        colors: [Color(hex: "#2FB6A8"), Color(hex: "#178A86")],
+        colors: [Color(hex: "#2DD4BF"), Color(hex: "#0EA5A4")],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
-    /// Warm paper page background and white cards.
-    static let background = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: "#111315") : UIColor(hex: "#F6F4F0") })
-    static let cardBackground = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: "#1E2124") : UIColor(hex: "#FFFFFF") })
-    static let insetBackground = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: "#2A2D31") : UIColor(hex: "#EFECE6") })
-    static let hairline = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: "#34383C") : UIColor(hex: "#E5E1DA") })
+    /// Cool, airy page background and floating cards.
+    static let background = dynamic("#F2F5FB", "#070B14")
+    static let cardBackground = dynamic("#FFFFFF", "#111827")
+    static let insetBackground = dynamic("#E8EDF6", "#1A2236")
+    static let hairline = dynamic("#E2E8F2", "#253049")
+    /// Soft glow tint behind floating cards.
+    static let shadow = dynamic("#1E3A8A", "#000000")
+}
+
+/// The page background: a soft sky wash at the top fading into the page color.
+struct SkyBackdrop: View {
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            Theme.background
+            LinearGradient(colors: scheme == .dark
+                           ? [Color(hex: "#1E3A8A").opacity(0.55), Color(hex: "#312E81").opacity(0.25), .clear]
+                           : [Color(hex: "#BFDBFE").opacity(0.9), Color(hex: "#E0E7FF").opacity(0.6), .clear],
+                           startPoint: .top, endPoint: .bottom)
+                .frame(height: 420)
+            // A warm sunrise glow in the corner.
+            Circle()
+                .fill(RadialGradient(colors: [Theme.mangoLight.opacity(scheme == .dark ? 0.18 : 0.35), .clear],
+                                     center: .center, startRadius: 0, endRadius: 220))
+                .frame(width: 440, height: 440)
+                .offset(x: 170, y: -200)
+        }
+        .ignoresSafeArea()
+    }
+}
+
+extension View {
+    /// Sky-wash page background (use on the main tab screens).
+    func skyBackground() -> some View { background(SkyBackdrop()) }
 }
 
 extension UIColor {
@@ -77,7 +122,8 @@ struct CardModifier: ViewModifier {
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Theme.cardBackground, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-            .shadow(color: .black.opacity(0.06), radius: 10, y: 4)
+            .overlay(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous).strokeBorder(Theme.hairline.opacity(0.7), lineWidth: 0.5))
+            .shadow(color: Theme.shadow.opacity(0.10), radius: 18, y: 8)
     }
 }
 
@@ -100,7 +146,8 @@ struct PrimaryButtonStyle: ButtonStyle {
             .padding(.horizontal, 22)
             .frame(maxWidth: .infinity, minHeight: 52)
             .background(Theme.sunsetGradient, in: Capsule())
-            .shadow(color: Theme.mango.opacity(isEnabled ? 0.35 : 0), radius: 10, y: 5)
+            .overlay(Capsule().strokeBorder(.white.opacity(0.25), lineWidth: 1))
+            .shadow(color: Theme.ink.opacity(isEnabled ? 0.45 : 0), radius: 14, y: 6)
             .opacity(isEnabled ? 1 : 0.45)
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.snappy(duration: 0.15), value: configuration.isPressed)
@@ -108,7 +155,7 @@ struct PrimaryButtonStyle: ButtonStyle {
 }
 
 struct SecondaryButtonStyle: ButtonStyle {
-    var tint: Color = Theme.lagoon
+    var tint: Color = Theme.ink
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -188,7 +235,7 @@ struct EmptyStateView<Actions: View>: View {
                 .foregroundStyle(.white)
                 .frame(width: 92, height: 92)
                 .background(Theme.sunsetGradient, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
-                .shadow(color: Theme.mango.opacity(0.35), radius: 14, y: 8)
+                .shadow(color: Theme.ink.opacity(0.4), radius: 16, y: 8)
                 .accessibilityHidden(true)
 
             VStack(spacing: 8) {

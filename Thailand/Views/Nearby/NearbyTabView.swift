@@ -40,7 +40,7 @@ struct NearbyTabView: View {
                     content
                 }
             }
-            .background(Theme.background)
+            .skyBackground()
             .navigationTitle("Nearby")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

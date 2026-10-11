@@ -6,6 +6,18 @@ struct ThailandApp: App {
     @Environment(\.scenePhase) private var scenePhase
     private let persistence = PersistenceController.shared
 
+    init() {
+        // Bold, rounded screen titles to match the app's look.
+        func rounded(_ style: UIFont.TextStyle, _ weight: UIFont.Weight) -> UIFont {
+            let base = UIFont.preferredFont(forTextStyle: style)
+            let font = UIFont.systemFont(ofSize: base.pointSize, weight: weight)
+            return UIFont(descriptor: font.fontDescriptor.withDesign(.rounded) ?? font.fontDescriptor, size: base.pointSize)
+        }
+        let nav = UINavigationBar.appearance()
+        nav.largeTitleTextAttributes = [.font: rounded(.largeTitle, .heavy)]
+        nav.titleTextAttributes = [.font: rounded(.headline, .bold)]
+    }
+
     var body: some Scene {
         WindowGroup {
             RootTabView()

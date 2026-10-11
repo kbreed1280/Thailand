@@ -46,7 +46,7 @@ struct ConvertTabView: View {
                 .padding()
             }
             .scrollDismissesKeyboard(.interactively)
-            .background(Theme.background)
+            .skyBackground()
             .navigationTitle("Convert")
             .toolbar {
                 if showsDone {

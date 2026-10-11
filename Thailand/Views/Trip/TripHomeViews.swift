@@ -66,7 +66,8 @@ struct TripHero: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(trip.displayName)
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .font(.system(size: 34, weight: .heavy, design: .rounded))
+                    .shadow(color: .black.opacity(0.2), radius: 8, y: 2)
                     .foregroundStyle(.white)
                     .lineLimit(2)
                 if let start = trip.startDate, let end = trip.endDate {
@@ -77,7 +78,7 @@ struct TripHero: View {
             }
 
             let all = trip.allItems
-            HStack(spacing: 14) {
+            HStack(spacing: 8) {
                 stat("\(trip.sortedDays.count)", "days")
                 stat("\(all.count)", "stops")
                 stat("\(trip.confirmedSpots.count)", "spots")
@@ -137,26 +138,85 @@ struct TripHero: View {
                     Image(uiImage: cover).resizable().scaledToFill()
                         .overlay(LinearGradient(colors: [.black.opacity(0.2), .black.opacity(0.7)], startPoint: .top, endPoint: .bottom))
                 } else {
-                    Theme.sunsetGradient
-                        .overlay(alignment: .topTrailing) {
-                            // A low evening sun.
-                            Circle()
-                                .fill(RadialGradient(colors: [Theme.mangoLight.opacity(0.55), .clear], center: .center, startRadius: 0, endRadius: 140))
-                                .frame(width: 280, height: 280)
-                                .offset(x: 90, y: -120)
-                        }
+                    AnimatedSky()
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 30, style: .continuous).strokeBorder(.white.opacity(0.18), lineWidth: 1))
         }
-        .shadow(color: Theme.inkDeep.opacity(0.25), radius: 16, y: 8)
+        .shadow(color: Theme.ink.opacity(0.35), radius: 22, y: 12)
     }
 
+    /// A frosted-glass chip with a big number.
     private func stat(_ value: String, _ label: String) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(value).font(.title3.weight(.bold)).foregroundStyle(.white)
-            Text(LocalizedStringKey(label)).font(.caption).foregroundStyle(.white.opacity(0.75))
+        VStack(spacing: 0) {
+            Text(value).font(.title3.weight(.heavy).monospacedDigit()).foregroundStyle(.white)
+            Text(LocalizedStringKey(label)).font(.caption2.weight(.semibold)).foregroundStyle(.white.opacity(0.8))
         }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(.ultraThinMaterial.opacity(0.55), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(.white.opacity(0.2), lineWidth: 0.5))
+    }
+}
+
+/// The trip card's sky: deep blue into a sunrise glow, clouds drifting by and a little plane
+/// crossing now and then (still when Reduce Motion is on).
+struct AnimatedSky: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { timeline in
+            let t = reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate
+            GeometryReader { geo in
+                let w = geo.size.width, h = geo.size.height
+                ZStack {
+                    LinearGradient(colors: [Color(hex: "#1E3A8A"), Color(hex: "#2563EB"), Color(hex: "#60A5FA")],
+                                   startPoint: .topLeading, endPoint: .bottomTrailing)
+                    // Sunrise glow, gently breathing.
+                    Circle()
+                        .fill(RadialGradient(colors: [Theme.mangoLight.opacity(0.75), Theme.mango.opacity(0.25), .clear],
+                                             center: .center, startRadius: 0, endRadius: 170))
+                        .frame(width: 340, height: 340)
+                        .scaleEffect(1 + 0.04 * sin(t / 3))
+                        .position(x: w * 0.92, y: h * 0.05)
+                    // Stars of light (a little sparkle).
+                    ForEach(0..<6, id: \.self) { i in
+                        Circle().fill(.white)
+                            .frame(width: 3, height: 3)
+                            .opacity(0.25 + 0.35 * (0.5 + 0.5 * sin(t * 1.3 + Double(i) * 1.7)))
+                            .position(x: w * [0.12, 0.3, 0.48, 0.62, 0.2, 0.75][i], y: h * [0.12, 0.22, 0.08, 0.3, 0.42, 0.18][i])
+                    }
+                    // Clouds drifting left to right at different speeds.
+                    cloud(width: 150, opacity: 0.22, x: drift(t, speed: 9, width: w, offset: 0), y: h * 0.72)
+                    cloud(width: 110, opacity: 0.16, x: drift(t, speed: 6, width: w, offset: 0.45), y: h * 0.35)
+                    cloud(width: 190, opacity: 0.28, x: drift(t, speed: 12, width: w, offset: 0.7), y: h * 0.92)
+                    // The plane: crosses every 14 seconds on a gentle climb.
+                    let p = (t / 14).truncatingRemainder(dividingBy: 1)
+                    Image(systemName: "airplane")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.55))
+                        .rotationEffect(.degrees(-18))
+                        .position(x: -40 + (w + 80) * p, y: h * 0.62 - h * 0.35 * p)
+                        .opacity(p < 0.05 || p > 0.95 ? 0 : 1)
+                }
+            }
+        }
+    }
+
+    private func drift(_ t: Double, speed: Double, width: CGFloat, offset: Double) -> CGFloat {
+        let span = width + 240
+        let x = (t * speed + offset * Double(span)).truncatingRemainder(dividingBy: Double(span))
+        return CGFloat(x) - 120
+    }
+
+    private func cloud(width: CGFloat, opacity: Double, x: CGFloat, y: CGFloat) -> some View {
+        Image(systemName: "cloud.fill")
+            .resizable().scaledToFit()
+            .frame(width: width)
+            .foregroundStyle(.white.opacity(opacity))
+            .blur(radius: 1.5)
+            .position(x: x, y: y)
     }
 }
 
@@ -293,10 +353,15 @@ struct TravelToolsGrid: View {
                 Button { onAction(tool) } label: {
                     VStack(spacing: 6) {
                         Image(systemName: icon)
-                            .font(.title3.weight(.semibold))
-                            .foregroundStyle(color)
+                            .font(.title3.weight(.bold))
+                            .foregroundStyle(.white)
                             .frame(width: 54, height: 54)
-                            .background(color.opacity(0.13), in: RoundedRectangle(cornerRadius: 17, style: .continuous))
+                            .background(
+                                LinearGradient(colors: [color.opacity(0.75), color], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            )
+                            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(.white.opacity(0.25), lineWidth: 1))
+                            .shadow(color: color.opacity(0.35), radius: 6, y: 3)
                         Text(title)
                             .font(.caption.weight(.medium))
                             .foregroundStyle(.primary)
@@ -311,7 +376,8 @@ struct TravelToolsGrid: View {
         .padding(.vertical, 14)
         .padding(.horizontal, 8)
         .background(Theme.cardBackground, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-        .shadow(color: .black.opacity(0.05), radius: 10, y: 4)
+        .overlay(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous).strokeBorder(Theme.hairline.opacity(0.7), lineWidth: 0.5))
+        .shadow(color: Theme.shadow.opacity(0.10), radius: 18, y: 8)
     }
 }
 

@@ -42,7 +42,7 @@ struct TripTabView: View {
                         }
                         .buttonStyle(.secondary)
                     }
-                    .background(Theme.background)
+                    .skyBackground()
                     .navigationTitle("Trip")
                 }
             }

@@ -59,7 +59,7 @@ struct WeatherView: View {
         }
         #endif
         }
-        .background(Theme.background)
+        .skyBackground()
         .navigationTitle("Weather")
         .refreshable { await load() }
         .task(id: placeName) { await load() }

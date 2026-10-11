@@ -71,7 +71,7 @@ struct SpotsHomeView: View {
         guard let category else { return discoverKinds }
         return DiscoverKind.forCategory(category).map { [$0] } ?? []
     }
-    @State private var topPicks: [TopPick] = TopPicks.bangkok.filter { $0.coordinate != nil }
+    @State private var topPicks: [TopPick] = []
     @State private var addedTopPicks: Int?
     @State private var walkTarget: WalkTarget?
 
@@ -107,7 +107,7 @@ struct SpotsHomeView: View {
                          discoverKinds: visibleKinds,
                          onPickLandmark: { landmark = $0 },
                          applePlaces: applePlaces,
-                         topPicks: trip.isThailand ? topPicks : [])
+                         topPicks: topPicks)
     }
 
     private var core: some View {
@@ -176,14 +176,14 @@ struct SpotsHomeView: View {
         view
         .sheet(isPresented: $showingInbox) { SpotsView(trip: trip) }
         .sheet(item: $landmark) { landmarkSheet($0) }
-        .task { if trip.isThailand { topPicks = await TopPicks.bangkokLocated() } }
+        .task(id: trip.objectID) { await loadTopPicks() }
         .fullScreenCover(item: $walkTarget) { target in
             WalkingRouteView(destinationName: target.name, coordinate: target.coordinate)
         }
-        .alert("Bangkok Top Picks added", isPresented: Binding(get: { addedTopPicks != nil }, set: { if !$0 { addedTopPicks = nil } })) {
+        .alert("\(picksCity) Top Picks added", isPresented: Binding(get: { addedTopPicks != nil }, set: { if !$0 { addedTopPicks = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("\(addedTopPicks ?? 0) places are in your Spots and in the \"Bangkok Top Picks\" list (Collections).")
+            Text("\(addedTopPicks ?? 0) places are in your Spots and in the \"\(picksCity) Top Picks\" list (Collections).")
         }
         .sheet(item: $placeToAdd) { place in
             AddPlaceSheet(place: place, trip: trip) { spot in selected = spot }
@@ -302,6 +302,24 @@ struct SpotsHomeView: View {
         .buttonStyle(.plain)
     }
 
+    /// "Bangkok" for Thailand trips, otherwise the trip's destination ("Tokyo").
+    private var picksCity: String {
+        guard !trip.isThailand else { return "Bangkok" }
+        let d = (trip.destination ?? "").split(separator: ",").first.map(String.init)?.trimmingCharacters(in: .whitespaces) ?? ""
+        return d.isEmpty ? trip.countryName : d
+    }
+
+    /// Bangkok's researched picks, or popular places around any other destination (Apple Maps).
+    private func loadTopPicks() async {
+        if trip.isThailand {
+            topPicks = await TopPicks.bangkokLocated()
+        } else if let center = trip.destinationCoordinate {
+            topPicks = await DestinationIdeas.topPicks(around: center, city: picksCity)
+        } else {
+            topPicks = []
+        }
+    }
+
     private var addMenu: some View {
         Menu {
             Button("Search for a place", systemImage: "magnifyingglass") { showingSearchPlace = true }
@@ -310,13 +328,12 @@ struct SpotsHomeView: View {
             Button("Auto-plan days", systemImage: "wand.and.sparkles") { showingAutoPlan = true }
             Button("Sidequest", systemImage: "dice") { showingSidequest = true }
             Button("Trending nearby", systemImage: "flame") { showingTrending = true }
-            if trip.isThailand {
+            if !topPicks.isEmpty {
                 Divider()
-                Button("Add Bangkok Top Picks (\(TopPicks.bangkok.count))", systemImage: "star.circle") {
+                Button("Add \(picksCity) Top Picks (\(topPicks.count))", systemImage: "star.circle") {
                     Task {
-                        let picks = await TopPicks.bangkokLocated()
-                        topPicks = picks
-                        let list = TopPicks.saveAll(picks, to: trip, context: context)
+                        if trip.isThailand { topPicks = await TopPicks.bangkokLocated() }
+                        let list = TopPicks.saveAll(topPicks, to: trip, city: picksCity, context: context)
                         addedTopPicks = list.spots.count
                     }
                 }

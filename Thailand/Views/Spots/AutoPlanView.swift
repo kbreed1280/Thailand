@@ -1,10 +1,24 @@
 import CoreData
+#if canImport(FoundationModels)
+import FoundationModels
+#endif
 import MapKit
 import SwiftUI
 
 /// Builds day plans from your saved spots: nearby spots share a day, each day is ordered
 /// around the heat, and (optionally) gaps are filled with ideas that fit the trip's vibe.
+/// Describe your perfect trip and it also finds places for you (Apple Intelligence turns the
+/// wishes into Apple Maps searches on supported iPhones), so it can build a trip from nothing.
 struct AutoPlanView: View {
+    /// A place the planner found for you (not one of your saved spots).
+    struct Suggestion {
+        var name: String
+        var coordinate: CLLocationCoordinate2D
+        var address: String
+        var url: URL?
+        var reason: String
+    }
+
     @ObservedObject var trip: Trip
     /// Plan just this list (from a list's screen); nil = all saved spots.
     var collection: SpotCollection?
@@ -19,8 +33,11 @@ struct AutoPlanView: View {
     @State private var onlyEmptyDays = true
     @State private var fillGaps = true
     @State private var plan: AutoPlanner.Plan?
-    @State private var suggestions: [UUID: MKMapItem] = [:]
+    @State private var suggestions: [UUID: Suggestion] = [:]
     @State private var planning = false
+    @State private var wishes = ""
+    @State private var usedAI = false
+    @State private var planError: String?
 
     private var spots: [Spot] {
         let all = collection?.spots ?? trip.confirmedSpots
@@ -43,7 +60,7 @@ struct AutoPlanView: View {
                     setup
                 }
             }
-            .navigationTitle(plan == nil ? "Auto-plan" : "Your plan")
+            .navigationTitle(plan == nil ? "Plan my trip" : "Your plan")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -53,7 +70,7 @@ struct AutoPlanView: View {
                     if let plan {
                         Button("Add to trip") { apply(plan) }.disabled(plan.days.allSatisfy(\.stops.isEmpty))
                     } else {
-                        Button("Plan") { Task { await makePlan() } }.disabled(spots.isEmpty || days.isEmpty || planning)
+                        Button("Plan") { Task { await makePlan() } }.disabled(!canPlan || planning)
                     }
                 }
             }
@@ -72,9 +89,27 @@ struct AutoPlanView: View {
         }
     }
 
+    /// Plan saved spots, or (with wishes or a known destination) build days from scratch.
+    private var canPlan: Bool {
+        !days.isEmpty && (!spots.isEmpty || !wishes.trimmingCharacters(in: .whitespaces).isEmpty || trip.destinationCoordinate != nil)
+    }
+
     // MARK: Setup
 
     @ViewBuilder private var setup: some View {
+        Section {
+            TextField("e.g. ramen, jazz bars, art museums, a sunset viewpoint, no early mornings", text: $wishes, axis: .vertical)
+                .lineLimit(2...5)
+        } header: {
+            Label("Describe your perfect trip", systemImage: "sparkles")
+        } footer: {
+            Text(Self.aiAvailable
+                 ? "Apple Intelligence turns this into real places near your destination, then plans them around your saved spots."
+                 : "We'll search for these near your destination and plan them around your saved spots.")
+        }
+        if let planError {
+            Section { Label(planError, systemImage: "exclamationmark.triangle").foregroundStyle(.orange) }
+        }
         Section {
             TextField("Destination (e.g. Bangkok)", text: $destination)
             VStack(alignment: .leading, spacing: 8) {
@@ -107,8 +142,8 @@ struct AutoPlanView: View {
             Toggle("Only days with nothing planned", isOn: $onlyEmptyDays)
             Toggle("Fill gaps with ideas for my vibe", isOn: $fillGaps)
         } footer: {
-            if spots.isEmpty {
-                Text("Every saved spot with a location is already on a day. Save more spots, or remove some from days.")
+            if spots.isEmpty && wishes.isEmpty {
+                Text("No saved spots to plan yet, so we'll fill your days with popular places for your vibe. Or describe what you'd love above.")
             } else if days.isEmpty {
                 Text("No free days. Turn off \"Only days with nothing planned\" to add to days that already have plans.")
             } else {
@@ -120,6 +155,9 @@ struct AutoPlanView: View {
     // MARK: Preview
 
     @ViewBuilder private func preview(_ plan: AutoPlanner.Plan) -> some View {
+        if usedAI {
+            Section { Label("Built with Apple Intelligence from your wishes", systemImage: "sparkles").foregroundStyle(Theme.lagoon) }
+        }
         ForEach(Array(plan.days.enumerated()), id: \.offset) { _, day in
             Section {
                 if day.stops.isEmpty {
@@ -137,7 +175,8 @@ struct AutoPlanView: View {
                         VStack(alignment: .leading, spacing: 1) {
                             Text(planned.stop.name).font(.subheadline.weight(.semibold))
                             if planned.stop.isSuggestion {
-                                Text("Suggested for \(vibe.title.lowercased())").font(.caption2).foregroundStyle(Theme.lagoon)
+                                Text(suggestions[planned.stop.id]?.reason ?? "Suggested for \(vibe.title.lowercased())")
+                                    .font(.caption2).foregroundStyle(Theme.lagoon)
                             }
                         }
                     }
@@ -178,10 +217,40 @@ struct AutoPlanView: View {
             guard let c = spot.coordinate, let id = spot.uuid else { return nil }
             return AutoPlanner.Stop(id: id, name: spot.displayName, coordinate: c, category: spot.category)
         }
+        planError = nil
+        usedAI = false
+        let ideaStops = await ideas(room: max(0, days.count * pace.stopsPerDay - stops.count), excluding: Set(stops.map { $0.name.localizedLowercase }))
         let hot = forecast.hotDays(in: trip)
-        var result = AutoPlanner.plan(stops, dates: days.compactMap(\.date), pace: pace, hotDays: hot)
+        var result = AutoPlanner.plan(stops + ideaStops, dates: days.compactMap(\.date), pace: pace, hotDays: hot)
         if fillGaps { result = await fill(result, hot: hot) }
         plan = result
+    }
+
+    /// Places matching your wishes (or your vibe when there's nothing to plan yet) near the destination.
+    private func ideas(room: Int, excluding used: Set<String>) async -> [AutoPlanner.Stop] {
+        let wish = wishes.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard room > 0, !wish.isEmpty || spots.isEmpty else { return [] }
+        var center = trip.destinationCoordinate
+        if center == nil, let found = await Destinations.find(destination) {
+            center = CLLocationCoordinate2D(latitude: found.latitude, longitude: found.longitude)
+        }
+        guard let center else {
+            planError = "Add where you're going (Edit Trip → Where to?) so we can find places there."
+            return []
+        }
+        let (searches, ai) = await DestinationIdeas.searches(for: wish, destination: destination, vibe: vibe)
+        usedAI = ai
+        let found = await DestinationIdeas.find(searches.map { ($0, nil) }, around: center, perQuery: 2)
+        var out: [AutoPlanner.Stop] = []
+        for idea in found where out.count < room && idea.category != .stay {
+            guard !used.contains(idea.name.localizedLowercase) else { continue }
+            let id = UUID()
+            let reason = wish.isEmpty ? "Popular for \(vibe.title.lowercased())" : "Matches your wishes"
+            suggestions[id] = Suggestion(name: idea.name, coordinate: idea.coordinate, address: idea.address, url: idea.url, reason: reason)
+            out.append(AutoPlanner.Stop(id: id, name: idea.name, coordinate: idea.coordinate, category: idea.category, isSuggestion: true))
+        }
+        if out.isEmpty && !wish.isEmpty { planError = "Couldn't find places for that near your destination. Try different words." }
+        return out
     }
 
     /// Adds one Apple Maps place per gap, near the middle of that day's spots.
@@ -196,7 +265,8 @@ struct AutoPlanView: View {
                 guard let item = await search(queries, near: center, excluding: used),
                       let name = item.name else { continue }
                 let id = UUID()
-                suggestions[id] = item
+                suggestions[id] = Suggestion(name: name, coordinate: item.placemark.coordinate, address: item.placemark.title ?? "",
+                                             url: item.url, reason: "Suggested for \(vibe.title.lowercased())")
                 used.insert(name.localizedLowercase)
                 let category = gap == .eat ? SpotCategory.eat : SpotCategory(poi: item.pointOfInterestCategory)
                 stops.append(AutoPlanner.Stop(id: id, name: name, coordinate: item.placemark.coordinate, category: category, isSuggestion: true))
@@ -239,11 +309,11 @@ struct AutoPlanView: View {
                                          address: spot.address ?? "", coordinate: spot.coordinate,
                                          notes: Self.notes(for: spot))
                     item.link = spot.sources.first?.urlString ?? ""
-                } else if let mapItem = suggestions[planned.stop.id] {
+                } else if let suggestion = suggestions[planned.stop.id] {
                     item = store.addItem(title: planned.stop.name, category: Self.itemCategory(planned.stop.category), to: day, in: trip,
-                                         address: mapItem.placemark.title ?? "", coordinate: mapItem.placemark.coordinate,
-                                         notes: "Suggested by auto-plan (\(vibe.title.lowercased()))")
-                    item.link = mapItem.url?.absoluteString ?? ""
+                                         address: suggestion.address, coordinate: suggestion.coordinate,
+                                         notes: "\(suggestion.reason) (Plan my trip)")
+                    item.link = suggestion.url?.absoluteString ?? ""
                 } else { continue }
                 item.time = planned.start
                 item.durationMinutes = Int64(planned.durationMinutes)
@@ -252,6 +322,14 @@ struct AutoPlanView: View {
         store.save()
         Task { await DayReminders.reschedule(for: trip) }
         dismiss()
+    }
+
+    /// Whether this iPhone can run Apple Intelligence (iOS 26+, supported device, turned on).
+    static var aiAvailable: Bool {
+        #if canImport(FoundationModels)
+        if #available(iOS 26.0, *), case .available = SystemLanguageModel.default.availability { return true }
+        #endif
+        return false
     }
 
     static func itemCategory(_ c: SpotCategory) -> ItemCategory {

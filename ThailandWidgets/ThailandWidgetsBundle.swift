@@ -6,5 +6,6 @@ import SwiftUI
 struct ThailandWidgetsBundle: WidgetBundle {
     var body: some Widget {
         FlightLiveActivity()
+        DayPlanLiveActivity()
     }
 }

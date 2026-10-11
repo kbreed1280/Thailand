@@ -25,6 +25,7 @@ struct ThailandApp: App {
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active {
                         Task { await FlightStore.shared.refreshAllIfNeeded() }
+                        DayPlanActivityController.shared.refresh(trip: SpotSaver.currentTrip(in: persistence.viewContext))
                     }
                 }
         }

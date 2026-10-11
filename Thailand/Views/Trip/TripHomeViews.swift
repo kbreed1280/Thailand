@@ -169,6 +169,7 @@ struct TodayCard: View {
     let onOpenDay: (Day) -> Void
     let onAddSpots: (Day) -> Void
     let onSidequest: () -> Void
+    @ObservedObject private var live = DayPlanActivityController.shared
 
     private var focusDay: (day: Day, isToday: Bool)? {
         if let today = trip.today { return (today, true) }
@@ -218,8 +219,23 @@ struct TodayCard: View {
                         }
                     }
                     let remaining = day.sortedItems.filter { $0.status != .done }.count - 1
-                    if remaining > 0 {
-                        Text("+ \(remaining) more \(isToday ? "today" : "that day")").font(.caption).foregroundStyle(.secondary)
+                    HStack {
+                        if remaining > 0 {
+                            Text("+ \(remaining) more \(isToday ? "today" : "that day")").font(.caption).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        if isToday && live.isAvailable {
+                            Button {
+                                if live.isLive(day) { live.stop() } else { live.start(day, in: trip) }
+                            } label: {
+                                Label(live.isLive(day) ? "On Lock Screen" : "Show on Lock Screen",
+                                      systemImage: live.isLive(day) ? "checkmark.circle.fill" : "lock.iphone")
+                                    .font(.caption.weight(.semibold))
+                            }
+                            .buttonStyle(.bordered)
+                            .buttonBorderShape(.capsule)
+                            .tint(live.isLive(day) ? .green : Theme.ink)
+                        }
                     }
                 } else {
                     Text(isToday ? "Nothing planned today." : "Nothing planned yet for your first day.")
@@ -252,7 +268,7 @@ struct TravelToolsGrid: View {
     @ObservedObject var trip: Trip
     let onAction: (TripTool) -> Void
 
-    enum TripTool { case converter, tdac, weather, flights, transit, packing, documents, offline }
+    enum TripTool { case converter, tdac, entry, weather, flights, transit, packing, documents, offline }
 
     private var tools: [(TripTool, String, String, Color)] {
         let packing = trip.sortedPackingItems
@@ -264,7 +280,7 @@ struct TravelToolsGrid: View {
             (.weather, "Weather", "sun.max.fill", Theme.mango),
         ] + (thailand ? [(.transit, "BTS & MRT", "tram.fill", Color(hex: "#4C7BD9"))] : []) + [
             (.flights, "Flights", "airplane", Theme.ink),
-        ] + (thailand ? [(.tdac, "TDAC", "person.text.rectangle.fill", Theme.coral)] : []) + [
+        ] + (thailand ? [(.tdac, "TDAC", "person.text.rectangle.fill", Theme.coral)] : [(.entry, "Entry", "checkmark.seal.fill", Theme.coral)]) + [
             (.packing, packing.isEmpty ? "Packing" : "Packing \(packing.filter(\.isDone).count)/\(packing.count)", "suitcase.rolling.fill", Color(hex: "#8E6BD8")),
             (.documents, "Documents", "lock.doc.fill", Color(hex: "#5F6B7A")),
             (.offline, "Offline", "arrow.down.circle.fill", Color(hex: "#2F9E5B")),

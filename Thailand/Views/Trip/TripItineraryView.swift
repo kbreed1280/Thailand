@@ -36,6 +36,8 @@ struct TripItineraryView: View {
     @State private var showingFlights = false
     @State private var showingWeather = false
     @State private var showingTDAC = false
+    @State private var showingEntry = false
+    @State private var showingRecap = false
     @State private var showingConverter = false
     @State private var showingTransit = false
     @State private var showingOffline = false
@@ -87,6 +89,7 @@ struct TripItineraryView: View {
                     case .flights: showingFlights = true
                     case .weather: showingWeather = true
                     case .tdac: showingTDAC = true
+                    case .entry: showingEntry = true
                     case .converter: showingConverter = true
                     case .transit: showingTransit = true
                     case .offline: showingOffline = true
@@ -210,6 +213,8 @@ struct TripItineraryView: View {
         .sheet(isPresented: $showingWeather) {
             WeatherSheet()
         }
+        .sheet(isPresented: $showingEntry) { EntryRequirementsView(trip: trip) }
+        .sheet(isPresented: $showingRecap) { TripRecapView(trip: trip) }
         .sheet(isPresented: $showingTDAC) {
             TDACView(trip: trip)
         }
@@ -465,6 +470,8 @@ struct TripItineraryView: View {
             Button("Travel Documents", systemImage: "lock.doc.fill") { showingVault = true }
             Button("Flights", systemImage: "airplane") { showingFlights = true }
             Button("Weather", systemImage: "sun.max.fill") { showingWeather = true }
+            Button("Entry Requirements", systemImage: "checkmark.seal") { showingEntry = true }
+            Button("Trip Recap", systemImage: "sparkles.rectangle.stack") { showingRecap = true }
             if trip.isThailand {
                 Button("Arrival Card (TDAC)", systemImage: "person.text.rectangle") { showingTDAC = true }
             }

@@ -83,12 +83,15 @@ enum TopPicks {
 
     /// Saves every pick to Spots, in a "Bangkok Top Picks" list, with its tip and photo.
     @MainActor
-    static func saveAll(_ picks: [TopPick], to trip: Trip, context: NSManagedObjectContext) -> SpotCollection {
-        let list = trip.sortedCollections.first { $0.name == "Bangkok Top Picks" }
-            ?? CollectionStore.create(name: "Bangkok Top Picks", emoji: "⭐️", kind: .city, in: trip, context: context)
-        list.notes = "Bangkok's most popular sights, markets, food spots, rooftop bars and malls."
+    static func saveAll(_ picks: [TopPick], to trip: Trip, city: String = "Bangkok", context: NSManagedObjectContext) -> SpotCollection {
+        let name = "\(city) Top Picks"
+        let list = trip.sortedCollections.first { $0.name == name }
+            ?? CollectionStore.create(name: name, emoji: "⭐️", kind: .city, in: trip, context: context)
+        list.notes = city == "Bangkok"
+            ? "Bangkok's most popular sights, markets, food spots, rooftop bars and malls."
+            : "Popular sights, food, coffee, bars and places to stay in \(city), from Apple Maps."
         for pick in picks {
-            guard let spot = save(pick, to: trip, context: context) else { continue }
+            guard let spot = save(pick, to: trip, city: city, context: context) else { continue }
             CollectionStore.add(spot, to: list, note: pick.tip, context: context)
         }
         ItineraryStore(context: context).save()
@@ -96,11 +99,11 @@ enum TopPicks {
     }
 
     @MainActor @discardableResult
-    static func save(_ pick: TopPick, to trip: Trip, context: NSManagedObjectContext) -> Spot? {
+    static func save(_ pick: TopPick, to trip: Trip, city: String = "Bangkok", context: NSManagedObjectContext) -> Spot? {
         guard let c = pick.coordinate,
               let spot = SpotSaver.save(name: pick.name, coordinate: c, address: "", category: pick.spotCategory, context: context)
         else { return nil }
-        spot.city = spot.city?.isEmpty == false ? spot.city : "Bangkok"
+        spot.city = spot.city?.isEmpty == false ? spot.city : city
         // A source carrying the photo and the tip, so cards and pins show the picture.
         if !spot.sortedScoops.contains(where: { $0.source?.extractor == "top-picks" }) {
             let source = SpotSource(context: context)
@@ -108,7 +111,7 @@ enum TopPicks {
             source.uuid = UUID()
             source.urlString = pick.wikipedia ?? ""
             source.platformRaw = SourcePlatform.web.rawValue
-            source.title = "Bangkok Top Picks"
+            source.title = "\(city) Top Picks"
             source.creator = "Trip Butler"
             source.thumbnailURL = pick.photo ?? ""
             source.status = .ready

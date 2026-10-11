@@ -1,8 +1,8 @@
 import AppKit
 import CoreGraphics
 
-// Trip Butler app icon: a butler's serving cloche on a tray, with a map pin as its handle
-// ("your trip, served"). Run from the AppIcon.appiconset folder:
+// Trip Butler app icon: a jet climbing through soft clouds into a warm sky.
+// Run from the AppIcon.appiconset folder:
 //   swift ../../../scripts/make-app-icon.swift
 
 enum Variant { case light, dark, tinted }
@@ -11,17 +11,44 @@ func color(_ hex: UInt32, _ a: CGFloat = 1) -> CGColor {
     CGColor(red: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255, blue: CGFloat(hex & 0xFF) / 255, alpha: a)
 }
 
-/// Teardrop map pin: round head of radius r centred at (cx, cy), tip at tipY.
-func pinPath(cx: CGFloat, cy: CGFloat, r: CGFloat, tipY: CGFloat) -> CGPath {
-    let d = tipY - cy
-    let alpha = acos(r / d)
-    let left = CGPoint(x: cx - r * sin(alpha), y: cy + r * cos(alpha))
-    let right = CGPoint(x: cx + r * sin(alpha), y: cy + r * cos(alpha))
+/// A puffy cloud: overlapping circles on a flat base, as one path.
+func cloud(_ x: CGFloat, _ y: CGFloat, _ w: CGFloat) -> CGPath {
     let p = CGMutablePath()
-    p.move(to: CGPoint(x: cx, y: tipY))
-    p.addLine(to: left)
-    p.addArc(center: CGPoint(x: cx, y: cy), radius: r, startAngle: atan2(left.y - cy, left.x - cx),
-             endAngle: atan2(right.y - cy, right.x - cx), clockwise: false)
+    let h = w * 0.34
+    p.addRoundedRect(in: CGRect(x: x, y: y + h * 0.45, width: w, height: h * 0.55), cornerWidth: h * 0.27, cornerHeight: h * 0.27)
+    p.addEllipse(in: CGRect(x: x + w * 0.10, y: y + h * 0.20, width: w * 0.34, height: w * 0.34 * 0.9))
+    p.addEllipse(in: CGRect(x: x + w * 0.30, y: y - h * 0.15, width: w * 0.44, height: w * 0.44 * 0.9))
+    p.addEllipse(in: CGRect(x: x + w * 0.58, y: y + h * 0.15, width: w * 0.30, height: w * 0.30 * 0.9))
+    return p
+}
+
+/// Side-on airliner pointing right, nose at the origin's right; drawn in a 600-wide box centred at (0,0).
+func plane() -> CGPath {
+    let p = CGMutablePath()
+    // Fuselage
+    p.addRoundedRect(in: CGRect(x: -300, y: -34, width: 560, height: 68), cornerWidth: 34, cornerHeight: 34)
+    // Nose cone
+    p.move(to: CGPoint(x: 230, y: -34))
+    p.addQuadCurve(to: CGPoint(x: 300, y: 4), control: CGPoint(x: 300, y: -34))
+    p.addQuadCurve(to: CGPoint(x: 230, y: 34), control: CGPoint(x: 290, y: 34))
+    p.closeSubpath()
+    // Main wing (sweeps back and down toward the viewer)
+    p.move(to: CGPoint(x: 90, y: 10))
+    p.addLine(to: CGPoint(x: -70, y: 230))
+    p.addLine(to: CGPoint(x: -150, y: 230))
+    p.addLine(to: CGPoint(x: -50, y: 10))
+    p.closeSubpath()
+    // Tail fin
+    p.move(to: CGPoint(x: -220, y: -20))
+    p.addLine(to: CGPoint(x: -300, y: -160))
+    p.addLine(to: CGPoint(x: -340, y: -160))
+    p.addLine(to: CGPoint(x: -300, y: -20))
+    p.closeSubpath()
+    // Tail plane
+    p.move(to: CGPoint(x: -240, y: 10))
+    p.addLine(to: CGPoint(x: -300, y: 80))
+    p.addLine(to: CGPoint(x: -340, y: 80))
+    p.addLine(to: CGPoint(x: -300, y: 10))
     p.closeSubpath()
     return p
 }
@@ -33,86 +60,68 @@ func render(_ v: Variant, to path: String) {
                         bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
     ctx.translateBy(x: 0, y: S); ctx.scaleBy(x: 1, y: -1) // y-down
 
-    // Background: deep navy into teal, with a warm glow behind the dome.
-    let bg: [CGColor] = switch v {
-    case .light: [color(0x123A5A), color(0x0E5E6F), color(0x0B7A74)]
-    case .dark: [color(0x0A1724), color(0x08141C), color(0x050B10)]
-    case .tinted: [color(0x000000), color(0x000000)]
+    // Sky: deep blue at the top into a warm sunrise glow near the horizon.
+    let sky: [CGColor] = switch v {
+    case .light: [color(0x1D4ED8), color(0x3B82F6), color(0x7DD3FC), color(0xFDBA74)]
+    case .dark: [color(0x0B1430), color(0x13244D), color(0x1E3A6B), color(0x5B3A4A)]
+    case .tinted: [color(0x000000), color(0x000000), color(0x000000), color(0x000000)]
     }
-    let g = CGGradient(colorsSpace: cs, colors: bg as CFArray, locations: bg.count == 3 ? [0, 0.55, 1] : [0, 1])!
-    ctx.drawLinearGradient(g, start: CGPoint(x: S * 0.15, y: 0), end: CGPoint(x: S * 0.85, y: S),
-                           options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+    ctx.drawLinearGradient(CGGradient(colorsSpace: cs, colors: sky as CFArray, locations: [0, 0.45, 0.78, 1])!,
+                           start: CGPoint(x: S / 2, y: 0), end: CGPoint(x: S / 2, y: S), options: [])
     if v != .tinted {
-        let glow = CGGradient(colorsSpace: cs, colors: [color(0xFFC86B, v == .light ? 0.30 : 0.16), color(0xFFC86B, 0)] as CFArray, locations: [0, 1])!
-        ctx.drawRadialGradient(glow, startCenter: CGPoint(x: S / 2, y: S * 0.52), startRadius: 0,
-                               endCenter: CGPoint(x: S / 2, y: S * 0.52), endRadius: S * 0.55, options: [])
+        // Sun glow low on the right.
+        let sun = CGGradient(colorsSpace: cs, colors: [color(0xFFE7A3, v == .light ? 0.85 : 0.35), color(0xFFE7A3, 0)] as CFArray, locations: [0, 1])!
+        ctx.drawRadialGradient(sun, startCenter: CGPoint(x: S * 0.78, y: S * 0.80), startRadius: 0,
+                               endCenter: CGPoint(x: S * 0.78, y: S * 0.80), endRadius: S * 0.45, options: [])
     }
 
-    let cx = S / 2
-    let trayY: CGFloat = 742          // top of the tray
-    let domeR: CGFloat = 318          // dome radius (half-ellipse)
-    let domeH: CGFloat = 300          // dome height
+    let cloudBack: CGColor = v == .tinted ? color(0xFFFFFF, 0.35) : (v == .light ? color(0xFFFFFF, 0.55) : color(0xC7D2FE, 0.25))
+    let cloudFront: CGColor = v == .tinted ? color(0xFFFFFF, 0.8) : (v == .light ? color(0xFFFFFF) : color(0xE0E7FF))
 
-    // Soft shadow under the tray.
+    // Back clouds (behind the plane).
+    ctx.setFillColor(cloudBack)
+    ctx.addPath(cloud(60, 250, 360)); ctx.fillPath()
+    ctx.addPath(cloud(640, 170, 300)); ctx.fillPath()
+
+    // Contrail behind the plane.
     ctx.saveGState()
-    ctx.setFillColor(color(0x000000, v == .tinted ? 0.25 : 0.22))
-    ctx.fillEllipse(in: CGRect(x: cx - 360, y: trayY + 52, width: 720, height: 56))
+    ctx.translateBy(x: 520, y: 470); ctx.rotate(by: -0.42)
+    let trail = CGGradient(colorsSpace: cs, colors: [color(0xFFFFFF, 0), color(0xFFFFFF, v == .tinted ? 0.5 : 0.75)] as CFArray, locations: [0, 1])!
+    ctx.addRect(CGRect(x: -620, y: -14, width: 360, height: 28)); ctx.clip()
+    ctx.drawLinearGradient(trail, start: CGPoint(x: -620, y: 0), end: CGPoint(x: -260, y: 0), options: [])
     ctx.restoreGState()
 
-    // Dome (cloche): polished silver, or white for tinted.
-    let dome = CGMutablePath()
-    dome.move(to: CGPoint(x: cx - domeR, y: trayY))
-    dome.addCurve(to: CGPoint(x: cx, y: trayY - domeH),
-                  control1: CGPoint(x: cx - domeR, y: trayY - domeH * 0.62), control2: CGPoint(x: cx - domeR * 0.58, y: trayY - domeH))
-    dome.addCurve(to: CGPoint(x: cx + domeR, y: trayY),
-                  control1: CGPoint(x: cx + domeR * 0.58, y: trayY - domeH), control2: CGPoint(x: cx + domeR, y: trayY - domeH * 0.62))
-    dome.closeSubpath()
+    // The plane, climbing up and to the right.
     ctx.saveGState()
-    ctx.addPath(dome); ctx.clip()
-    let silver: [CGColor] = switch v {
-    case .light: [color(0xFFFFFF), color(0xE9EEF2), color(0xB9C6D0)]
-    case .dark: [color(0xE6ECF0), color(0xC3CED6), color(0x8E9EAA)]
-    case .tinted: [color(0xFFFFFF), color(0xDDDDDD), color(0xAAAAAA)]
-    }
-    let sg = CGGradient(colorsSpace: cs, colors: silver as CFArray, locations: [0, 0.5, 1])!
-    ctx.drawLinearGradient(sg, start: CGPoint(x: cx - domeR, y: trayY - domeH), end: CGPoint(x: cx + domeR, y: trayY), options: [])
-    // Highlight streak on the upper left of the dome.
-    let hl = CGMutablePath()
-    hl.addEllipse(in: CGRect(x: cx - 230, y: trayY - 250, width: 120, height: 210), transform: CGAffineTransform(translationX: cx - 170, y: trayY - 145).rotated(by: -0.55).translatedBy(x: -(cx - 170), y: -(trayY - 145)))
-    ctx.addPath(hl)
-    ctx.setFillColor(color(0xFFFFFF, 0.55)); ctx.fillPath()
-    ctx.restoreGState()
-
-    // Tray: gold band with a rim.
-    let gold: [CGColor] = v == .tinted ? [color(0xFFFFFF), color(0xCCCCCC)] : [color(0xFFD27A), color(0xE9A23B)]
-    let tray = CGPath(roundedRect: CGRect(x: cx - 380, y: trayY - 6, width: 760, height: 58), cornerWidth: 29, cornerHeight: 29, transform: nil)
-    ctx.saveGState(); ctx.addPath(tray); ctx.clip()
-    ctx.drawLinearGradient(CGGradient(colorsSpace: cs, colors: gold as CFArray, locations: [0, 1])!,
-                           start: CGPoint(x: 0, y: trayY - 6), end: CGPoint(x: 0, y: trayY + 52), options: [])
-    ctx.restoreGState()
-
-    // Handle: a coral map pin sitting on the top of the dome.
-    let pinR: CGFloat = 92, pinCY: CGFloat = trayY - domeH - 120, pinTip: CGFloat = trayY - domeH + 14
-    let pin = pinPath(cx: cx, cy: pinCY, r: pinR, tipY: pinTip)
-    ctx.saveGState()
-    ctx.setShadow(offset: CGSize(width: 0, height: 10), blur: 24, color: color(0x000000, 0.28))
-    ctx.addPath(pin)
-    ctx.setFillColor(v == .tinted ? color(0xFFFFFF) : color(0xFF6B5B))
+    ctx.translateBy(x: 530, y: 440); ctx.rotate(by: -0.42); ctx.scaleBy(x: 1.05, y: 1.05)
+    ctx.setShadow(offset: CGSize(width: 0, height: 18), blur: 30, color: color(0x0B1430, v == .tinted ? 0.2 : 0.35))
+    ctx.addPath(plane())
+    ctx.setFillColor(v == .tinted ? color(0xFFFFFF) : color(0xFFFFFF))
     ctx.fillPath()
-    ctx.restoreGState()
+    ctx.setShadow(offset: .zero, blur: 0, color: nil)
     if v != .tinted {
-        ctx.saveGState(); ctx.addPath(pin); ctx.clip()
-        let coral = CGGradient(colorsSpace: cs, colors: [color(0xFF8A70), color(0xE8473F)] as CFArray, locations: [0, 1])!
-        ctx.drawLinearGradient(coral, start: CGPoint(x: cx - pinR, y: pinCY - pinR), end: CGPoint(x: cx + pinR, y: pinTip), options: [])
-        ctx.restoreGState()
+        // Window stripe and an accent on the tail.
+        ctx.setFillColor(color(0x1D4ED8, v == .light ? 0.9 : 0.7))
+        for i in 0..<9 { ctx.fillEllipse(in: CGRect(x: 150 - CGFloat(i) * 44, y: -12, width: 20, height: 18)) }
+        // Orange tail fin.
+        ctx.setFillColor(color(0xF97316))
+        let fin = CGMutablePath()
+        fin.move(to: CGPoint(x: -220, y: -30)); fin.addLine(to: CGPoint(x: -300, y: -160))
+        fin.addLine(to: CGPoint(x: -340, y: -160)); fin.addLine(to: CGPoint(x: -300, y: -30)); fin.closeSubpath()
+        ctx.addPath(fin); ctx.fillPath()
     }
-    // Pin hole.
-    ctx.setFillColor(v == .tinted ? color(0x000000) : (v == .light ? color(0x123A5A) : color(0x0A1724)))
-    ctx.fillEllipse(in: CGRect(x: cx - 36, y: pinCY - 36, width: 72, height: 72))
+    ctx.restoreGState()
+
+    // Front clouds the plane is bursting out of.
+    ctx.setFillColor(cloudFront)
+    // A billowing bank of clouds across the bottom (no flat edge).
+    for (x, y, w) in [(-90.0, 690.0, 470.0), (250, 735, 430), (560, 680, 520), (-60, 820, 560), (380, 840, 700), (-40, 900, 600), (480, 910, 640), (200, 930, 520)] {
+        ctx.addPath(cloud(CGFloat(x), CGFloat(y), CGFloat(w))); ctx.fillPath()
+    }
+    ctx.fill(CGRect(x: 0, y: 830, width: S, height: S - 830))
 
     let image = ctx.makeImage()!
-    let rep = NSBitmapImageRep(cgImage: image)
-    try! rep.representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: path))
+    try! NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: path))
 }
 
 render(.light, to: "AppIcon.png")

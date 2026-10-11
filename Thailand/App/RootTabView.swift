@@ -10,6 +10,8 @@ struct RootTabView: View {
     #if DEBUG
     /// Debug-only: launch with `-showWeather YES` to open the weather screen directly.
     @State private var showWeather = UserDefaults.standard.bool(forKey: "showWeather")
+    /// Debug-only: `-showPaywall YES` opens the Pro paywall (App Review screenshot).
+    @State private var showPaywall = UserDefaults.standard.bool(forKey: "showPaywall")
     /// Debug-only: `-showSevenEleven YES` opens the 7-Eleven map.
     @State private var showSevenEleven = UserDefaults.standard.bool(forKey: "showSevenEleven")
     /// Debug-only: `-showRailMap YES` opens the BTS/MRT network map.
@@ -54,6 +56,7 @@ struct RootTabView: View {
         }
         #if DEBUG
         .sheet(isPresented: $showWeather) { WeatherSheet() }
+        .sheet(isPresented: $showPaywall) { PaywallView() }
         .fullScreenCover(isPresented: $showSevenEleven) { SevenElevenMapView() }
         .fullScreenCover(isPresented: $showRailMap) { RailNetworkMapView() }
         .sheet(item: $debugSpotsTrip) { trip in

@@ -39,8 +39,28 @@ struct PaywallView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
+                    #if DEBUG
+                    if UserDefaults.standard.bool(forKey: "paywallPreview") {
+                        // Debug-only: the plans as configured in App Store Connect, for the App Review screenshot.
+                        VStack(spacing: 12) {
+                            planCard(id: Subscription.productIDs[1], title: "Annual", price: "$49.99 / year",
+                                     detail: "Just $4.17/month", badge: "SAVE 17%")
+                            planCard(id: Subscription.productIDs[0], title: "Monthly", price: "$4.99 / month",
+                                     detail: "3-day free trial, then $4.99/month", badge: "FREE TRIAL")
+                        }
+                        Text("Continue").font(.headline)
+                            .frame(maxWidth: .infinity).padding(.vertical, 16)
+                            .background(PlotStyle.ink, in: Capsule()).foregroundStyle(.white)
+                    } else if store.isTestBuild {
+                        Label("Everything is unlocked in Xcode builds.", systemImage: "hammer.fill").foregroundStyle(.secondary)
+                    }
+                    #else
                     if store.isTestBuild {
                         Label("Everything is unlocked in Xcode builds.", systemImage: "hammer.fill").foregroundStyle(.secondary)
+                    }
+                    #endif
+                    if store.isTestBuild {
+                        EmptyView() // handled above
                     } else if store.isPro {
                         Label("You're Pro. Thank you!", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
                     } else if store.products.isEmpty {
@@ -69,21 +89,21 @@ struct PaywallView: View {
     private var plans: some View {
         VStack(spacing: 12) {
             if let yearly = store.yearly {
-                planCard(yearly, title: "Annual", price: "\(yearly.displayPrice) / year",
+                planCard(id: yearly.id, title: "Annual", price: "\(yearly.displayPrice) / year",
                          detail: perMonth(yearly).map { "Just \($0)/month" },
                          badge: store.yearlySavingsPercent.map { "SAVE \($0)%" })
             }
             if let monthly = store.monthly {
-                planCard(monthly, title: "Monthly", price: "\(monthly.displayPrice) / month",
+                planCard(id: monthly.id, title: "Monthly", price: "\(monthly.displayPrice) / month",
                          detail: store.trialText(for: monthly).map { "\($0), then \(monthly.displayPrice)/month" },
                          badge: store.trialText(for: monthly) != nil ? "FREE TRIAL" : nil)
             }
         }
     }
 
-    private func planCard(_ product: Product, title: String, price: String, detail: String?, badge: String?) -> some View {
-        let on = selectedID == product.id
-        return Button { selectedID = product.id } label: {
+    private func planCard(id: String, title: String, price: String, detail: String?, badge: String?) -> some View {
+        let on = selectedID == id
+        return Button { selectedID = id } label: {
             HStack(spacing: 14) {
                 Image(systemName: on ? "checkmark.circle.fill" : "circle")
                     .font(.title2).foregroundStyle(on ? PlotStyle.ink : .secondary)

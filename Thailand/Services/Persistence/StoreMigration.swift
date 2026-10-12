@@ -24,6 +24,10 @@ enum StoreMigration {
             defaults.set(true, forKey: doneKey)
             return new
         }
+        #if !DEBUG
+        // App Store and TestFlight builds always used Production: keep their existing files.
+        return old
+        #else
         do {
             try copyAll(from: old, to: new, model: model)
             defaults.set(true, forKey: doneKey)
@@ -35,10 +39,14 @@ enum StoreMigration {
             try? FileManager.default.removeItem(at: new)
             return old
         }
+        #endif
     }
 
+    /// Uses the new shared file only alongside the new private file.
     static func sharedStoreURL(in base: URL) -> URL {
-        UserDefaults.standard.bool(forKey: doneKey) ? base.appending(path: sharedName) : base.appending(path: "shared.sqlite")
+        let usingNew = UserDefaults.standard.bool(forKey: doneKey)
+            || !FileManager.default.fileExists(atPath: base.appending(path: "private.sqlite").path)
+        return usingNew ? base.appending(path: sharedName) : base.appending(path: "shared.sqlite")
     }
 
     /// Copies every object (attributes and relationships) from one store file into a new one.

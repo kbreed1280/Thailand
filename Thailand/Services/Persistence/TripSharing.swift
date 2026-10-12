@@ -29,8 +29,10 @@ enum TripSharing {
 
         let share: CKShare
         if let existing = persistence.share(for: trip) {
+            SyncLog.write("share: reusing \(existing.recordID.recordName) url=\(existing.url?.absoluteString ?? "nil")")
             share = existing
         } else {
+            SyncLog.write("share: creating new share for \(trip.displayName)")
             let (_, newShare, _) = try await persistence.container.share([trip], to: nil)
             newShare[CKShare.SystemFieldKey.title] = trip.displayName
             newShare.publicPermission = .none
@@ -58,6 +60,7 @@ enum TripSharing {
             NotificationCenter.default.post(name: .didAcceptTripShare, object: nil)
         } catch {
             print("Accepting share failed: \(error)")
+            SyncLog.write("accept failed: \(error)")
         }
     }
 
@@ -81,6 +84,7 @@ extension Notification.Name {
 final class SharingControllerDelegate: NSObject, UICloudSharingControllerDelegate {
     func cloudSharingController(_ csc: UICloudSharingController, failedToSaveShareWithError error: Error) {
         print("Saving share failed: \(error)")
+        SyncLog.write("save share failed: \(error)")
     }
 
     func itemTitle(for csc: UICloudSharingController) -> String? {

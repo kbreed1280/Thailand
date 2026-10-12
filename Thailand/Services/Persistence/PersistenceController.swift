@@ -50,13 +50,15 @@ final class PersistenceController {
         } else {
             let base = NSPersistentContainer.defaultDirectoryURL()
 
-            let privateDescription = NSPersistentStoreDescription(url: base.appending(path: "private.sqlite"))
+            // One-time move into fresh files so everything uploads to the Production iCloud environment.
+            let privateURL = StoreMigration.privateStoreURL(in: base, model: TripModel.model)
+            let privateDescription = NSPersistentStoreDescription(url: privateURL)
             Self.enableHistory(on: privateDescription)
             let privateOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: Self.containerIdentifier)
             privateOptions.databaseScope = .private
             privateDescription.cloudKitContainerOptions = privateOptions
 
-            let sharedDescription = NSPersistentStoreDescription(url: base.appending(path: "shared.sqlite"))
+            let sharedDescription = NSPersistentStoreDescription(url: StoreMigration.sharedStoreURL(in: base))
             Self.enableHistory(on: sharedDescription)
             let sharedOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: Self.containerIdentifier)
             sharedOptions.databaseScope = .shared
@@ -72,7 +74,7 @@ final class PersistenceController {
         }
 
         for store in container.persistentStoreCoordinator.persistentStores {
-            if store.url?.lastPathComponent == "shared.sqlite" {
+            if let name = store.url?.lastPathComponent, name == "shared.sqlite" || name == StoreMigration.sharedName {
                 sharedStore = store
             } else {
                 privateStore = store
@@ -92,6 +94,10 @@ final class PersistenceController {
         }
         #endif
 
+        if isCloudEnabled {
+            SyncLog.observe(container)
+            SyncLog.write("launch stores=\(container.persistentStoreCoordinator.persistentStores.compactMap { $0.url?.lastPathComponent })")
+        }
         container.viewContext.automaticallyMergesChangesFromParent = true
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         container.viewContext.transactionAuthor = "app"

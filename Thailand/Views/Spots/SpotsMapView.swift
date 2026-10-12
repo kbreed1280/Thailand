@@ -205,6 +205,8 @@ struct ClusteredSpotMap: UIViewRepresentable {
     var applePlaces: [MKPointOfInterestCategory]?
     /// Researched must-sees, shown whenever discover is on.
     var topPicks: [TopPick] = []
+    /// Called after the map stops moving, with the area on screen.
+    var onRegionChange: ((MKCoordinateRegion) -> Void)?
 
     static let addablePlaces: [MKPointOfInterestCategory] = [
         .hotel, .restaurant, .cafe, .bakery, .foodMarket, .nightlife, .brewery, .winery, .museum, .park, .nationalPark,
@@ -334,7 +336,10 @@ struct ClusteredSpotMap: UIViewRepresentable {
         }
 
         func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-            MainActor.assumeIsolated { loadDiscover(mapView) }
+            MainActor.assumeIsolated {
+                loadDiscover(mapView)
+                parent.onRegionChange?(mapView.region)
+            }
         }
 
         init(_ parent: ClusteredSpotMap) { self.parent = parent }

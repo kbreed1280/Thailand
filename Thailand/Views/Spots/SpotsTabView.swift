@@ -41,6 +41,8 @@ struct SpotsHomeView: View {
     @State private var favorites = false
     /// Only spots that came from a TikTok you shared.
     @State private var fromTikTok = false
+    /// The area on screen (the TikTok list shows only places in it).
+    @State private var visibleRegion: MKCoordinateRegion?
     @State private var search = ""
     @State private var selected: Spot?
     @State private var focus: SpotsMapView.MapFocus?
@@ -110,7 +112,8 @@ struct SpotsHomeView: View {
                          discoverKinds: visibleKinds,
                          onPickLandmark: { landmark = $0 },
                          applePlaces: applePlaces,
-                         topPicks: topPicks)
+                         topPicks: topPicks,
+                         onRegionChange: { visibleRegion = $0 })
     }
 
     private var core: some View {
@@ -455,6 +458,12 @@ struct SpotsHomeView: View {
         .buttonStyle(.plain)
     }
 
+    /// The list under the map: with the TikTok filter on, only the places in the area on screen.
+    private var listSpots: [Spot] {
+        guard fromTikTok, let region = visibleRegion else { return spots }
+        return spots.filter { spot in spot.coordinate.map(region.contains) ?? false }
+    }
+
     /// Saved from a TikTok post (shared to the app or pasted as a link).
     static func isFromTikTok(_ spot: Spot) -> Bool {
         spot.sources.contains { $0.platform == .tiktok }
@@ -493,7 +502,14 @@ struct SpotsHomeView: View {
                     }
                     .buttonStyle(.plain)
                 }
-                ForEach(spots) { spot in
+                if fromTikTok && visibleRegion != nil {
+                    Label("\(listSpots.count) of \(spots.count) TikTok places in this area. Move the map to see others.",
+                          systemImage: SourcePlatform.tiktok.systemImage)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                ForEach(listSpots) { spot in
                     SpotCard(spot: spot, distance: distanceText(spot)) { path.append(spot) }
                 }
                 if spots.isEmpty, pastedURL == nil {

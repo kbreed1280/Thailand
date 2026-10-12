@@ -2,10 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Push notifications let CloudKit deliver your partner's changes quickly. -->
 	<key>aps-environment</key>
 	<string>development</string>
-	<!-- iCloud + CloudKit for sync and trip sharing. -->
+	<key>com.apple.developer.icloud-container-environment</key>
+	<string>Production</string>
 	<key>com.apple.developer.icloud-container-identifiers</key>
 	<array>
 		<string>iCloud.com.kbreed.thailandtrip</string>
@@ -14,15 +14,12 @@
 	<array>
 		<string>CloudKit</string>
 	</array>
-	<!-- Shared keychain with the Share extension: links shared from TikTok wait here.
-	     (Team provisioning profiles already allow any TEAMID.* keychain group.) -->
+	<key>com.apple.developer.weatherkit</key>
+	<true/>
 	<key>keychain-access-groups</key>
 	<array>
 		<string>$(AppIdentifierPrefix)com.kbreed.thailandtrip</string>
 		<string>$(AppIdentifierPrefix)com.kbreed.thailandtrip.shared</string>
 	</array>
-	<!-- Weather on the Nearby tab. -->
-	<key>com.apple.developer.weatherkit</key>
-	<true/>
 </dict>
 </plist>

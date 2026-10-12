@@ -43,6 +43,11 @@ struct SpotsHomeView: View {
     @State private var fromTikTok = false
     /// The area on screen (the TikTok list shows only places in it).
     @State private var visibleRegion: MKCoordinateRegion?
+    @State private var mapHeight: CGFloat = 0
+    @State private var containerHeight: CGFloat = 0
+    @State private var bottomInset: CGFloat = 0
+    @State private var checkingLocations = false
+    @State private var locationReport: LocationChecker.Result?
     @State private var search = ""
     @State private var selected: Spot?
     @State private var focus: SpotsMapView.MapFocus?
@@ -113,7 +118,7 @@ struct SpotsHomeView: View {
                          onPickLandmark: { landmark = $0 },
                          applePlaces: applePlaces,
                          topPicks: topPicks,
-                         onRegionChange: { visibleRegion = $0 })
+                         onRegionChange: { region, height in visibleRegion = region; mapHeight = height })
     }
 
     private var core: some View {
@@ -128,6 +133,8 @@ struct SpotsHomeView: View {
                     sheet(height: geo.size.height)
                         .frame(maxHeight: .infinity, alignment: .bottom)
                 }
+                .onAppear { containerHeight = geo.size.height; bottomInset = geo.safeAreaInsets.bottom }
+                .onChange(of: geo.size) { _, size in containerHeight = size.height }
             }
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: Spot.self) { SpotDetailView(spot: $0) }
@@ -185,6 +192,18 @@ struct SpotsHomeView: View {
         .task(id: trip.objectID) { await loadTopPicks() }
         .fullScreenCover(item: $walkTarget) { target in
             WalkingRouteView(destinationName: target.name, coordinate: target.coordinate)
+        }
+        .overlay {
+            if checkingLocations {
+                ProgressView("Checking locations…").padding().background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+            }
+        }
+        .alert("Map locations checked", isPresented: Binding(get: { locationReport != nil }, set: { if !$0 { locationReport = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            if let r = locationReport {
+                Text(Self.reportText(r))
+            }
         }
         .alert("\(picksCity) Top Picks added", isPresented: Binding(get: { addedTopPicks != nil }, set: { if !$0 { addedTopPicks = nil } })) {
             Button("OK", role: .cancel) {}
@@ -308,6 +327,17 @@ struct SpotsHomeView: View {
         .buttonStyle(.plain)
     }
 
+    /// Re-checks pins against Apple Maps (TikTok spots when that filter is on, otherwise all).
+    private func checkLocations() async {
+        checkingLocations = true
+        defer { checkingLocations = false }
+        let targets = fromTikTok ? trip.confirmedSpots.filter(Self.isFromTikTok) : trip.confirmedSpots
+        let report = await LocationChecker.check(targets, trip: trip)
+        ItineraryStore(context: context).save()
+        refreshTick += 1
+        locationReport = report
+    }
+
     /// "Bangkok" for Thailand trips, otherwise the trip's destination ("Tokyo").
     private var picksCity: String {
         guard !trip.isThailand else { return "Bangkok" }
@@ -331,6 +361,8 @@ struct SpotsHomeView: View {
             Button("Search for a place", systemImage: "magnifyingglass") { showingSearchPlace = true }
             Button("Add screenshots", systemImage: "text.viewfinder") { showingScreenshots = true }
             Divider()
+            Button("Fix map locations", systemImage: "mappin.and.ellipse") { Task { await checkLocations() } }
+                .disabled(!canEdit || checkingLocations)
             Button("Auto-plan days", systemImage: "wand.and.sparkles") { showingAutoPlan = true }
             Button("Sidequest", systemImage: "dice") { showingSidequest = true }
             Button("Trending nearby", systemImage: "flame") { showingTrending = true }
@@ -460,8 +492,27 @@ struct SpotsHomeView: View {
 
     /// The list under the map: with the TikTok filter on, only the places in the area on screen.
     private var listSpots: [Spot] {
-        guard fromTikTok, let region = visibleRegion else { return spots }
-        return spots.filter { spot in spot.coordinate.map(region.contains) ?? false }
+        guard fromTikTok, let region = visibleRegion, mapHeight > 0 else { return spots }
+        // Only the part of the map above the sheet: the sheet covers the bottom of the map.
+        let sheetTop = mapHeight - (height(detent, in: containerHeight) + bottomInset)
+        let shown = max(0.15, min(1, sheetTop / mapHeight))
+        let north = region.center.latitude + region.span.latitudeDelta / 2
+        let south = north - region.span.latitudeDelta * shown
+        let west = region.center.longitude - region.span.longitudeDelta / 2
+        let east = region.center.longitude + region.span.longitudeDelta / 2
+        return spots.filter { spot in
+            guard let c = spot.coordinate else { return false }
+            return c.latitude <= north && c.latitude >= south && c.longitude >= west && c.longitude <= east
+        }
+    }
+
+    static func reportText(_ r: LocationChecker.Result) -> String {
+        var lines = ["Checked \(r.checked) places."]
+        lines.append(r.moved.isEmpty ? "All pins were already in the right spot." : "Moved \(r.moved.count) to the right spot: \(r.moved.prefix(6).joined(separator: ", "))\(r.moved.count > 6 ? "…" : "").")
+        if !r.unconfirmed.isEmpty {
+            lines.append("Couldn't confirm \(r.unconfirmed.count) on Apple Maps: \(r.unconfirmed.prefix(6).joined(separator: ", "))\(r.unconfirmed.count > 6 ? "…" : ""). Open one and tap ⋯ → Report incorrect point → Wrong location to pick the right place.")
+        }
+        return lines.joined(separator: "\n\n")
     }
 
     /// Saved from a TikTok post (shared to the app or pasted as a link).

@@ -39,6 +39,8 @@ struct SpotsHomeView: View {
     @State private var category: SpotCategory?
     @State private var notVisited = false
     @State private var favorites = false
+    /// Only spots that came from a TikTok you shared.
+    @State private var fromTikTok = false
     @State private var search = ""
     @State private var selected: Spot?
     @State private var focus: SpotsMapView.MapFocus?
@@ -87,6 +89,7 @@ struct SpotsHomeView: View {
             (category == nil || spot.category == category)
                 && (!notVisited || !spot.isVisited)
                 && (!favorites || spot.isFavorite)
+                && (!fromTikTok || Self.isFromTikTok(spot))
                 && (query.isEmpty || SharedInbox.firstURL(in: query) != nil
                     || [spot.displayName, spot.city ?? "", spot.address ?? ""].contains { $0.localizedCaseInsensitiveContains(query) })
         }
@@ -441,9 +444,20 @@ struct SpotsHomeView: View {
                 }
                 Button { notVisited.toggle() } label: { filterChip("Not visited", icon: notVisited ? "circle.inset.filled" : "circle.dashed", on: notVisited) }
                 Button { favorites.toggle() } label: { filterChip("Favorite", icon: favorites ? "star.fill" : "star", on: favorites) }
+                let tiktok = trip.confirmedSpots.filter(Self.isFromTikTok).count
+                if tiktok > 0 || fromTikTok {
+                    Button { fromTikTok.toggle() } label: {
+                        filterChip("TikTok (\(tiktok))", icon: SourcePlatform.tiktok.systemImage, on: fromTikTok)
+                    }
+                }
             }
         }
         .buttonStyle(.plain)
+    }
+
+    /// Saved from a TikTok post (shared to the app or pasted as a link).
+    static func isFromTikTok(_ spot: Spot) -> Bool {
+        spot.sources.contains { $0.platform == .tiktok }
     }
 
     private func filterChip(_ title: String, icon: String, on: Bool) -> some View {

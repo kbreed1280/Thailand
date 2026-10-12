@@ -30,18 +30,28 @@ enum TripSharing {
         let share: CKShare
         if let existing = persistence.share(for: trip) {
             SyncLog.write("share: reusing \(existing.recordID.recordName) url=\(existing.url?.absoluteString ?? "nil")")
+            // Older shares were invite-only; if nobody has joined, open the link so invites work even
+            // when Messages can't match the person's iCloud account.
+            let others = existing.participants.filter { $0.role != .owner }
+            if existing.publicPermission == .none && others.isEmpty {
+                existing.publicPermission = .readOnly
+                _ = try? await persistence.container.persistUpdatedShare(existing, in: privateStore)
+                SyncLog.write("share: opened link to view-only")
+            }
             share = existing
         } else {
             SyncLog.write("share: creating new share for \(trip.displayName)")
             let (_, newShare, _) = try await persistence.container.share([trip], to: nil)
             newShare[CKShare.SystemFieldKey.title] = trip.displayName
-            newShare.publicPermission = .none
+            // Anyone with the link can view (reliable for invites by Messages, even when the other
+            // person's number isn't their Apple Account). Change it under Manage.
+            newShare.publicPermission = .readOnly
             _ = try await persistence.container.persistUpdatedShare(newShare, in: privateStore)
             share = newShare
         }
 
         let controller = UICloudSharingController(share: share, container: persistence.cloudKitContainer)
-        controller.availablePermissions = [.allowPrivate, .allowReadWrite, .allowReadOnly]
+        controller.availablePermissions = [.allowPublic, .allowPrivate, .allowReadOnly, .allowReadWrite]
         controller.delegate = delegate
         controller.modalPresentationStyle = .formSheet
         topViewController()?.present(controller, animated: true)
@@ -88,7 +98,7 @@ final class SharingControllerDelegate: NSObject, UICloudSharingControllerDelegat
     }
 
     func itemTitle(for csc: UICloudSharingController) -> String? {
-        csc.share?[CKShare.SystemFieldKey.title] as? String ?? "Thailand Trip"
+        csc.share?[CKShare.SystemFieldKey.title] as? String ?? "Trip"
     }
 
     func itemThumbnailData(for csc: UICloudSharingController) -> Data? {

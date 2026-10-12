@@ -1,3 +1,4 @@
+import CloudKit
 import CoreData
 import Foundation
 
@@ -14,6 +15,35 @@ enum SyncLog {
             handle.seekToEndOfFile(); handle.write(data); try? handle.close()
         } else {
             try? data.write(to: url)
+        }
+        #endif
+    }
+
+    /// Asks iCloud about every trip share: does it exist on the server, its link, and who is on it.
+    @MainActor
+    static func checkShares() async {
+        #if DEBUG
+        let persistence = PersistenceController.shared
+        guard persistence.isCloudEnabled else { return }
+        let trips = (try? persistence.viewContext.fetch(NSFetchRequest<Trip>(entityName: "Trip"))) ?? []
+        for trip in trips {
+            guard let local = persistence.share(for: trip) else { continue }
+            let db = persistence.isSharedWithMe(trip) ? persistence.cloudKitContainer.sharedCloudDatabase : persistence.cloudKitContainer.privateCloudDatabase
+            do {
+                guard let server = try await db.record(for: local.recordID) as? CKShare else {
+                    write("check \(trip.displayName): server record isn't a share"); continue
+                }
+                let people = server.participants.map { p in
+                    let who = p.userIdentity.lookupInfo?.emailAddress ?? p.userIdentity.lookupInfo?.phoneNumber
+                        ?? p.userIdentity.nameComponents.map { PersonNameComponentsFormatter.localizedString(from: $0, style: .short) } ?? "?"
+                    let status = switch p.acceptanceStatus { case .accepted: "accepted"; case .pending: "pending"; case .removed: "removed"; default: "unknown" }
+                    let role = p.role == .owner ? "owner" : "participant"
+                    return "\(who)[\(role),\(status),\(p.permission == .readWrite ? "rw" : "ro")]"
+                }
+                write("check \(trip.displayName): url=\(server.url?.absoluteString ?? "nil") public=\(server.publicPermission.rawValue) people=\(people)")
+            } catch {
+                write("check \(trip.displayName): server error \(error)")
+            }
         }
         #endif
     }

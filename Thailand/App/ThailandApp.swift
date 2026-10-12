@@ -32,6 +32,7 @@ struct ThailandApp: App {
                     }
                     #endif
                     await Subscription.shared.start()
+                    await SyncLog.checkShares()
                     await IdentityService.refreshDisplayName()
                 }
                 .onChange(of: scenePhase) { _, phase in

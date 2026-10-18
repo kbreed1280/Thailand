@@ -42,6 +42,17 @@ struct TripItineraryView: View {
     @State private var showingTransit = false
     @State private var showingOffline = false
     @State private var sharingError: String?
+    @AppStorage("plannerTab") private var tabRaw = PlannerTab.overview.rawValue
+    @State private var showingBudget = false
+    @State private var showingAssistant = false
+    @State private var showingNewList = false
+    @State private var newListName = ""
+    @State private var renamingList: String?
+    @State private var renameText = ""
+    @State private var optimizeMessage: String?
+    @State private var collapsedLists: Set<String> = []
+
+    private var tab: PlannerTab { PlannerTab(rawValue: tabRaw) ?? .overview }
 
     private var store: ItineraryStore { ItineraryStore(context: context) }
     private var persistence: PersistenceController { PersistenceController.shared }
@@ -51,65 +62,9 @@ struct TripItineraryView: View {
     var body: some View {
         // Re-read relationships whenever anything in the store changes (local edits or sync).
         let _ = refreshTick
-        List {
-            Section {
-                TripHero(
-                    trip: trip,
-                    members: persistence.participantNames(for: trip),
-                    isSharedWithMe: persistence.isSharedWithMe(trip),
-                    canEdit: canEdit,
-                    onFlights: { showingFlights = true },
-                    onWeather: { showingWeather = true },
-                    onShare: persistence.isCloudEnabled ? { shareTrip() } : nil,
-                    isPreparingShare: isPreparingShare
-                )
-                .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 8, trailing: 0))
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-            }
-
-            Section {
-                TodayCard(trip: trip,
-                          onDirections: { item in
-                              if let c = item.coordinate { walkTarget = WalkTarget(name: item.displayTitle, coordinate: c) }
-                          },
-                          onOpenDay: { mapDay = $0 },
-                          onAddSpots: { spotPickerDay = $0 },
-                          onSidequest: { showingSidequest = true })
-                .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 8, trailing: 0))
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-            }
-
-            Section {
-                TravelToolsGrid(trip: trip) { tool in
-                    switch tool {
-                    case .packing: showingPacking = true
-                    case .documents: showingVault = true
-                    case .flights: showingFlights = true
-                    case .weather: showingWeather = true
-                    case .tdac: showingTDAC = true
-                    case .entry: showingEntry = true
-                    case .converter: showingConverter = true
-                    case .transit: showingTransit = true
-                    case .offline: showingOffline = true
-                    }
-                }
-                .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-            }
-
-            wishListSection
-
-            ForEach(trip.sortedDays) { day in
-                daySection(day)
-            }
-        }
-        .listStyle(.insetGrouped)
-        .listSectionSpacing(.compact)
-        .scrollContentBackground(.hidden)
-        .skyBackground()
+        plannerContent
+            .safeAreaInset(edge: .top, spacing: 0) { tabPicker }
+            .skyBackground()
         .navigationTitle(trip.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarTitleMenu { tripMenu }
@@ -150,7 +105,35 @@ struct TripItineraryView: View {
             refreshTick &+= 1
         }
         .sheet(item: $editingNewItemFor) { target in
-            ItemEditorView(item: nil, trip: trip, initialDay: target.day)
+            ItemEditorView(item: nil, trip: trip, initialDay: target.day, initialList: target.list)
+        }
+        .sheet(isPresented: $showingBudget) { BudgetView(trip: trip) }
+        .sheet(isPresented: $showingAssistant) { TripAssistantView(trip: trip) }
+        .alert("New List", isPresented: $showingNewList) {
+            TextField("Restaurants, Things to do…", text: $newListName)
+            Button("Create") {
+                store.addList(newListName, to: trip)
+                store.save()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Ideas: \(TripLists.suggestions.prefix(4).joined(separator: ", ")).")
+        }
+        .alert("Rename List", isPresented: Binding(get: { renamingList != nil }, set: { if !$0 { renamingList = nil } })) {
+            TextField("Name", text: $renameText)
+            Button("Rename") {
+                if let old = renamingList {
+                    store.renameList(old, to: renameText, in: trip)
+                    store.save()
+                }
+                renamingList = nil
+            }
+            Button("Cancel", role: .cancel) { renamingList = nil }
+        }
+        .alert("Route Optimized", isPresented: Binding(get: { optimizeMessage != nil }, set: { if !$0 { optimizeMessage = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(optimizeMessage ?? "")
         }
         .sheet(isPresented: $showingStarterIdeas) {
             StarterIdeasView(trip: trip)
@@ -265,6 +248,140 @@ struct TripItineraryView: View {
         }
     }
 
+    // MARK: Tabs
+
+    private var tabPicker: some View {
+        Picker("Planner section", selection: $tabRaw) {
+            ForEach(PlannerTab.allCases) { tab in
+                Text(tab.title).tag(tab.rawValue)
+            }
+        }
+        .pickerStyle(.segmented)
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(.bar)
+    }
+
+    @ViewBuilder
+    private var plannerContent: some View {
+        switch tab {
+        case .map:
+            TripMapView(trip: trip) { mapDay = $0 }
+        case .overview, .itinerary:
+            List {
+                if tab == .overview {
+                    overviewSections
+                } else {
+                    itinerarySections
+                }
+            }
+            .listStyle(.insetGrouped)
+            .listSectionSpacing(.compact)
+            .scrollContentBackground(.hidden)
+        }
+    }
+
+    @ViewBuilder
+    private var overviewSections: some View {
+        Section {
+            TripHero(
+                trip: trip,
+                members: persistence.participantNames(for: trip),
+                isSharedWithMe: persistence.isSharedWithMe(trip),
+                canEdit: canEdit,
+                onFlights: { showingFlights = true },
+                onWeather: { showingWeather = true },
+                onShare: persistence.isCloudEnabled ? { shareTrip() } : nil,
+                isPreparingShare: isPreparingShare
+            )
+            .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 8, trailing: 0))
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+        }
+
+        Section {
+            TodayCard(trip: trip,
+                      onDirections: { item in
+                          if let c = item.coordinate { walkTarget = WalkTarget(name: item.displayTitle, coordinate: c) }
+                      },
+                      onOpenDay: { mapDay = $0 },
+                      onAddSpots: { spotPickerDay = $0 },
+                      onSidequest: { showingSidequest = true })
+            .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 8, trailing: 0))
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+        }
+
+        Section {
+            AssistantCard { showingAssistant = true }
+        }
+
+        Section {
+            TravelToolsGrid(trip: trip) { tool in
+                switch tool {
+                case .packing: showingPacking = true
+                case .documents: showingVault = true
+                case .flights: showingFlights = true
+                case .weather: showingWeather = true
+                case .tdac: showingTDAC = true
+                case .entry: showingEntry = true
+                case .converter: showingConverter = true
+                case .transit: showingTransit = true
+                case .offline: showingOffline = true
+                }
+            }
+            .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+        }
+
+        Section {
+            BookingsSummaryRow(trip: trip, canEdit: canEdit,
+                               onOpen: { showingBookings = true },
+                               onImport: { showingImport = true })
+            BudgetCard(trip: trip) { showingBudget = true }
+        }
+
+        Section {
+            TripNotesCard(trip: trip, canEdit: canEdit)
+        }
+
+        wishListSection
+
+        ForEach(trip.customListNames, id: \.self) { name in
+            customListSection(name)
+        }
+
+        Section {
+            if canEdit {
+                Button {
+                    newListName = ""
+                    showingNewList = true
+                } label: {
+                    Label("New List", systemImage: "plus.rectangle.on.rectangle")
+                }
+            }
+            ExportMapsRow(trip: trip)
+        } footer: {
+            Text("Lists hold places you haven't scheduled, like Restaurants or Things to do. Drag a place onto a day in Itinerary when you're ready.")
+        }
+    }
+
+    @ViewBuilder
+    private var itinerarySections: some View {
+        if trip.sortedDays.isEmpty {
+            Section {
+                Text("Add travel dates to the trip to get a plan for each day.")
+                    .foregroundStyle(.secondary)
+                Button("Edit Trip", systemImage: "calendar") { showingEditTrip = true }
+                    .disabled(!canEdit)
+            }
+        }
+        ForEach(trip.sortedDays) { day in
+            daySection(day)
+        }
+    }
+
     // MARK: Sections
 
     @ViewBuilder
@@ -318,6 +435,86 @@ struct TripItineraryView: View {
         }
     }
 
+    private func customListSection(_ name: String) -> some View {
+        let expanded = !collapsedLists.contains(name)
+        let items = trip.listItems(name)
+        return Section {
+            if expanded {
+                if items.isEmpty {
+                    DropPlaceholder(text: "Drag places here, or tap + to add one.") { ids in
+                        drop(ids, onto: nil, list: name, before: nil)
+                    }
+                }
+                ForEach(items) { item in
+                    row(for: item, in: nil, list: name)
+                }
+            }
+        } header: {
+            HStack {
+                Button {
+                    withAnimation {
+                        if expanded { collapsedLists.insert(name) } else { collapsedLists.remove(name) }
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "list.bullet.rectangle.fill").foregroundStyle(Theme.lagoon)
+                        Text(name).font(.title3.weight(.bold))
+                        Text("\(items.count)").foregroundStyle(.secondary)
+                        Image(systemName: expanded ? "chevron.down" : "chevron.right")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(name), \(items.count) places, \(expanded ? "expanded" : "collapsed")")
+                Spacer()
+                if canEdit {
+                    Menu {
+                        Button("Add a Place", systemImage: "plus") {
+                            editingNewItemFor = NewItemTarget(day: nil, list: name)
+                        }
+                        Button("Rename", systemImage: "pencil") {
+                            renameText = name
+                            renamingList = name
+                        }
+                        Button("Delete List", systemImage: "trash", role: .destructive) {
+                            withAnimation {
+                                store.deleteList(name, in: trip)
+                                store.save()
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.title3)
+                            .frame(minWidth: 44, minHeight: 32)
+                    }
+                    .accessibilityLabel("\(name) options")
+                }
+            }
+            .font(.headline)
+            .textCase(nil)
+            .foregroundStyle(.primary)
+            .dropDestination(for: String.self) { ids, _ in
+                drop(ids, onto: nil, list: name, before: nil)
+            }
+        }
+    }
+
+    private func optimize(_ day: Day) {
+        let hotel = trip.sortedSavedPlaces.first
+        let saved = store.optimizeRoute(for: day, start: hotel?.coordinate, end: hotel?.coordinate)
+        store.save()
+        if saved > 0 {
+            let km = saved / 1000
+            let distance = km >= 1 ? String(format: "%.1f km", km) : "\(Int(saved.rounded())) m"
+            let timed = day.sortedItems.contains { $0.time != nil }
+            optimizeMessage = "Day \(day.number) reordered\(hotel.map { " from \($0.displayName)" } ?? ""), about \(distance) shorter."
+                + (timed ? " Start times weren't changed: open Map & route and tap Re-time Day to update them." : "")
+        } else {
+            optimizeMessage = "Day \(day.number) is already in the shortest order."
+        }
+    }
+
     private func daySection(_ day: Day) -> some View {
         Section {
             let items = day.sortedItems
@@ -345,12 +542,14 @@ struct TripItineraryView: View {
                 }
             }
         } header: {
-            DayHeader(day: day, canAddSpots: canEdit && !trip.confirmedSpots.isEmpty) {
+            DayHeader(day: day, canAddSpots: canEdit && !trip.confirmedSpots.isEmpty, canEdit: canEdit) {
                 mapDay = day
             } onAdd: {
                 editingNewItemFor = NewItemTarget(day: day)
             } onSpots: {
                 spotPickerDay = day
+            } onOptimize: {
+                optimize(day)
             }
             .dropDestination(for: String.self) { ids, _ in
                 drop(ids, onto: day, before: nil)
@@ -359,9 +558,9 @@ struct TripItineraryView: View {
     }
 
     @ViewBuilder
-    private func row(for item: Item, in day: Day?) -> some View {
+    private func row(for item: Item, in day: Day?, list: String = "") -> some View {
         if canEdit {
-            editableRow(for: item, in: day)
+            editableRow(for: item, in: day, list: list)
         } else {
             NavigationLink(value: item) {
                 ItemRow(item: item)
@@ -369,7 +568,7 @@ struct TripItineraryView: View {
         }
     }
 
-    private func editableRow(for item: Item, in day: Day?) -> some View {
+    private func editableRow(for item: Item, in day: Day?, list: String = "") -> some View {
         NavigationLink(value: item) {
             ItemRow(item: item)
         }
@@ -380,7 +579,7 @@ struct TripItineraryView: View {
                 .background(Theme.cardBackground, in: RoundedRectangle(cornerRadius: Theme.smallCornerRadius))
         }
         .dropDestination(for: String.self) { ids, _ in
-            drop(ids, onto: day, before: item)
+            drop(ids, onto: day, list: list, before: item)
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive) {
@@ -404,6 +603,9 @@ struct TripItineraryView: View {
         .contextMenu {
             Menu {
                 Button("Wish List", systemImage: "star") { move(item, to: nil) }
+                ForEach(trip.customListNames, id: \.self) { name in
+                    Button(name, systemImage: "list.bullet") { move(item, to: nil, list: name) }
+                }
                 ForEach(trip.sortedDays) { target in
                     Button(target.heading) { move(item, to: target) }
                 }
@@ -519,20 +721,25 @@ struct TripItineraryView: View {
         }
     }
 
-    private func move(_ item: Item, to day: Day?) {
+    private func move(_ item: Item, to day: Day?, list: String = "") {
         withAnimation {
             store.move(item, toDay: day, in: trip, before: nil)
+            if day == nil { item.listName = list }
             store.save()
         }
     }
 
     /// Handles a drop of dragged item IDs onto a day (nil = wish list), before `target` or at the end.
-    private func drop(_ ids: [String], onto day: Day?, before target: Item?) -> Bool {
+    private func drop(_ ids: [String], onto day: Day?, list: String = "", before target: Item?) -> Bool {
         let items = ids.compactMap { id in trip.allItems.first { $0.uuid?.uuidString == id } }
         guard !items.isEmpty else { return false }
         withAnimation {
             for item in items where item != target {
                 store.move(item, toDay: day, in: trip, before: target)
+                if day == nil, item.listName != list {
+                    item.listName = list
+                    item.markEdited()
+                }
             }
             store.save()
         }
@@ -544,6 +751,8 @@ struct TripItineraryView: View {
 struct NewItemTarget: Identifiable {
     let id = UUID()
     let day: Day?
+    /// Custom list for a new unscheduled place ("" = Wish List).
+    var list: String = ""
 }
 
 // MARK: - Pieces
@@ -569,10 +778,20 @@ private struct DropPlaceholder: View {
 private struct DayHeader: View {
     @ObservedObject var day: Day
     var canAddSpots = false
+    var canEdit = true
     let onMap: () -> Void
     let onAdd: () -> Void
     var onSpots: () -> Void = {}
+    var onOptimize: () -> Void = {}
     @State private var walked: WalkStats?
+    @State private var totals: TravelLeg?
+
+    /// Changes whenever the day's stops, order or travel modes change.
+    private var totalsKey: String {
+        day.sortedItems.filter(\.hasCoordinate)
+            .map { String(format: "%.5f,%.5f,%@", $0.latitude, $0.longitude, $0.travelModeRaw ?? "") }
+            .joined(separator: ";")
+    }
     @ObservedObject private var forecast = TripForecast.shared
 
     private var isToday: Bool { day.date.map { Calendar.current.isDateInToday($0) } ?? false }
@@ -595,6 +814,11 @@ private struct DayHeader: View {
                 HStack(spacing: 8) {
                     if let date = day.date {
                         Text(date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))
+                    }
+                    if let totals, totals.seconds > 0 {
+                        Label("\(ScheduleMath.durationText(seconds: totals.seconds)) · \(Self.distanceText(totals.meters))", systemImage: "point.topleft.down.to.point.bottomright.curvepath.fill")
+                            .foregroundStyle(Theme.ink)
+                            .accessibilityLabel("Travel today: \(ScheduleMath.durationText(seconds: totals.seconds)), \(Self.distanceText(totals.meters))")
                     }
                     if let walked, walked.steps > 0 {
                         Label("\(walked.steps.formatted()) steps", systemImage: "shoeprints.fill")
@@ -620,6 +844,10 @@ private struct DayHeader: View {
                 if canAddSpots { Button("Add from Spots", systemImage: "mappin.and.ellipse", action: onSpots) }
                 Button("Map & route", systemImage: "map", action: onMap)
                     .disabled(!day.sortedItems.contains { $0.hasCoordinate })
+                if canEdit {
+                    Button("Optimize Route", systemImage: "arrow.triangle.swap", action: onOptimize)
+                        .disabled(day.sortedItems.filter(\.hasCoordinate).count < 2)
+                }
             } label: {
                 Image(systemName: "plus.circle.fill")
                     .font(.title2)
@@ -636,6 +864,25 @@ private struct DayHeader: View {
                 walked = await PedometerService.shared.stats(for: date)
             }
         }
+        .task(id: totalsKey) { totals = await dayTotals() }
+    }
+
+    /// Total travel time and distance between the day's stops, by each stop's travel mode.
+    private func dayTotals() async -> TravelLeg? {
+        let stops = day.sortedItems.filter(\.hasCoordinate)
+        guard stops.count > 1 else { return nil }
+        var total = TravelLeg(seconds: 0, meters: 0)
+        for (from, to) in zip(stops, stops.dropFirst()) {
+            guard let a = from.coordinate, let b = to.coordinate,
+                  let leg = await TravelTimeService.shared.leg(from: a, to: b, mode: to.travelMode, at: to.time) else { continue }
+            total.seconds += leg.seconds
+            total.meters += leg.meters
+        }
+        return total.seconds > 0 ? total : nil
+    }
+
+    static func distanceText(_ meters: Double) -> String {
+        meters >= 1000 ? String(format: "%.1f km", meters / 1000) : "\(Int(meters.rounded())) m"
     }
 }
 

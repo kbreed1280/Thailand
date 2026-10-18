@@ -95,6 +95,8 @@ struct ItineraryStore {
         let wasOnWishList = item.isOnWishList
 
         attach(item, to: day, in: trip)
+        // Scheduling a place takes it off its custom list.
+        if day != nil, !(item.listName ?? "").isEmpty { item.listName = "" }
 
         let siblings = day?.sortedItems ?? trip.sortedWishItems
         let order = ItineraryOrdering.inserting(item.objectID, before: target?.objectID, in: siblings.map(\.objectID))

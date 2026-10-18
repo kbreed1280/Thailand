@@ -11,7 +11,7 @@ enum TripModel {
 
     /// Model versions shipped so far, rebuilt by the migration tests.
     enum Version: Int, Comparable {
-        case step12 = 12, step13 = 13, step14 = 14, current = 15
+        case step12 = 12, step13 = 13, step14 = 14, step15 = 15, current = 16
         static func < (a: Version, b: Version) -> Bool { a.rawValue < b.rawValue }
     }
 
@@ -33,13 +33,19 @@ enum TripModel {
             // Step 14: trip planner.
             attribute("destination", .stringAttributeType, default: ""),
             attribute("vibe", .stringAttributeType, default: "")
-        ] : []) + (version >= .current ? [
+        ] : []) + (version >= .step15 ? [
             // Step 15: any destination. ISO 4217 code of the trip's local money ("" = Thai baht, for trips made before).
             attribute("currencyCode", .stringAttributeType, default: ""),
             // Where the trip is ("" = Thailand, for trips made before): ISO country code + destination point.
             attribute("countryCode", .stringAttributeType, default: ""),
             attribute("destinationLatitude", .doubleAttributeType, default: 0),
             attribute("destinationLongitude", .doubleAttributeType, default: 0)
+        ] : []) + (version >= .current ? [
+            // Step 16: planner overview. Budget in the trip's local money (0 = no budget), per-category
+            // budgets as "category=amount" lines, and custom list names (one per line) so empty lists survive.
+            attribute("budgetTotal", .doubleAttributeType, default: 0),
+            attribute("budgetByCategory", .stringAttributeType, default: ""),
+            attribute("listNames", .stringAttributeType, default: "")
         ] : []))
 
         let day = entity("Day", [
@@ -69,7 +75,10 @@ enum TripModel {
             attribute("updatedAt", .dateAttributeType),
             attribute("durationMinutes", .integer64AttributeType, default: 60),
             attribute("travelModeRaw", .stringAttributeType, default: TravelMode.walking.rawValue)
-        ])
+        ] + (version >= .current ? [
+            // Step 16: which custom list an unscheduled item is on ("" = Wish List).
+            attribute("listName", .stringAttributeType, default: "")
+        ] : []))
 
         let photo = entity("ItemPhoto", [
             attribute("uuid", .UUIDAttributeType),

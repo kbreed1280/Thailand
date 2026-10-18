@@ -11,6 +11,8 @@ struct ItemEditorView: View {
     let item: Item?
     @ObservedObject var trip: Trip
     let initialDay: Day?
+    /// Custom list for a new unscheduled place ("" = Wish List).
+    var initialList: String = ""
 
     @State private var title = ""
     @State private var category: ItemCategory = .place
@@ -277,6 +279,7 @@ struct ItemEditorView: View {
             }
         } else {
             target = store.addItem(title: title, category: category, to: day, in: trip)
+            if day == nil { target.listName = initialList }
         }
 
         target.title = title.trimmingCharacters(in: .whitespaces)

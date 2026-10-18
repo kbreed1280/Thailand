@@ -195,6 +195,9 @@ final class Trip: NSManagedObject {
     @NSManaged var packingItems: NSSet?
     @NSManaged var savedPlaces: NSSet?
     @NSManaged var documents: NSSet?
+    @NSManaged var budgetTotal: Double
+    @NSManaged var budgetByCategory: String?
+    @NSManaged var listNames: String?
 
     var sortedDocuments: [TripDocument] {
         (documents as? Set<TripDocument> ?? []).sorted { ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast) }
@@ -233,8 +236,8 @@ final class Trip: NSManagedObject {
         }
     }
 
-    /// Wish list without TikTok tip videos filed in folders (those live in the TikTok screen).
-    var wishListPlaces: [Item] { sortedWishItems.filter { !$0.isFolderVideo } }
+    /// Wish list without TikTok tip videos filed in folders (those live in the TikTok screen) or places on custom lists.
+    var wishListPlaces: [Item] { sortedWishItems.filter { !$0.isFolderVideo && ($0.listName ?? "").isEmpty } }
 
     var sortedWishItems: [Item] {
         (wishItems as? Set<Item> ?? []).sorted { $0.sortIndex < $1.sortIndex }
@@ -310,6 +313,7 @@ final class Item: NSManagedObject {
     @NSManaged var updatedAt: Date?
     @NSManaged var durationMinutes: Int64
     @NSManaged var travelModeRaw: String?
+    @NSManaged var listName: String?
     @NSManaged var day: Day?
     @NSManaged var wishTrip: Trip?
     @NSManaged var photos: NSSet?

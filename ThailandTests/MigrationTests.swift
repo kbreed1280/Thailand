@@ -13,6 +13,9 @@ final class MigrationTests: XCTestCase {
     /// Step 14 (lists, planner) → 15 (trip currency).
     func testStep14StoreMigratesToTripCurrency() throws { try migrate(from: .step14) }
 
+    /// Step 15 (trip currency) → 16 (budget and custom lists).
+    func testStep15StoreMigratesToPlannerOverview() throws { try migrate(from: .step15) }
+
     private func migrate(from version: TripModel.Version) throws {
         let url = FileManager.default.temporaryDirectory.appending(path: "migration-\(UUID().uuidString).sqlite")
         defer { try? FileManager.default.removeItem(at: url) }

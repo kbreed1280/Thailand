@@ -77,6 +77,7 @@ struct TripMapView: View {
             }
             UserAnnotation()
         }
+        .mapLook()
         .mapControls {
             MapUserLocationButton()
             MapCompass()

@@ -177,6 +177,7 @@ struct SidequestView: View {
                         }
                     }
                 }
+                .mapLook()
                 .frame(height: 260)
                 .listRowInsets(EdgeInsets())
             } footer: {
@@ -352,6 +353,7 @@ private struct SwipeCard: View {
                 interactionModes: []) {
                 Marker(card.name, systemImage: card.category.systemImage, coordinate: card.coordinate).tint(card.category.color)
             }
+            .mapLook(showsPicker: false)
             .frame(maxHeight: .infinity)
             VStack(alignment: .leading, spacing: 6) {
                 HStack {

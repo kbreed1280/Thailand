@@ -47,6 +47,7 @@ struct SpotsMapView: View {
         ZStack(alignment: .top) {
             ClusteredSpotMap(spots: spots, selected: $selected, focus: focus)
                 .ignoresSafeArea(edges: .bottom)
+                .overlay(alignment: .bottomTrailing) { MapLookButton().padding(12) }
 
             filterBar
         }
@@ -207,6 +208,7 @@ struct ClusteredSpotMap: UIViewRepresentable {
     var topPicks: [TopPick] = []
     /// Called after the map stops moving, with the area on screen.
     var onRegionChange: ((MKCoordinateRegion, CGFloat) -> Void)?
+    @AppStorage(MapLook.storageKey) private var lookRaw = MapLook.standard.rawValue
 
     static let addablePlaces: [MKPointOfInterestCategory] = [
         .hotel, .restaurant, .cafe, .bakery, .foodMarket, .nightlife, .brewery, .winery, .museum, .park, .nationalPark,
@@ -239,6 +241,13 @@ struct ClusteredSpotMap: UIViewRepresentable {
 
     func updateUIView(_ map: MKMapView, context: Context) {
         context.coordinator.parent = self
+        if context.coordinator.lastLook != lookRaw {
+            context.coordinator.lastLook = lookRaw
+            // A new configuration resets the place filter, so keep the one already chosen.
+            let filter = map.pointOfInterestFilter
+            map.preferredConfiguration = (MapLook(rawValue: lookRaw) ?? .standard).configuration
+            map.pointOfInterestFilter = filter
+        }
         if onPickPlace != nil {
             let wanted = applePlaces ?? Self.addablePlaces
             if context.coordinator.lastApplePlaces != wanted {
@@ -314,6 +323,7 @@ struct ClusteredSpotMap: UIViewRepresentable {
     }
 
     final class Coordinator: NSObject, MKMapViewDelegate {
+        var lastLook: String?
         var parent: ClusteredSpotMap
         var lastFocus: SpotsMapView.MapFocus?
         var lastKinds: Set<DiscoverKind>?

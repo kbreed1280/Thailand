@@ -29,6 +29,7 @@ struct SevenElevenMapView: View {
                     .annotationTitles(.hidden)
                 }
             }
+            .mapLook()
             .mapControls {
                 MapUserLocationButton()
                 MapCompass()

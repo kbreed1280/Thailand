@@ -42,6 +42,7 @@ struct SpotPickerSheet: View {
                     }
                     UserAnnotation()
                 }
+                .mapLook()
                 .frame(height: 320)
                 .overlay(alignment: .top) { categoryPills.padding(.top, 8) }
 

@@ -27,6 +27,7 @@ struct SpotDetailView: View {
                     Map(initialPosition: .region(MKCoordinateRegion(center: c, latitudinalMeters: 600, longitudinalMeters: 600))) {
                         Marker(spot.displayName, systemImage: spot.category.systemImage, coordinate: c).tint(spot.category.color)
                     }
+                    .mapLook(showsPicker: false)
                     .frame(height: 170)
                     .listRowInsets(EdgeInsets())
                 }

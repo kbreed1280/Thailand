@@ -27,6 +27,7 @@ struct JournalView: View {
                             }
                         }
                     }
+                    .mapLook(showsPicker: false)
                     .frame(height: 160)
                     .listRowInsets(EdgeInsets())
 

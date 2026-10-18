@@ -161,6 +161,7 @@ struct NearbyTabView: View {
                             .tint(Theme.mango)
                     }
                 }
+                .mapLook()
                 .mapControls { MapUserLocationButton() }
                 .frame(height: 220)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))

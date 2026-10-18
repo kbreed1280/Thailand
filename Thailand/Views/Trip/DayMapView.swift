@@ -101,6 +101,7 @@ struct DayMapView: View {
             }
             UserAnnotation()
         }
+        .mapLook()
         .mapControls {
             MapUserLocationButton()
             MapCompass()

@@ -25,6 +25,7 @@ struct WalkingRouteView: View {
                         .tint(Theme.mango)
                     UserAnnotation()
                 }
+                .mapLook()
                 .mapControls {
                     MapUserLocationButton()
                     MapCompass()

@@ -147,6 +147,7 @@ struct ItemDetailView: View {
                 Marker(item.displayTitle, systemImage: item.category.systemImage, coordinate: coordinate)
                     .tint(Color(hex: item.category.colorHex))
             }
+            .mapLook(showsPicker: false)
             .frame(height: 170)
             .clipShape(RoundedRectangle(cornerRadius: Theme.smallCornerRadius, style: .continuous))
             .allowsHitTesting(false)

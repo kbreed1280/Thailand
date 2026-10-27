@@ -7,17 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7A100000000000000000004B /* WanderHubShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7A1000000000000000000041 /* WanderHubShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		7A100000000000000000003B /* ThailandWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7A1000000000000000000031 /* ThailandWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		7A100000000000000000004B /* WanderHubShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7A1000000000000000000041 /* WanderHubShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		7A100000000000000000004E /* PBXContainerItemProxy */ = {
+		7A1000000000000000000020 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 7A1000000000000000000009 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 7A1000000000000000000046;
-			remoteInfo = WanderHubShare;
+			remoteGlobalIDString = 7A1000000000000000000006;
+			remoteInfo = Thailand;
 		};
 		7A100000000000000000003E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -26,12 +26,12 @@
 			remoteGlobalIDString = 7A1000000000000000000036;
 			remoteInfo = ThailandWidgets;
 		};
-		7A1000000000000000000020 /* PBXContainerItemProxy */ = {
+		7A100000000000000000004E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 7A1000000000000000000009 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 7A1000000000000000000006;
-			remoteInfo = Thailand;
+			remoteGlobalIDString = 7A1000000000000000000046;
+			remoteInfo = WanderHubShare;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -51,20 +51,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		7A1000000000000000000041 /* WanderHubShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WanderHubShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A1000000000000000000001 /* Thailand.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Thailand.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A1000000000000000000011 /* ThailandTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ThailandTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A1000000000000000000031 /* ThailandWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ThailandWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		7A1000000000000000000041 /* WanderHubShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WanderHubShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		7A1000000000000000000048 /* Exceptions for "WanderHubShare" folder in "WanderHubShare" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 7A1000000000000000000046 /* WanderHubShare */;
-		};
 		7A1000000000000000000038 /* Exceptions for "ThailandWidgets" folder in "ThailandWidgets" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -72,17 +65,16 @@
 			);
 			target = 7A1000000000000000000036 /* ThailandWidgets */;
 		};
+		7A1000000000000000000048 /* Exceptions for "WanderHubShare" folder in "WanderHubShare" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 7A1000000000000000000046 /* WanderHubShare */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		7A1000000000000000000042 /* WanderHubShare */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				7A1000000000000000000048 /* Exceptions for "WanderHubShare" folder in "WanderHubShare" target */,
-			);
-			path = WanderHubShare;
-			sourceTree = "<group>";
-		};
 		7A1000000000000000000002 /* Thailand */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Thailand;
@@ -101,16 +93,17 @@
 			path = ThailandWidgets;
 			sourceTree = "<group>";
 		};
+		7A1000000000000000000042 /* WanderHubShare */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7A1000000000000000000048 /* Exceptions for "WanderHubShare" folder in "WanderHubShare" target */,
+			);
+			path = WanderHubShare;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		7A1000000000000000000044 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		7A1000000000000000000003 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -126,6 +119,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		7A1000000000000000000034 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7A1000000000000000000044 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -160,28 +160,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		7A1000000000000000000046 /* WanderHubShare */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 7A1000000000000000000047 /* Build configuration list for PBXNativeTarget "WanderHubShare" */;
-			buildPhases = (
-				7A1000000000000000000043 /* Sources */,
-				7A1000000000000000000044 /* Frameworks */,
-				7A1000000000000000000045 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				7A1000000000000000000042 /* WanderHubShare */,
-			);
-			name = WanderHubShare;
-			packageProductDependencies = (
-			);
-			productName = WanderHubShare;
-			productReference = 7A1000000000000000000041 /* WanderHubShare.appex */;
-			productType = "com.apple.product-type.app-extension";
-		};
 		7A1000000000000000000006 /* Thailand */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 7A100000000000000000000A /* Build configuration list for PBXNativeTarget "Thailand" */;
@@ -252,6 +230,28 @@
 			productReference = 7A1000000000000000000031 /* ThailandWidgets.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		7A1000000000000000000046 /* WanderHubShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7A1000000000000000000047 /* Build configuration list for PBXNativeTarget "WanderHubShare" */;
+			buildPhases = (
+				7A1000000000000000000043 /* Sources */,
+				7A1000000000000000000044 /* Frameworks */,
+				7A1000000000000000000045 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				7A1000000000000000000042 /* WanderHubShare */,
+			);
+			name = WanderHubShare;
+			packageProductDependencies = (
+			);
+			productName = WanderHubShare;
+			productReference = 7A1000000000000000000041 /* WanderHubShare.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -305,13 +305,6 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		7A1000000000000000000045 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		7A1000000000000000000008 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -333,16 +326,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-/* End PBXResourcesBuildPhase section */
-
-/* Begin PBXSourcesBuildPhase section */
-		7A1000000000000000000043 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
+		7A1000000000000000000045 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
 		7A1000000000000000000007 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -364,14 +357,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7A1000000000000000000043 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		7A100000000000000000004F /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 7A1000000000000000000046 /* WanderHubShare */;
-			targetProxy = 7A100000000000000000004E /* PBXContainerItemProxy */;
-		};
 		7A1000000000000000000021 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 7A1000000000000000000006 /* Thailand */;
@@ -382,63 +377,14 @@
 			target = 7A1000000000000000000036 /* ThailandWidgets */;
 			targetProxy = 7A100000000000000000003E /* PBXContainerItemProxy */;
 		};
+		7A100000000000000000004F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7A1000000000000000000046 /* WanderHubShare */;
+			targetProxy = 7A100000000000000000004E /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		7A100000000000000000004C /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = WanderHubShare/WanderHubShare.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
-				DEVELOPMENT_TEAM = "";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = WanderHubShare/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Trip Butler";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kbreed.thailandtrip.share;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Debug;
-		};
-		7A100000000000000000004D /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = WanderHubShare/WanderHubShare.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
-				DEVELOPMENT_TEAM = "";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = WanderHubShare/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Trip Butler";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kbreed.thailandtrip.share;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Release;
-		};
 		7A100000000000000000000C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -507,7 +453,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Thailand.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEVELOPMENT_ASSET_PATHS = "\"Thailand/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
@@ -519,8 +465,8 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "Take photos to attach to places in your itinerary and to translate menus and signs.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID keeps your passport and booking documents private.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to show where you are, photos of nearby sights and places to eat. It's only used while the app is open.";
-				INFOPLIST_KEY_NSMotionUsageDescription = "Motion & Fitness counts your steps and how far you've walked each day of the trip.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The microphone is used for voice translation so you can talk with people in Thai.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Motion & Fitness counts your steps and how far you've walked each day of the trip.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save photos from your trip to your photo library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Add photos from your library to places in your itinerary and translate text in photos.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Speech recognition turns what you say into text so it can be translated.";
@@ -548,7 +494,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Thailand.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEVELOPMENT_ASSET_PATHS = "\"Thailand/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
@@ -560,8 +506,8 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "Take photos to attach to places in your itinerary and to translate menus and signs.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID keeps your passport and booking documents private.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to show where you are, photos of nearby sights and places to eat. It's only used while the app is open.";
-				INFOPLIST_KEY_NSMotionUsageDescription = "Motion & Fitness counts your steps and how far you've walked each day of the trip.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The microphone is used for voice translation so you can talk with people in Thai.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Motion & Fitness counts your steps and how far you've walked each day of the trip.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save photos from your trip to your photo library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Add photos from your library to places in your itinerary and translate text in photos.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Speech recognition turns what you say into text so it can be translated.";
@@ -587,7 +533,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
@@ -605,7 +551,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
@@ -622,7 +568,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ThailandWidgets/Info.plist;
@@ -647,7 +593,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ThailandWidgets/Info.plist;
@@ -668,18 +614,63 @@
 			};
 			name = Release;
 		};
+		7A100000000000000000004C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = WanderHubShare/WanderHubShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 13;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WanderHubShare/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Trip Butler";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kbreed.thailandtrip.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		7A100000000000000000004D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = WanderHubShare/WanderHubShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 13;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WanderHubShare/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Trip Butler";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kbreed.thailandtrip.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		7A1000000000000000000047 /* Build configuration list for PBXNativeTarget "WanderHubShare" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				7A100000000000000000004C /* Debug */,
-				7A100000000000000000004D /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		7A100000000000000000000A /* Build configuration list for PBXNativeTarget "Thailand" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -712,6 +703,15 @@
 			buildConfigurations = (
 				7A100000000000000000003C /* Debug */,
 				7A100000000000000000003D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7A1000000000000000000047 /* Build configuration list for PBXNativeTarget "WanderHubShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7A100000000000000000004C /* Debug */,
+				7A100000000000000000004D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
